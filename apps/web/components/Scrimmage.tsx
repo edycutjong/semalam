@@ -14,6 +14,9 @@ import { publicRpc, restoreSigner, walletSigner, localSigner, injected, type Sig
 import { status, type StatusJson } from "@/lib/commit";
 
 const PRICE = 200n * 10n ** 18n;
+const PAID_STORE = "semalam.paid.v1";
+type PaidRun = { tx: Hex; round: number; account: Address; policy: Policy };
+const loadPaid = (): PaidRun[] => { try { return JSON.parse(localStorage.getItem(PAID_STORE) ?? "[]"); } catch { return []; } };
 type Opp = { source: { round: number } | null; opponents: Opponent[]; mix: { house: number; players: number }; note?: string };
 
 export default function Scrimmage() {
@@ -30,6 +33,9 @@ export default function Scrimmage() {
   useEffect(() => setHasWallet(Boolean(injected())), []);
   const [bal, setBal] = useState<bigint | null>(null);
   const [tick, setTick] = useState(0);
+  const [paidRuns, setPaidRuns] = useState<PaidRun[]>([]);
+  const [restoreTx, setRestoreTx] = useState("");
+  useEffect(() => setPaidRuns(loadPaid()), []);
 
   const load = useCallback(async () => {
     const s = restoreSigner(); setSigner(s);
@@ -47,7 +53,9 @@ export default function Scrimmage() {
 
   const first = st ? (JSON.parse(localStorage.getItem(`semalam.first.${st.round}`) ?? "null") as { policy: Policy; policyHash: Hex; account: Address } | null) : null;
   const firstOnChain = st?.commits[0];
-  const freeOk = Boolean(first && signer && first.account.toLowerCase() === signer.address.toLowerCase() && firstOnChain && firstOnChain.policyHash.toLowerCase() === first.policyHash.toLowerCase());
+  const sameAccount = Boolean(first && signer && first.account.toLowerCase() === signer.address.toLowerCase());
+  const intact = Boolean(first && draftHash(first.policy).toLowerCase() === first.policyHash.toLowerCase()); // the stored policy is still the one that was sealed
+  const freeOk = Boolean(sameAccount && intact && firstOnChain && firstOnChain.policyHash.toLowerCase() === first!.policyHash.toLowerCase());
 
   function runFree() {
     if (!first || !st || !opp || !signer) return;
@@ -75,12 +83,30 @@ export default function Scrimmage() {
       if (allowance < PRICE) { setMsg(`approve exactly 200 ${WIF_LABEL}…`); await send("approve", [SCRIMMAGE, PRICE], WIF, ERC20_ABI); }
       setMsg("paying 200 — 160 burned, 40 to compute…");
       const tx = await send("pay", [BigInt(st.round), PRICE, dh], SCRIMMAGE, SCRIMMAGE_ABI);
-      setMsg("checking the Paid receipt…");
-      const r = await (await fetch(`/api/paid?tx=${tx}`)).json();
-      if (r.error || r.payer.toLowerCase() !== signer.address.toLowerCase() || r.round !== st.round || r.draftHash.toLowerCase() !== dh.toLowerCase()) throw new Error(r.error ?? "the Paid receipt does not match this draft");
-      setRes({ kind: "paid", tx, policy: draft, r: scrimmage({ id: signer.address, policy: draft }, opp.opponents, paidSeed(tx), st.round) });
-      setMsg(null);
+      const entry: PaidRun = { tx, round: st.round, account: signer.address, policy: draft };
+      const all = [...loadPaid().filter((x) => x.tx !== tx), entry]; localStorage.setItem(PAID_STORE, JSON.stringify(all)); setPaidRuns(all);
+      await verifyAndRun(entry);
     } catch (e) { setErr((e as Error).message.split("\n")[0]); setMsg(null); }
+    setBusy(false);
+  }
+  /** A13: the paid run exists only for a successful Paid receipt whose payer, round and draftHash match; same tx → same result. */
+  async function verifyAndRun(e: PaidRun) {
+    if (!opp) throw new Error("the opponent list is still loading — try again in a moment");
+    setMsg("checking the Paid receipt…");
+    const r = await (await fetch(`/api/paid?tx=${e.tx}`)).json();
+    if (r.error) throw new Error(r.error);
+    if (r.payer.toLowerCase() !== e.account.toLowerCase() || r.round !== e.round || r.draftHash.toLowerCase() !== draftHash(e.policy).toLowerCase()) throw new Error("the Paid receipt does not match this draft");
+    setRes({ kind: "paid", tx: e.tx, policy: e.policy, r: scrimmage({ id: e.account, policy: e.policy }, opp.opponents, paidSeed(e.tx), e.round) });
+    setMsg(null);
+  }
+  async function restore(e: PaidRun) { setBusy(true); setErr(null); try { await verifyAndRun(e); } catch (x) { setErr((x as Error).message.split("\n")[0]); setMsg(null); } setBusy(false); }
+  async function restoreByTx() {
+    setBusy(true); setErr(null);
+    try {
+      const known = loadPaid().find((x) => x.tx.toLowerCase() === restoreTx.trim().toLowerCase());
+      if (!known) throw new Error("that payment is not saved in this browser — the draft that was paid for is needed to re-run it");
+      await verifyAndRun(known);
+    } catch (x) { setErr((x as Error).message.split("\n")[0]); setMsg(null); }
     setBusy(false);
   }
   async function mint() {
@@ -104,7 +130,7 @@ export default function Scrimmage() {
           <h3 style={{ fontSize: 20 }}>Free: tonight's orders</h3>
           <p className="muted" style={{ marginTop: 0 }}>Your first committed policy of this round — one result, no payment.</p>
           <button type="button" onClick={runFree} disabled={!freeOk || !opp}>Run my first commit</button>
-          {!freeOk && <p className="note">{!signer ? "Seal orders on Tonight first, then come back." : !first ? "No committed policy from this browser yet this round." : "Waiting for the chain to show your first commit."}</p>}
+          {!freeOk && <p className="note">{!signer ? "Seal orders on Tonight first, then come back." : !first ? "No committed policy from this browser yet this round." : !sameAccount ? "The first commit saved here belongs to a different account than the one you are using now." : !intact ? "The saved first commit no longer matches what was sealed — it cannot be re-run." : "Waiting for the chain to show your first commit."}</p>}
         </div>
         <div className="card" style={{ marginTop: 16 }}>
           <h3 style={{ fontSize: 20 }}>Any other draft</h3>
@@ -127,6 +153,18 @@ export default function Scrimmage() {
           )}
           <p className="muted" style={{ fontSize: 15 }}>The CLI runs the same simulation free on your own machine; the fee buys the instant in-app run and replay.</p>
         </div>
+        {paidRuns.filter((x) => st && x.round === st.round).length > 0 && (
+          <div className="card" style={{ marginTop: 16 }}>
+            <h3 style={{ fontSize: 20 }}>Your paid runs this round</h3>
+            {paidRuns.filter((x) => st && x.round === st.round).map((x) => (
+              <div className="row" key={x.tx} style={{ marginBottom: 8 }}>
+                <span className="data">{x.policy.name} · <a href={txUrl(x.tx)}>{x.tx.slice(0, 10)}…</a></span>
+                <button type="button" className="quiet" onClick={() => restore(x)} disabled={busy}>Show again</button>
+              </div>))}
+            <label htmlFor="rtx" style={{ marginTop: 10 }}>Or paste a payment transaction hash saved in this browser</label>
+            <div className="row"><input id="rtx" type="text" value={restoreTx} onChange={(e) => setRestoreTx(e.target.value)} style={{ flex: 1, minWidth: 200, fontSize: 14 }} /><button type="button" className="quiet" onClick={restoreByTx} disabled={busy || !/^0x[0-9a-fA-F]{64}$/.test(restoreTx.trim())}>Re-check</button></div>
+          </div>
+        )}
         {msg && <p className="data" role="status">{msg}</p>}
         {err && <p className="note warn" role="alert">{err}</p>}
       </section>

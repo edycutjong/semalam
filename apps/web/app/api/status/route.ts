@@ -1,6 +1,7 @@
 import { getAddress, isAddress } from "viem";
 import { closeTime, currentRound } from "@/lib/clock";
 import { chainNow, commitsOf, publicClient, relayer, RELAY_FLOOR_WEI } from "@/lib/chain";
+import { ipOf, throttle } from "@/lib/guard";
 import { CHAIN_ID, IS_TESTNET, ORDERS, WIF_LABEL } from "@/lib/config";
 import { ORDERS_ABI } from "@/lib/abi";
 
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** Live state for the Tonight screen: chain clock, relay health, and (with ?account=) that account's commits. */
 export async function GET(req: Request) {
+  if (!throttle(`status:${ipOf(req)}`, 90, 60_000)) return Response.json({ error: "too many requests — wait a few seconds" }, { status: 429 });
   const acc = new URL(req.url).searchParams.get("account");
   try {
     const now = await chainNow();

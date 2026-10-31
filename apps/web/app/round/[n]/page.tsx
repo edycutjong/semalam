@@ -16,7 +16,7 @@ export default async function RoundPage({ params }: { params: Promise<{ n: strin
       <>
         <div className="eyebrow">Breakfast · round {n}</div>
         <h1>{art.status === "hash-mismatch-not-posted" ? "Hash mismatch — not posted" : art.status === "poster-reverted" ? "Poster reverted" : "Not posted yet"}</h1>
-        <p className="lead">The runner and the CLI disagreed or the post failed, so no result is shown for this night. Replay it yourself: <span className="data">npx semalam replay {n}</span>.</p>
+        <p className="lead">{art.status === "hash-mismatch-not-posted" ? "The runner and the CLI computed different hashes, so nothing was posted and no result is shown for this night." : art.status === "poster-reverted" ? "The settle transaction reverted, so no result is on chain for this night yet." : "The night has been computed but not posted, so no result is shown yet."} Replay it yourself: <span className="data">npx semalam replay {n}</span>.</p>
         <Link className="btn" href={`/verify/${n}`}>Verify</Link>
       </>
     );

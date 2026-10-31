@@ -1,0 +1,30 @@
+// A3: with the compiler paused (provider mocked to fail), the no-LLM builder still produces a schema-valid policy and commits.
+import { createRequire } from "node:module";
+const require = createRequire("/Users/edycu/Hackathon/_tools/DemoStudio/package.json");
+const puppeteer = require("puppeteer");
+const base = process.argv[2] ?? "http://localhost:3101";
+const browser = await puppeteer.launch({ headless: true, executablePath: process.env.CHROME ?? undefined, args: ["--no-sandbox"] });
+const page = await browser.newPage();
+await page.setViewport({ width: 1280, height: 900 });
+const errors = [];
+page.on("pageerror", (e) => errors.push(e.message));
+await page.setRequestInterception(true);
+page.on("request", (r) => (r.url().includes("/api/compile") ? r.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ kind: "paused", reason: "compiler paused — use the builder (mock)" }) }) : r.continue()));
+const click = async (t) => {
+  await page.waitForFunction((x) => [...document.querySelectorAll("button")].some((b) => b.textContent.includes(x) && !b.disabled), { timeout: 30000 }, t);
+  await page.evaluate((x) => [...document.querySelectorAll("button")].find((b) => b.textContent.includes(x) && !b.disabled).click(), t);
+};
+await page.goto(base, { waitUntil: "networkidle0" });
+await page.type("#orders", "Be nice unless they steal from me.");
+await click("Compile");
+await page.waitForFunction(() => /compiler paused/.test(document.body.innerText), { timeout: 20000 });
+await click("Use the builder");
+await click("Read it back");
+await page.waitForFunction(() => /first matching rule wins|Your agent/.test(document.body.innerText) && document.querySelector(".ticket"), { timeout: 20000 });
+await click("Seal");
+await click("Play without a wallet");
+await page.waitForFunction(() => document.querySelector(".stamp.sealed"), { timeout: 90000 });
+const stamp = await page.$eval(".stamp.sealed", (e) => e.textContent);
+console.log(JSON.stringify({ stamp, errors }));
+await browser.close();
+process.exit(errors.length || !/SEALED/.test(stamp) ? 1 : 0);

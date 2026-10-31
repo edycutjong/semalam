@@ -18,6 +18,7 @@ export async function POST(req: Request) {
   const day = new Date().toISOString().slice(0, 10);
   const hit = cache.get(orders);
   if (hit && hit.day === day) return Response.json(hit.result);
+  if (!throttle(`compile-day:${ipOf(req)}`, 60, 86_400_000)) return Response.json({ kind: "paused", reason: "daily compile limit for this address reached — use the builder" }, { status: 429 });
   if (!throttle(`compile:${ipOf(req)}`, 12, 60_000)) return Response.json({ kind: "paused", reason: "too many compiles from this address — use the builder, or wait a minute" }, { status: 429 });
   if (used.day !== day) used = { day, n: 0 };
   const keys = (process.env.GROQ_API_KEYS ?? "").split(",").map((s) => s.trim()).filter(Boolean);

@@ -46,7 +46,7 @@ export default function Fidelity() {
           <span className={`counter ${orderLength(orders) > MAX_ORDERS ? "over" : ""}`}>{orderLength(orders)}/{MAX_ORDERS}</span>
         </div>
         <button type="button" className="primary" onClick={compile} disabled={busy || !orders.trim() || orderLength(orders) > MAX_ORDERS}>{busy ? "Reading…" : "Read it back"}</button>
-        <p className="note">Nothing is stored on our side. Your answers stay in this browser until you download the file and send it to whoever asked you.</p>
+        <p className="note">Nothing is saved to a database. Your orders are sent to the compiler provider and cached in server memory for the day; your answers stay in this browser until you download the file and send it to whoever asked you.</p>
       </section>
       <section aria-live="polite">
         {res?.kind === "policy" && <Ticket state="draft" title={res.policy.name} lines={res.readback} stamp="READBACK" />}

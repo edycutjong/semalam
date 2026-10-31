@@ -8,6 +8,8 @@ const COND_WORDS: Record<string, string> = {
   partner_richer: "my neighbour is richer", partner_poorer: "my neighbour is poorer", partner_is_leader: "my neighbour is in the top 10",
   i_am_leading: "I am in the top 10", i_am_behind: "I am in the bottom half", turn_after: "it is after turn…",
 };
+const GL: Record<string, string> = { GATHER: "▲", GUARD: "■", SHARE: "◆", STEAL: "✕", COPY_LEADER: "⧉" };
+const Opt = ({ a }: { a: string }) => <option value={a}>{GL[a]} {a}</option>;
 export default function Builder({ onPolicy, initial }: { onPolicy: (p: Policy) => void; initial?: Policy }) {
   const [p, setP] = useState<Policy>(initial ?? PRESETS[1]);
   const [err, setErr] = useState<string | null>(null);
@@ -30,9 +32,9 @@ export default function Builder({ onPolicy, initial }: { onPolicy: (p: Policy) =
       </select>
       <div className="row" style={{ marginTop: 14 }}>
         <div style={{ flex: 1, minWidth: 140 }}><label htmlFor="opening">Turns 1–10</label>
-          <select id="opening" value={p.opening} onChange={(e) => upd({ opening: e.target.value as Policy["opening"] })}>{ACTIONS.map((a) => <option key={a}>{a}</option>)}</select></div>
+          <select id="opening" value={p.opening} onChange={(e) => upd({ opening: e.target.value as Policy["opening"] })}>{ACTIONS.map((a) => <Opt key={a} a={a} />)}</select></div>
         <div style={{ flex: 1, minWidth: 140 }}><label htmlFor="dflt">Otherwise</label>
-          <select id="dflt" value={p.default} onChange={(e) => upd({ default: e.target.value as Policy["default"] })}>{ACTIONS.map((a) => <option key={a}>{a}</option>)}</select></div>
+          <select id="dflt" value={p.default} onChange={(e) => upd({ default: e.target.value as Policy["default"] })}>{ACTIONS.map((a) => <Opt key={a} a={a} />)}</select></div>
         <div style={{ flex: 1, minWidth: 140 }}><label htmlFor="grudge">Remember a theft for (turns)</label>
           <select id="grudge" value={p.grudge} onChange={(e) => upd({ grudge: Number(e.target.value) })}>{[0, 1, 2, 3, 5, 8, 10, 15, 20].map((n) => <option key={n}>{n}</option>)}</select></div>
       </div>
@@ -46,7 +48,7 @@ export default function Builder({ onPolicy, initial }: { onPolicy: (p: Policy) =
           {r.if === "turn_after" && <input aria-label={`Rule ${i + 1} turn`} type="text" inputMode="numeric" style={{ width: 90, minHeight: 44, fontSize: 16 }} value={r.n ?? 100} onChange={(e) => setRule(i, { n: Math.max(1, Math.min(300, Number(e.target.value.replace(/\D/g, "")) || 1)) })} />}
           <label style={{ display: "inline-flex", gap: 6, alignItems: "center", margin: 0, minHeight: 44 }}><input type="checkbox" checked={Boolean(r.not)} onChange={(e) => setRule(i, { not: e.target.checked })} style={{ width: 22, height: 22 }} /> not</label>
           <span className="data">→</span>
-          <select aria-label={`Rule ${i + 1} action`} value={r.then} onChange={(e) => setRule(i, { then: e.target.value as Policy["rules"][number]["then"] })}>{ACTIONS.map((a) => <option key={a}>{a}</option>)}</select>
+          <select aria-label={`Rule ${i + 1} action`} value={r.then} onChange={(e) => setRule(i, { then: e.target.value as Policy["rules"][number]["then"] })}>{ACTIONS.map((a) => <Opt key={a} a={a} />)}</select>
           <button type="button" className="quiet" aria-label={`Remove rule ${i + 1}`} onClick={() => setP((q) => ({ ...q, rules: q.rules.filter((_, k) => k !== i) }))}>remove</button>
         </div>
       ))}

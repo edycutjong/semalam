@@ -1,6 +1,6 @@
 {
   "46630": {
-    "name": "Robinhood Chain testnet",
+    "name": "chain 46630 (testnet)",
     "rpcs": [
       "https://rpc.testnet.chain.robinhood.com"
     ],
@@ -18,7 +18,7 @@
     "genesis": 1793293200
   },
   "4663": {
-    "name": "Robinhood Chain",
+    "name": "chain 4663",
     "rpcs": [
       "https://rpc.mainnet.chain.robinhood.com"
     ],

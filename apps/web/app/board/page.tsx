@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { readArtifact, settledRounds } from "@/lib/artifact";
-import { paidLogs } from "@/lib/chain";
-import { seasonOf } from "@/lib/clock";
+import { namedState, readArtifact, settledRounds } from "@/lib/artifact";
+import { chainNow, paidLogs, postedOf } from "@/lib/chain";
+import { currentRound, seasonOf } from "@/lib/clock";
 import { seasonBoard } from "@/lib/season";
 
 import { addrUrl } from "@/lib/config";
@@ -10,11 +10,21 @@ export const dynamic = "force-dynamic";
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 export default async function Board() {
-  const rounds = await settledRounds();
+  const all = await settledRounds();
+  const arts = (await Promise.all(all.map(readArtifact))).filter((a) => a && a.status === "posted");
+  const rounds = arts.map((a) => a!.round); // only nights that are on chain AND equal the CLI's hash count
   const last = rounds.at(-1);
-  const art = last ? await readArtifact(last) : null;
+  const art = last ? arts[arts.length - 1] : null;
+  // a newer closed round without a posted artifact gets its named state, never an endless "settling"
+  let pending: { round: number; label: string; detail?: string } | null = null;
+  try {
+    const now = await chainNow(), cur = currentRound(now);
+    for (let r = (last ?? 0) + 1; r < cur; r++) { const st = namedState(r, now, cur, Boolean(await postedOf(r))); pending = { round: r, ...st }; break; }
+  } catch { /* the board still renders from artifacts */ }
   if (!art || !last) return <><h1>Board</h1><p className="lead">No night has settled yet. The first board appears the morning after the first close.</p><Link className="btn" href="/">Tonight</Link></>;
   const s = art.settled;
+  const playerRank = new Map<string, number>();
+  s.ranking.filter((r) => !r.house && !r.operator).forEach((r, i) => playerRank.set(r.id, i + 1));
   const season = seasonOf(last);
   const seasonRounds = rounds.filter((r) => seasonOf(r) === season && season > 0);
   const nights = (await Promise.all(seasonRounds.map(readArtifact))).filter((a) => a && a.status === "posted").map((a) => a!.settled);
@@ -26,13 +36,15 @@ export default async function Board() {
     <>
       <div className="eyebrow">Round {last} · {s.players} player{s.players === 1 ? "" : "s"} · {s.agents - s.players - (s.playersAll - s.players)} house agents</div>
       <h1>Board</h1>
+      {pending && <p className="note" role="status">Round {pending.round}: {pending.label}{pending.detail ? ` — ${pending.detail}` : ""}</p>}
       <p className="lead">{s.players === 0 ? "A house-only night: no player commits were admitted, so nobody scored. " : ""}House agents are labelled and never score or win the crown. Ties break by fewer steals, then a hash — never by address order.</p>
       <h2 style={{ fontSize: 24 }}>Tonight's ranks</h2>
       <div className="scroll"><table>
-        <thead><tr><th>#</th><th>Agent</th><th>Coins</th><th>Steals</th><th>Points</th></tr></thead>
+        <thead><tr><th title="rank among all agents, house included">Rank of {s.agents}</th><th title="rank among players only">Player #</th><th>Agent</th><th>Coins</th><th>Steals</th><th>Points</th></tr></thead>
         <tbody>{top.map((r) => (
           <tr key={r.id} className={r.house ? "house" : ""}>
             <td className="data">{r.rank}</td>
+            <td className="data">{playerRank.get(r.id) ? `${playerRank.get(r.id)} of ${s.players}` : "—"}</td>
             <td className="data">{r.house ? <><span className="badge">house</span> {r.label}</> : r.operator ? <><span className="badge">operator</span> {short(r.id)}</> : <a href={addrUrl(r.id)}>{short(r.id)}</a>}</td>
             <td className="data">{r.coins}</td><td className="data">{r.steals}</td><td className="data">{r.points}</td>
           </tr>))}</tbody>

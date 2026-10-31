@@ -4,7 +4,7 @@ import { CHAIN_ID, DEP, IS_TESTNET, ORDERS, RESULTS, SCRIMMAGE, WIF, WIF_LABEL, 
 export default function Playtest() {
   return (
     <>
-      <div className="eyebrow">Playtest kit · {DEP.name} ({CHAIN_ID})</div>
+      <div className="eyebrow">Playtest kit · {DEP.name}</div>
       <h1>Play one night</h1>
       <p className="lead">Five minutes tonight, ninety seconds tomorrow morning. {IS_TESTNET ? `This is the testnet: ${WIF_LABEL} is a labelled stand-in with no value.` : ""}</p>
       <ol style={{ paddingLeft: 22 }}>

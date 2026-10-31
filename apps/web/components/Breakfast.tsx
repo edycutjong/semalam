@@ -31,14 +31,23 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
   const myPolicy = d.policies.find((p) => p.id.toLowerCase() === addr.toLowerCase())?.policy;
   const line = addr ? rankLine(d.ranking, addr, d.players, d.agents) : null;
 
+  const fieldWith = (mineP: Policy): Agent[] => [
+    ...HOUSE.agents.map((h) => ({ id: h.id, policy: h.policy, house: true })),
+    ...d.policies.map((p) => ({ id: p.id as Hex, policy: p.id.toLowerCase() === addr.toLowerCase() ? mineP : p.policy })),
+  ];
+  const opts = { round: BigInt(d.round), drandRound: BigInt(d.drandRound), policySetHash: d.policySetHash as Hex, houseSetHash: d.houseSetHash as Hex };
+  // an unmodified re-run must reproduce the posted hash, or the what-if numbers cannot be trusted
+  const [baseline, setBaseline] = useState<"checking" | "ok" | "differs">("checking");
+  useEffect(() => {
+    if (!myPolicy) return;
+    try { setBaseline(run(fieldWith(myPolicy), d.randomness as Hex, opts).resultHash.toLowerCase() === d.resultHash.toLowerCase() ? "ok" : "differs"); } catch { setBaseline("differs"); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myPolicy, d.resultHash]);
+
   function whatIf() {
-    if (!myPolicy || variants.length >= MAX_VARIANTS) return;
+    if (!myPolicy || variants.length >= MAX_VARIANTS || baseline !== "ok") return;
     const edited: Policy = { ...myPolicy, rules: myPolicy.rules.filter((_, i) => !off.has(i)) };
-    const field: Agent[] = [
-      ...HOUSE.agents.map((h) => ({ id: h.id, policy: h.policy, house: true })),
-      ...d.policies.map((p) => ({ id: p.id as Hex, policy: p.id.toLowerCase() === addr.toLowerCase() ? edited : p.policy })),
-    ];
-    const res = run(field, d.randomness as Hex, { round: BigInt(d.round), drandRound: BigInt(d.drandRound), policySetHash: d.policySetHash as Hex, houseSetHash: d.houseSetHash as Hex });
+    const res = run(fieldWith(edited), d.randomness as Hex, opts);
     const idx = res.ranking.findIndex((r) => r.id.toLowerCase() === addr.toLowerCase());
     setVariants((v) => [...v, { off: [...off], rank: idx + 1, coins: res.ranking[idx].coins }]);
   }
@@ -67,10 +76,11 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
             {myPolicy.rules.map((r, i) => (
               <label key={i} style={{ display: "flex", gap: 10, alignItems: "center", minHeight: 44, color: "var(--ink)" }}>
                 <input type="checkbox" style={{ width: 22, height: 22 }} checked={!off.has(i)} onChange={(e) => setOff((o) => { const n = new Set(o); e.target.checked ? n.delete(i) : n.add(i); return n; })} />
-                <span>rule {i + 1}: {r.not ? "not " : ""}{r.if}{r.n ? ` ${r.n}` : ""} → {r.then}</span>
+                <span>{readback(myPolicy).filter((l) => /^\s+\d+\./.test(l))[i]?.trim() ?? `rule ${i + 1}`}</span>
               </label>
             ))}
-            <button type="button" onClick={whatIf} disabled={variants.length >= MAX_VARIANTS || off.size === 0}>Re-run the night ({variants.length}/{MAX_VARIANTS})</button>
+            <button type="button" onClick={whatIf} disabled={variants.length >= MAX_VARIANTS || off.size === 0 || baseline !== "ok"}>Re-run the night ({variants.length}/{MAX_VARIANTS})</button>
+            {baseline === "differs" && <p className="note warn" role="status">Re-running the unmodified night here does not reproduce the posted hash, so what-if is switched off for this round. Verify it with the CLI.</p>}
             {variants.map((v, i) => <p key={i} className="data" style={{ margin: "8px 0 0" }}>rules off [{v.off.map((x) => x + 1).join(", ")}] → rank {v.rank} of {d.agents}, {v.coins} coins (actual: {mine.rank}, {mine.coins})</p>)}
           </div>
         )}

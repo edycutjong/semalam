@@ -1,11 +1,11 @@
 "use client";
 // Seal → sign → relay → read back. "Entered" is shown only after the Committed event matches (spec step 4).
-import { bytesToHex, keccak256, toBytes, type Address, type Hex } from "viem";
+import { bytesToHex, createWalletClient, http, keccak256, toBytes, type Address, type Hex } from "viem";
 import { seal, stanzaOf, seedRoundAt, QUICKNET } from "@semalam/beacon";
 import { canonical, Policy } from "@semalam/policy";
 import { MAX_SEALED } from "@semalam/sim/round";
 import { COMMIT_TYPES, ORDERS_ABI } from "./abi";
-import { CHAIN, ORDERS } from "./config";
+import { CHAIN, DEP, ORDERS } from "./config";
 import { closeTime } from "./clock";
 import type { Signer } from "./wallet";
 
@@ -25,8 +25,8 @@ export async function sealPolicy(policy: Policy, round: number): Promise<Sealed>
 
 export type Entered = { tx: string; url: string; mode: "relay" | "wallet"; blockOk: boolean };
 
-export async function commitSealed(signer: Signer, round: number, s: Sealed, nonce: bigint): Promise<Entered> {
-  const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
+export async function commitSealed(signer: Signer, round: number, s: Sealed, nonce: bigint, chainNow: number): Promise<Entered> {
+  const deadline = BigInt(chainNow + 900); // chain clock, not the visitor's
   const message = { account: signer.address, round: BigInt(round), policyHash: s.policyHash, sealedHash: keccak256(s.sealedBlob), nonce, deadline };
   const domain = { name: "SEMALAM Orders", version: "1", chainId: CHAIN.id, verifyingContract: ORDERS } as const;
   const signature = signer.mode === "local"
@@ -39,8 +39,11 @@ export async function commitSealed(signer: Signer, round: number, s: Sealed, non
   const j = await res.json();
   if (res.ok && j.ok) return { tx: j.tx, url: j.url, mode: "relay", blockOk: true };
   // Relay empty / refused: a wallet that holds ETH can send the commit itself.
-  if (signer.mode === "wallet" && (j.relay === false || res.status === 429)) {
-    const hash = await signer.client.writeContract({ account: signer.address, chain: CHAIN, address: ORDERS, abi: ORDERS_ABI, functionName: "commit", args: [BigInt(round), s.policyHash, s.sealedBlob] });
+  if (j.relay === false || res.status === 429) {
+    const args = [BigInt(round), s.policyHash, s.sealedBlob] as const;
+    const hash = signer.mode === "wallet"
+      ? await signer.client.writeContract({ account: signer.address, chain: CHAIN, address: ORDERS, abi: ORDERS_ABI, functionName: "commit", args })
+      : await createWalletClient({ account: signer.account, chain: CHAIN, transport: http(DEP.rpcs[0]) }).writeContract({ chain: CHAIN, address: ORDERS, abi: ORDERS_ABI, functionName: "commit", args }).catch(() => { throw new Error(`${j.state ?? "relay unavailable"} — this browser key has no ETH to commit by itself; send a little to ${signer.address} and press Seal again`); });
     return { tx: hash, url: "", mode: "wallet", blockOk: true };
   }
   throw new Error(j.state ?? `commit failed (${res.status})`);

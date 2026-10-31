@@ -3,6 +3,7 @@ import { createPublicClient, createWalletClient, http, type Address, type Hex, t
 import { privateKeyToAccount } from "viem/accounts";
 import { CHAIN, DEP, ORDERS, RESULTS, SCRIMMAGE } from "./config";
 import { ORDERS_ABI, RESULTS_ABI, SCRIMMAGE_ABI } from "./abi";
+import { memoized } from "./guard";
 
 export const publicClient: PublicClient = createPublicClient({
   chain: CHAIN,
@@ -15,15 +16,24 @@ export async function chainNow(): Promise<number> {
   return Number(b.timestamp);
 }
 
-const COMMIT_WINDOW = 420_000n; // ≈ one day of blocks; the quota only needs the current round's logs
-export async function commitsOf(account: Address, round: number) {
+/** eth_getLogs over [from, head] in spans that halve on any provider error (the public RPC serves wide ranges; Alchemy Free does not). */
+async function paged<T>(f: (lo: bigint, hi: bigint) => Promise<T[]>): Promise<T[]> {
   const head = await publicClient.getBlockNumber();
-  const from = head > COMMIT_WINDOW ? head - COMMIT_WINDOW : 0n;
-  const logs = await publicClient.getLogs({
-    address: ORDERS, event: ORDERS_ABI[4], args: { round: BigInt(round), account },
-    fromBlock: from < BigInt(DEP.fromBlock) ? BigInt(DEP.fromBlock) : from, toBlock: head,
-  });
+  const out: T[] = [];
+  let lo = BigInt(DEP.fromBlock), span = 2_000_000n;
+  while (lo <= head) {
+    const hi = lo + span - 1n > head ? head : lo + span - 1n;
+    try { out.push(...(await f(lo, hi))); lo = hi + 1n; } catch (e) { if (span <= 1000n) throw e; span /= 2n; }
+  }
+  return out;
+}
+export async function commitsOf(account: Address, round: number) {
+  const logs = await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: ORDERS_ABI[4], args: { round: BigInt(round), account }, fromBlock: lo, toBlock: hi }));
   return logs.map((l) => ({ tx: l.transactionHash as Hex, block: Number(l.blockNumber), logIndex: l.logIndex, policyHash: l.args.policyHash as Hex, sealedBytes: ((l.args.sealedBlob as Hex).length - 2) / 2 }));
+}
+/** How many commit events the round has so far (any account) — the relay's global per-round cap reads this. */
+export async function commitCountOf(round: number): Promise<number> {
+  return memoized(`commits:${round}`, 15_000, async () => (await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: ORDERS_ABI[4], args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }))).length);
 }
 
 export async function postedOf(round: number): Promise<{ resultHash: Hex; drandRound: number } | null> {
@@ -56,18 +66,10 @@ export function relayer() {
 /** Relayer stops below this balance (named state "relay empty — use your own wallet"). */
 export const RELAY_FLOOR_WEI = 300_000_000_000_000n; // 0.0003 ETH
 
-/** Everyone who paid for a scrimmage, with the round they paid in (for season crown-eligibility). */
+/** Everyone who paid for a scrimmage, with the round they paid in (for season crown-eligibility). Memoised 30 s. */
 export async function paidLogs() {
-  const head = await publicClient.getBlockNumber();
-  const out: { payer: string; round: number; draftHash: Hex; burned: bigint; tx: Hex }[] = [];
-  let lo = BigInt(DEP.fromBlock), span = 2_000_000n;
-  while (lo <= head) {
-    const hi = lo + span - 1n > head ? head : lo + span - 1n;
-    try {
-      const logs = await publicClient.getLogs({ address: SCRIMMAGE, event: SCRIMMAGE_ABI[2], fromBlock: lo, toBlock: hi });
-      for (const l of logs) out.push({ payer: l.args.payer as string, round: Number(l.args.round), draftHash: l.args.draftHash as Hex, burned: l.args.burned as bigint, tx: l.transactionHash as Hex });
-      lo = hi + 1n;
-    } catch (e) { if (span <= 1000n) throw e; span /= 2n; }
-  }
-  return out;
+  return memoized("paid", 30_000, async () =>
+    (await paged((lo, hi) => publicClient.getLogs({ address: SCRIMMAGE, event: SCRIMMAGE_ABI[2], fromBlock: lo, toBlock: hi }))).map((l) => ({
+      payer: l.args.payer as string, round: Number(l.args.round), draftHash: l.args.draftHash as Hex, burned: l.args.burned as bigint, tx: l.transactionHash as Hex,
+    })));
 }

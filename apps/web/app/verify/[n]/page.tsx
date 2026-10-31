@@ -26,15 +26,15 @@ export default async function Verify({ params }: { params: Promise<{ n: string }
         <div className="data" style={{ marginBottom: 8 }}>$ npx semalam replay {n} {chainFlag}</div>
         <p style={{ margin: 0 }} className="muted">Exit 0 prints the hash below and says MATCH. {CHAIN_ID === 46630 ? `Testnet uses ${WIF_LABEL}, a labelled stand-in.` : ""}</p>
       </div>
-      {verdict && <p className={verdict === "MATCH" ? "ok" : "bad"} role="status" style={{ fontSize: 22, fontFamily: "var(--font-display)" }}>{verdict === "MATCH" ? "✓ MATCH" : `✗ ${verdict}`}</p>}
+      {verdict && <p className={verdict === "MATCH" ? "ok" : "bad"} role="status" style={{ fontSize: 22, fontFamily: "var(--font-display)" }}>{verdict === "MATCH" ? "✓ MATCH" : `✗ ${verdict.replace(/-/g, " ").toLowerCase()}`}</p>}
       {!art && state && <p className="note" role="status">{state.label}{state.detail ? ` — ${state.detail}` : ""}</p>}
       <dl className="kv">
-        <dt>Result hash (recomputed)</dt><dd>{s ? <HashLine value={s.resultHash} /> : <span className="muted">not computed yet</span>}</dd>
+        <dt>Result hash (runner artifact)</dt><dd>{s ? <HashLine value={s.resultHash} /> : <span className="muted">not computed yet</span>}</dd>
         <dt>Result hash (on chain)</dt><dd>{posted ? <HashLine value={posted.resultHash} href={art?.onchain?.tx ? txUrl(art.onchain.tx) : undefined} /> : <span className="muted">not posted</span>}</dd>
-        <dt>CLI (fresh process)</dt><dd>{art ? <span className="data">v{art.cli.version} · {art.cli.match ? "same hash" : "DIFFERENT hash"}</span> : <span className="muted">—</span>}</dd>
-        <dt>drand round</dt><dd className="data">{s ? s.drandRound : "—"} · quicknet <span className="muted">{QUICKNET.hash.slice(0, 10)}…</span> · BLS-verified by the CLI, signature check in the runner</dd>
+        <dt>CLI cross-check (runner's fresh-process run)</dt><dd>{art ? <span className="data">v{art.cli.version} · {art.cli.match ? "same hash" : "DIFFERENT hash"}</span> : <span className="muted">—</span>}</dd>
+        <dt>drand round</dt><dd className="data">{s ? s.drandRound : "—"} · quicknet <span className="muted">{QUICKNET.hash.slice(0, 10)}…</span> · the runner and the CLI BLS-verify this beacon before replaying (packages/beacon); run the CLI to check it yourself</dd>
         <dt>Randomness</dt><dd>{s ? <HashLine value={s.randomness} short /> : "—"}</dd>
-        <dt>Players</dt><dd className="data">{s ? `${s.players} (${s.playersAll - s.players} operator address${s.playersAll - s.players === 1 ? "" : "es"} excluded)${s.playersAll === 0 ? " · house-only night" : ""}` : "—"} · excluded: {EXCLUDED.map((a) => a.slice(0, 8)).join(", ") || "none"}</dd>
+        <dt>Players (accounts, house excluded)</dt><dd className="data">{s ? `${s.players} (${s.playersAll - s.players} operator address${s.playersAll - s.players === 1 ? "" : "es"} excluded)${s.playersAll === 0 ? " · house-only night" : ""}` : "—"} · excluded: {EXCLUDED.map((a) => a.slice(0, 8)).join(", ") || "none"}</dd>
         <dt>Void commits</dt><dd className="data">{s ? (s.voids.length ? s.voids.map((v) => `${v.account.slice(0, 8)}… ${v.reason}`).join(" · ") : "none") : "—"}</dd>
         <dt>Contracts</dt><dd className="data"><a href={addrUrl(ORDERS)}>Orders</a> · <a href={addrUrl(RESULTS)}>Results</a> · <a href={addrUrl(SCRIMMAGE)}>Scrimmage</a></dd>
         <dt>Commit transactions</dt><dd className="data">{art ? (art.commitTxs.length ? art.commitTxs.slice(0, 12).map((c, i) => <span key={c.tx}>{i ? " · " : ""}<a href={txUrl(c.tx)}>{c.tx.slice(0, 10)}…</a></span>) : "none") : "—"}{art && art.commitTxs.length > 12 ? ` · +${art.commitTxs.length - 12} more` : ""}</dd>
