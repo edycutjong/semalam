@@ -105,7 +105,8 @@ export default function Scrimmage() {
   /** A13: the paid run exists only for a successful Paid receipt whose payer, round and draftHash match; same tx → same result. */
   async function verifyAndRun(e: PaidRun) {
     setMsg("checking the Paid receipt…");
-    const r = await (await fetch(`/api/paid?tx=${e.tx}`)).json();
+    let r = await (await fetch(`/api/paid?tx=${e.tx}`)).json();
+    for (let i = 0; r.pending && i < 6; i++) { await new Promise((ok) => setTimeout(ok, 3000)); r = await (await fetch(`/api/paid?tx=${e.tx}`)).json(); } // the server's node may lag the wallet's
     if (r.error) throw new Error(r.error);
     if (r.payer.toLowerCase() !== e.account.toLowerCase() || r.round !== e.round || r.draftHash.toLowerCase() !== draftHash(e.policy).toLowerCase()) throw new Error("the Paid receipt does not match this draft");
     const field = (await (await fetch(`/api/opponents/${e.round}?source=${e.src ?? "house"}`)).json()) as Opp;

@@ -14,6 +14,8 @@ export async function GET(req: Request) {
     if (!p) return Response.json({ error: "no successful Scrimmage.Paid log in that transaction" }, { status: 404 });
     return Response.json({ payer: p.payer, round: p.round, draftHash: p.draftHash, amount: p.amount.toString(), burned: p.burned.toString(), toCompute: p.toCompute.toString() });
   } catch (e) {
+    // a just-sent payment has no receipt yet: say so (425) instead of a generic read failure
+    if ((e as Error).name === "TransactionReceiptNotFoundError") return Response.json({ error: "that payment is not mined yet — retry in a few seconds", pending: true }, { status: 425 });
     return Response.json({ error: `could not read that transaction (${(e as Error).message.split("\n")[0]})` }, { status: 502 });
   }
 }
