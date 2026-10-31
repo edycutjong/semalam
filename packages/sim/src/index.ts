@@ -171,18 +171,7 @@ export function run(
 
   const order = field.map((_, i) => i).sort((x, y) => rank[x] - rank[y]);
   const ranking: Standing[] = order.map((i) => ({ id: field[i].id, coins: coins[i], steals: steals[i], house: !!field[i].house }));
-  const resultHash = keccak256(
-    encodeAbiParameters(
-      [
-        { type: "string" }, { type: "uint256" }, { type: "uint64" }, { type: "bytes32" }, { type: "bytes32" }, { type: "bytes32" },
-        { type: "tuple[]", components: [{ type: "address" }, { type: "uint256" }] },
-      ],
-      [
-        SIM_VERSION, opts.round, opts.drandRound, randomness, opts.policySetHash, opts.houseSetHash,
-        ranking.map((r) => [r.id, BigInt(r.coins)] as const),
-      ],
-    ),
-  );
+  const resultHash = resultHashOf(opts.round, opts.drandRound, randomness, opts.policySetHash, opts.houseSetHash, ranking);
   return { ranking, resultHash, turns: TURNS, agents: N, field, trace: opts.trace ? trace : undefined };
 }
 
@@ -201,6 +190,19 @@ export function pairing(seat: number[], t: number): number[] {
     partner[b] = a;
   }
   return partner;
+}
+
+/** The one encoding of a night (also used to re-check a served artifact's ranking against the posted hash). */
+export function resultHashOf(round: bigint, drandRound: bigint, randomness: Hex, policySetHash: Hex, houseSetHash: Hex, ranking: readonly { id: Hex; coins: number }[]): Hex {
+  return keccak256(
+    encodeAbiParameters(
+      [
+        { type: "string" }, { type: "uint256" }, { type: "uint64" }, { type: "bytes32" }, { type: "bytes32" }, { type: "bytes32" },
+        { type: "tuple[]", components: [{ type: "address" }, { type: "uint256" }] },
+      ],
+      [SIM_VERSION, round, drandRound, randomness, policySetHash, houseSetHash, ranking.map((r) => [r.id, BigInt(r.coins)] as const)],
+    ),
+  );
 }
 
 /** coins desc, fewer steals, keccak(randomness, id) asc → 1-based rank per agent. */

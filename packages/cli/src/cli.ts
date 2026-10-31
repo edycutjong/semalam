@@ -72,7 +72,7 @@ function parse(raw: string[]): Args {
 }
 
 // ---------- chain ----------
-type Dep = { name: string; rpcs: string[]; orders: Address | null; results: Address | null; scrimmage: Address | null; fromBlock: number; excluded: Address[] };
+type Dep = { name: string; rpcs: string[]; orders: Address | null; results: Address | null; scrimmage: Address | null; fromBlock: number; excluded: Address[]; ordersDeployTx?: Hex | null };
 function dep(a: Args): Dep {
   const d = (deployments as Record<string, Dep>)[a.chain];
   if (!d) throw new Exit(64, `unknown --chain ${a.chain} (known: ${Object.keys(deployments).join(", ")})`);
@@ -155,6 +155,13 @@ async function readChainRound(a: Args, round: number) {
   // players seal to Orders' clock and the replay decrypts with Results' clock: they must be the same GENESIS
   const ordersGenesis = await net(c.readContract({ address: d.orders!, abi: ORDERS_GENESIS_ABI, functionName: "GENESIS" }), "reading Orders");
   if (ordersGenesis !== genesis) throw new Exit(2, `REFUSED: Orders.GENESIS ${ordersGenesis} ≠ Results.GENESIS ${genesis} — these contracts are not one deployment`);
+  // fromBlock is where the log scan starts: it must be the block that CREATED Orders, or early commits could be skipped
+  if (!deps.client) {
+    if (!d.ordersDeployTx) throw new Exit(2, `REFUSED: deployments.json has no ordersDeployTx for chain ${a.chain} — cannot prove fromBlock ${d.fromBlock} is where Orders was created`);
+    const rc = await net(c.getTransactionReceipt({ hash: d.ordersDeployTx }), "reading the Orders deploy receipt");
+    if (rc.contractAddress?.toLowerCase() !== d.orders!.toLowerCase() || rc.blockNumber !== BigInt(d.fromBlock))
+      throw new Exit(2, `REFUSED: fromBlock ${d.fromBlock} is not the block that created Orders (deploy tx block ${rc.blockNumber}, created ${rc.contractAddress})`);
+  }
   const fin = await net(c.getBlock({ blockTag: "finalized" }), "reading the finalized block");
   // every commit of the round must be inside the finalized range, or the replay could miss the last ones
   if (Number(fin.timestamp) < closeTime(Number(genesis), round))
@@ -292,7 +299,7 @@ export function seasonTable(nights: Settled[], payers: Set<string>) {
     for (const row of st.ranking) {
       if (row.house || row.operator) continue;
       const t = tally.get(row.id.toLowerCase()) ?? { points: 0, topHalf: false, coins: 0 };
-      t.points += row.points; t.coins += row.coins; t.topHalf ||= row.rank <= st.agents / 2;
+      t.points += row.points; t.coins += row.coins; t.topHalf ||= 2 * row.rank <= st.agents; // top half = rank × 2 ≤ agents (for odd N the median is out)
       tally.set(row.id.toLowerCase(), t);
     }
   const board = [...tally.entries()]

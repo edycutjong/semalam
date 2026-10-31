@@ -5,6 +5,7 @@ import { chainNow, postedOf } from "@/lib/chain";
 import { currentRound } from "@/lib/clock";
 import { CHAIN_ID, DEP, EXCLUDED, ORDERS, RESULTS, SCRIMMAGE, WIF_LABEL, addrUrl, txUrl } from "@/lib/config";
 import { QUICKNET } from "@semalam/beacon";
+import { resultHashOf } from "@semalam/sim";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,9 @@ export default async function Verify({ params }: { params: Promise<{ n: string }
   let posted: Awaited<ReturnType<typeof postedOf>> = null, state = null as ReturnType<typeof namedState> | null;
   try { posted = await postedOf(n); const now = await chainNow(); state = namedState(n, now, currentRound(now), Boolean(posted)); } catch { state = { code: "rpc", label: "chain unreachable — try again in a moment" }; }
   const s = art?.settled;
-  const verdict = !art ? null : art.status !== "posted" ? art.status.toUpperCase() : posted && posted.resultHash.toLowerCase() === s!.resultHash.toLowerCase() && art.cli.match ? "MATCH" : "MISMATCH";
+  // the board this site serves must re-hash to its own resultHash: an edited ranking cannot sit beside a matching chain hash
+  const boardOk = !s || resultHashOf(BigInt(s.round), BigInt(s.drandRound), s.randomness, s.policySetHash, s.houseSetHash, s.ranking).toLowerCase() === s.resultHash.toLowerCase();
+  const verdict = !art ? null : !boardOk ? "SERVED-BOARD-DOES-NOT-HASH" : art.status !== "posted" ? art.status.toUpperCase() : posted && posted.resultHash.toLowerCase() === s!.resultHash.toLowerCase() && art.cli.match ? "MATCH" : "MISMATCH";
   const chainFlag = CHAIN_ID === 46630 ? "--chain 46630" : "";
   return (
     <>

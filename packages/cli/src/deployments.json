@@ -15,7 +15,8 @@
     ],
     "wif": "0x4059105C779d46C1905c0437483b60c1DEbF1B47",
     "wifIsMock": true,
-    "genesis": 1793293200
+    "genesis": 1793293200,
+    "ordersDeployTx": "0xefb58126866e06314a6ad26cdccaa2fbc2eba7cce2fef9e87bd2e904afefa6ca"
   },
   "4663": {
     "name": "chain 4663",
@@ -28,6 +29,7 @@
     "fromBlock": 0,
     "excluded": [],
     "wif": "0x5173b8eA6923c2d40267890D45C46a3480954773",
-    "wifIsMock": false
+    "wifIsMock": false,
+    "ordersDeployTx": null
   }
 }

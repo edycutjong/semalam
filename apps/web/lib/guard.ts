@@ -37,4 +37,4 @@ export function reserve(key: string, ttlMs = 30_000): number {
   reserved.set(key, { n, at: cur && now - cur.at < ttlMs ? cur.at : now });
   return n;
 }
-export function bump(key: string, d: number) { const c = reserved.get(key); if (c) c.n = Math.max(0, c.n + d); else if (d > 0) reserved.set(key, { n: d, at: Date.now() }); }
+export function bump(key: string, d: number) { const c = reserved.get(key); if (c) { c.n = Math.max(0, c.n + d); if (d > 0) c.at = Date.now(); } else if (d > 0) reserved.set(key, { n: d, at: Date.now() }); } // a new in-flight send restarts the TTL

@@ -33,7 +33,7 @@ contract Scrimmage is RoundClock {
     error ZeroAddress();
 
     constructor(IWIF wif, address compute, uint256 genesis) RoundClock(genesis) {
-        if (address(wif) == address(0) || compute == address(0)) revert ZeroAddress();
+        if (address(wif) == address(0) || compute == address(0) || compute == address(this)) revert ZeroAddress();
         WIF = wif;
         COMPUTE = compute;
     }
