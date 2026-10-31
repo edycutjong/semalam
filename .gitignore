@@ -13,3 +13,5 @@ fixtures/
 out/
 cache/
 broadcast/
+*.tsbuildinfo
+next-env.d.ts
