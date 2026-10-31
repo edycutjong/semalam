@@ -29,6 +29,9 @@ const RESULTS_ABI = [
   { type: "function", name: "HOUSE_SET_HASH", stateMutability: "view", inputs: [], outputs: [{ type: "bytes32" }] },
   { type: "function", name: "GENESIS", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
+const CHAMPION_ABI = [
+  { type: "function", name: "championOf", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }] },
+] as const;
 const SCRIMMAGE_ABI = [
   { type: "function", name: "paidInSeason", stateMutability: "view", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] },
 ] as const;
@@ -43,8 +46,10 @@ const short = (h: string) => `${h.slice(0, 6)}…${h.slice(-4)}`;
 const REPO = "https://github.com/edycutjong/semalam";
 
 type Args = { _: string[]; chain: string; rpc: string[]; agent?: string; json?: string; fixture?: string; drand: string[] };
-function parse(argv: string[]): Args {
+function parse(raw: string[]): Args {
   const a: Args = { _: [], chain: "4663", rpc: [], drand: [] };
+  // --key=value is the same as --key value
+  const argv = raw.flatMap((x) => (/^--[a-z]+=/.test(x) ? [x.slice(0, x.indexOf("=")), x.slice(x.indexOf("=") + 1)] : [x]));
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     const v = () => { const x = argv[++i]; if (x === undefined) throw new Exit(64, `${k} needs a value`); return x; };
@@ -296,10 +301,22 @@ async function seasonCmd(a: Args, s: number): Promise<number> {
   const { board, champion } = seasonTable(nights, payers);
   console.log(`\nseason ${s} (rounds ${rounds.join(", ")}) · ${board.length} players · ${payers.size} paid accounts`);
   for (const [i, b] of board.slice(0, 10).entries()) console.log(`  ${i + 1}. ${b.id} ${b.points} pts${b.eligible ? " · crown-eligible" : ""}`);
-  if (!champion) { console.log("champion    none (no account paid this season, scored, AND finished in the top half once)"); return 0; }
+  // the on-chain crown (Results.crown is a POSTER attestation) must name the champion computed here
+  const crowned = (await net(c.readContract({ address: d.results!, abi: CHAMPION_ABI, functionName: "championOf", args: [BigInt(s)] }), "championOf")) as Address;
+  const none = /^0x0+$/.test(crowned);
+  const crownLine = () => (none ? dim("crown       not posted on chain yet") : `crown       Results.championOf(${s}) = ${crowned}`);
+  if (!champion) {
+    console.log("champion    none (no account paid this season, scored, AND finished in the top half once)");
+    console.log(crownLine());
+    if (!none) { console.log(bad("✗ MISMATCH — a crown was posted for a season with no eligible champion")); return 1; }
+    return 0;
+  }
   const onchain = await net(c.readContract({ address: d.scrimmage!, abi: SCRIMMAGE_ABI, functionName: "paidInSeason", args: [champion.id, BigInt(s)] }), "paidInSeason");
   if (!onchain) throw new Exit(1, `champion ${champion.id} has a Paid log but Scrimmage.paidInSeason is false — refusing`);
   console.log(`champion    ${champion.id} · ${champion.points} pts ${ok("✓ paidInSeason")}`);
+  console.log(crownLine());
+  if (!none && crowned.toLowerCase() !== champion.id.toLowerCase()) { console.log(bad(`✗ MISMATCH — the posted crown is not the champion computed from the three nights`)); return 1; }
+  if (!none) console.log(ok("✓ MATCH — the posted crown is the computed champion"));
   return 0;
 }
 

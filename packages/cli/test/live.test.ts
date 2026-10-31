@@ -133,3 +133,8 @@ test("refusal text never carries a link, a bare domain or an address", () => {
     assert.doesNotMatch(cleanReason(r), /evil\.com|x\.io|0x5b84|example\.org/, r);
   assert.equal(cleanReason("request conflicts with game rules"), "request conflicts with game rules");
 });
+
+test("flags: --key=value equals --key value (a judge pasting --chain=4663 is not refused)", () => {
+  const a = parse(["replay", "3", "--chain=46630", "--rpc=https://a.example", "--rpc", "https://b.example"]);
+  assert.deepEqual([a._, a.chain, a.rpc], [["replay", "3"], "46630", ["https://a.example", "https://b.example"]]);
+});
