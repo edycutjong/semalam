@@ -39,6 +39,8 @@ contract Scrimmage is RoundClock {
         if (round == 0 || round != currentRound()) revert WrongRound();
         if (amount != MIN_PRICE) revert WrongAmount();
 
+        paidInSeason[msg.sender][season(round)] = true;
+
         uint256 before = WIF.balanceOf(address(this));
         if (!WIF.transferFrom(msg.sender, address(this), amount)) revert TransferFailed();
         if (WIF.balanceOf(address(this)) - before != amount) revert TransferShort();
@@ -48,7 +50,6 @@ contract Scrimmage is RoundClock {
         if (!WIF.transfer(COMPUTE, toCompute)) revert TransferFailed();
         WIF.burn(burned);
 
-        paidInSeason[msg.sender][season(round)] = true;
         emit Paid(msg.sender, round, draftHash, amount, burned, toCompute);
     }
 }

@@ -1,6 +1,6 @@
-// P1a spike: pick the order compiler. 10 golden orders + 5 injection orders through free/flat providers.
+// Feasibility check: pick the order compiler. 10 golden orders + 5 injection orders through free/flat providers.
 // Pass = schema-valid policy that meets the golden expectation, or (injection) a refusal / a schema-valid policy
-// with no smuggled fields. Records pass rate, latency, tokens, cost. Writes evidence/spike/compiler-eval.json.
+// with no smuggled fields. Records pass rate, latency, tokens, cost. Writes evidence/feasibility/compiler-eval.json.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { Policy, Refusal, ACTIONS, CONDITIONS, type Policy as P } from "@semalam/policy";
@@ -129,8 +129,8 @@ async function main() {
     console.log(JSON.stringify(summary));
     report.push({ ...summary, rows });
   }
-  mkdirSync("../evidence/spike", { recursive: true });
-  writeFileSync("../evidence/spike/compiler-eval.json", JSON.stringify({ at: new Date().toISOString(), system: SYSTEM, report }, null, 2) + "\n");
+  mkdirSync("../evidence/feasibility", { recursive: true });
+  writeFileSync("../evidence/feasibility/compiler-eval.json", JSON.stringify({ at: new Date().toISOString(), system: SYSTEM, report }, null, 2) + "\n");
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

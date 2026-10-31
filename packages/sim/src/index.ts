@@ -1,5 +1,7 @@
 // SEMALAM night-market simulator — plain code, no LLM. Same inputs → same ranking → same resultHash.
-// v1 skeleton (P1a): rule set and payoffs as specified; P1b tunes payoffs against the house set, then freezes.
+// Rule set v1. Payoffs are tuned against the house set, then frozen and hashed before the first mainnet night.
+// resultHash = keccak256(abi.encode(string SIM_VERSION, round, drandRound, randomness, policySetHash, houseSetHash,
+// (address, coins)[] ranking)); Results.SIM_VERSION on chain stores keccak256(bytes(SIM_VERSION)).
 import { encodeAbiParameters, keccak256, concat, toBytes, type Hex } from "viem";
 import type { Policy } from "@semalam/policy";
 
@@ -57,8 +59,10 @@ function below(next: () => number, n: number) {
 export function run(
   agents: Agent[],
   randomness: Hex,
-  opts: { round?: bigint; drandRound?: bigint; policySetHash?: Hex; houseSetHash?: Hex; trace?: boolean } = {},
+  opts: { round: bigint; drandRound: bigint; policySetHash: Hex; houseSetHash: Hex; trace?: boolean },
 ): NightResult {
+  if (!opts?.policySetHash || !opts?.houseSetHash || opts.round === undefined || opts.drandRound === undefined)
+    throw new Error("run(): round, drandRound, policySetHash and houseSetHash are required");
   const field = [...agents].sort((x, y) => (x.id.toLowerCase() < y.id.toLowerCase() ? -1 : 1));
   const N = field.length;
   const rand = sfc32(randomness);
@@ -81,16 +85,7 @@ export function run(
         [seat[i], seat[j]] = [seat[j], seat[i]];
       }
     }
-    // pairing on the ring
-    const partner = new Array<number>(N).fill(-1);
-    const s = t % 2;
-    // even N: s=1 wraps (N-1, 0); odd N: stall N-1 (s=0) or stall 0 (s=1) sits out
-    const lim = (N % 2 === 0 ? N - 1 : N - 2) + s;
-    for (let k = s; k < lim; k += 2) {
-      const a = seat[k % N], b = seat[(k + 1) % N];
-      partner[a] = b;
-      partner[b] = a;
-    }
+    const partner = pairing(seat, t);
     // decide on the snapshot of the previous turn
     const act = new Array<Act>(N);
     for (let i = 0; i < N; i++) act[i] = decide(i, partner[i], t);
@@ -148,7 +143,6 @@ export function run(
 
   const order = field.map((_, i) => i).sort((x, y) => rank[x] - rank[y]);
   const ranking: Standing[] = order.map((i) => ({ id: field[i].id, coins: coins[i], steals: steals[i], house: !!field[i].house }));
-  const zero = ("0x" + "00".repeat(32)) as Hex;
   const resultHash = keccak256(
     encodeAbiParameters(
       [
@@ -156,12 +150,29 @@ export function run(
         { type: "tuple[]", components: [{ type: "address" }, { type: "uint256" }] },
       ],
       [
-        SIM_VERSION, opts.round ?? 0n, opts.drandRound ?? 0n, randomness, opts.policySetHash ?? zero, opts.houseSetHash ?? zero,
+        SIM_VERSION, opts.round, opts.drandRound, randomness, opts.policySetHash, opts.houseSetHash,
         ranking.map((r) => [r.id, BigInt(r.coins)] as const),
       ],
     ),
   );
   return { ranking, resultHash, turns: TURNS, agents: N, trace: opts.trace ? trace : undefined };
+}
+
+/**
+ * Ring pairing for turn t: pairs (2k+s, 2k+1+s) mod N with s = t mod 2. Even N: s=1 wraps (N-1, 0).
+ * Odd N: the stall at seat N-1 (s=0) or seat 0 (s=1) sits out and gathers alone. Returns partner[agent] (-1 = alone).
+ */
+export function pairing(seat: number[], t: number): number[] {
+  const N = seat.length;
+  const partner = new Array<number>(N).fill(-1);
+  const s = t % 2;
+  const lim = (N % 2 === 0 ? N - 1 : N - 2) + s;
+  for (let k = s; k < lim; k += 2) {
+    const a = seat[k % N], b = seat[(k + 1) % N];
+    partner[a] = b;
+    partner[b] = a;
+  }
+  return partner;
 }
 
 /** coins desc, fewer steals, keccak(randomness, id) asc → 1-based rank per agent. */

@@ -1,5 +1,5 @@
-// P1a spike: drand quicknet timelock — seal a max-size policy as BINARY age (<= 1,536 B), wait for the round,
-// decrypt, check keccak; confirm seedRound() against drand /info + roundAt. Writes evidence/spike/tlock.json.
+// Feasibility check: drand quicknet timelock — seal a max-size policy as BINARY age (<= 1,536 B), wait for the round,
+// decrypt, check keccak; confirm seedRound() against drand /info + roundAt. Writes evidence/feasibility/tlock.json.
 import { writeFileSync, mkdirSync } from "node:fs";
 import { timelockEncrypt, timelockDecrypt, mainnetClient, roundAt, roundTime, Buffer } from "tlock-js";
 import { keccak256, toBytes } from "viem";
@@ -91,10 +91,10 @@ async function main() {
   out.decrypt = { ok, decryptMs, policyHash };
   if (!ok) throw new Error("decrypt mismatch");
 
-  mkdirSync("../evidence/spike", { recursive: true });
-  writeFileSync("../evidence/spike/tlock.json", JSON.stringify(out, null, 2) + "\n");
-  writeFileSync("/tmp/semalam-spike/sealed.hex", "0x" + sealed.toString("hex"));
-  writeFileSync("/tmp/semalam-spike/policyHash", policyHash);
+  mkdirSync("../evidence/feasibility", { recursive: true });
+  writeFileSync("../evidence/feasibility/tlock.json", JSON.stringify(out, null, 2) + "\n");
+  writeFileSync("/tmp/semalam-feasibility-sealed.hex", "0x" + sealed.toString("hex"));
+  writeFileSync("/tmp/semalam-feasibility-policyHash", policyHash);
   console.log(JSON.stringify(out, null, 2));
 }
 

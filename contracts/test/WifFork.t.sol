@@ -10,18 +10,20 @@ interface IERC20Full is IWIF {
     function decimals() external view returns (uint8);
 }
 
-/// Fork test against the REAL $WIF on Robinhood Chain 4663 (pinned block). Proves: no fee-on-transfer
+/// Fork test against the REAL $WIF on Robinhood Chain 4663. Proves: no fee-on-transfer
 /// (balance delta == amount), `burn` really lowers totalSupply by exactly 80%, 20% reaches COMPUTE.
 /// Run: RPC_4663=https://rpc.mainnet.chain.robinhood.com forge test --match-contract WifFork
 contract WifForkTest is Test {
     IERC20Full constant WIF = IERC20Full(0x5173b8eA6923c2d40267890D45C46a3480954773);
     address constant HOLDER = 0x08b04C9F00EbF99711598F1dc233917DC9eeECfb; // EOA holder seen in Transfer logs
     address constant COMPUTE = address(0xC0FFEE);
-    uint256 constant FORK_BLOCK = 102548634;
 
     function test_fork_payBurnsRealWif() public {
         string memory rpc = vm.envOr("RPC_4663", string("https://rpc.mainnet.chain.robinhood.com"));
-        vm.createSelectFork(rpc, FORK_BLOCK);
+        // Public RPC is not an archive node: fork the latest block unless FORK_BLOCK is given with an archive RPC.
+        uint256 forkBlock = vm.envOr("FORK_BLOCK", uint256(0));
+        if (forkBlock == 0) vm.createSelectFork(rpc);
+        else vm.createSelectFork(rpc, forkBlock);
         assertEq(block.chainid, 4663);
         assertEq(WIF.decimals(), 18);
 

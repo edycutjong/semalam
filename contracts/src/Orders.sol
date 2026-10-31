@@ -67,6 +67,8 @@ contract Orders is RoundClock {
     }
 
     function _validSig(address account, bytes32 digest, bytes calldata sig) private view returns (bool) {
+        // Accounts with code (smart accounts, EIP-7702 delegated EOAs) must answer ERC-1271; a delegate without it
+        // cannot self-relay and uses commit() from its own address instead.
         if (account.code.length > 0) {
             try IERC1271(account).isValidSignature(digest, sig) returns (bytes4 magic) {
                 return magic == IERC1271.isValidSignature.selector;

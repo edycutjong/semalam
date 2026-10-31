@@ -1,4 +1,4 @@
-// P1a spike: one real sealed commit on testnet 46630 (direct) + one self-relayed commitBySig (local signer with
+// Feasibility check: one real sealed commit on testnet 46630 (direct) + one self-relayed commitBySig (local signer with
 // zero ETH signs EIP-712, the relayer pays). Reads the Committed events back and checks them.
 // Keys come from ~/.config/semalam/*.env via the environment, never from the tree.
 import { writeFileSync, mkdirSync } from "node:fs";
@@ -83,8 +83,8 @@ async function main() {
   out.relay = { tx: tx2, status: r2.status, gasUsed: Number(r2.gasUsed), effectiveGasPrice: Number(r2.effectiveGasPrice), sealedBytes: b.bytes, account: player.address, playerEthBalance: Number(await pub.getBalance({ address: player.address })), readbackOk: okRelay };
   if (!okDirect || !okRelay) throw new Error("readback mismatch");
 
-  mkdirSync("../evidence/spike", { recursive: true });
-  writeFileSync("../evidence/spike/testnet-commit.json", JSON.stringify(out, null, 2) + "\n");
+  mkdirSync("../evidence/feasibility", { recursive: true });
+  writeFileSync("../evidence/feasibility/testnet-commit.json", JSON.stringify(out, null, 2) + "\n");
   console.log(JSON.stringify(out, null, 2));
 }
 

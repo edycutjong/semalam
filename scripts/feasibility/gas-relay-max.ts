@@ -1,4 +1,4 @@
-// P1a gas table: worst-case relayed commit — commitBySig with a 1,536-byte blob (random bytes, gas only) on 46630.
+// Gas table input: worst-case relayed commit — commitBySig with a 1,536-byte blob (random bytes, gas only) on 46630.
 import { createPublicClient, createWalletClient, http, keccak256, parseAbi, defineChain, toHex, type Hex } from "viem";
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 import { randomBytes } from "node:crypto";

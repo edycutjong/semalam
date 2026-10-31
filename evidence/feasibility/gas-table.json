@@ -1,0 +1,79 @@
+{
+  "at": "2026-10-31T12:56:30.948Z",
+  "method": "L2 gas = testnet 46630 receipt gasUsed - gasUsedForL1; mainnet L1 gas = NodeInterface(0xC8).gasEstimateL1Component on 4663 for the same tx input; priced at 2x eth_gasPrice(4663)",
+  "mainnetGasPriceWei": 20068000,
+  "budgetPriceWei": 40136000,
+  "budgetEth": 0.00179,
+  "rows": [
+    {
+      "item": "deploy Orders",
+      "count": 1,
+      "payer": "operator",
+      "tx": "0x5727077acf754c49744428081b32c88254626b728e843f6bbafaba93fe5bd9e0",
+      "testnetGasUsed": 766897,
+      "testnetGasUsedForL1": 0,
+      "l2Gas": 766897,
+      "mainnetL1Gas": 1140,
+      "gasEach": 768037,
+      "ethAt2x": 0.00003083
+    },
+    {
+      "item": "deploy Scrimmage",
+      "count": 1,
+      "payer": "operator",
+      "tx": "0x5e1f5213efa57d76f1642d9d63e30c6cba2dec25f8f033804e78261dd27e68c1",
+      "testnetGasUsed": 598558,
+      "testnetGasUsedForL1": 0,
+      "l2Gas": 598558,
+      "mainnetL1Gas": 876,
+      "gasEach": 599434,
+      "ethAt2x": 0.00002406
+    },
+    {
+      "item": "deploy Results",
+      "count": 1,
+      "payer": "operator",
+      "tx": "0xbe5e087e5fc613323a2544f845fb3e309e5d40c1a3ad9b4b06f2e1ce7393a5a4",
+      "testnetGasUsed": 650148,
+      "testnetGasUsedForL1": 0,
+      "l2Gas": 650148,
+      "mainnetL1Gas": 1029,
+      "gasEach": 651177,
+      "ethAt2x": 0.00002614
+    },
+    {
+      "item": "Results.post (2 x 10 nights)",
+      "count": 20,
+      "payer": "operator (POSTER)",
+      "tx": "0xc4234f43a872bc958b0fb2d7aa96f3d472ec1f6721ea905d22a067ce048783ef",
+      "testnetGasUsed": 69551,
+      "testnetGasUsedForL1": 0,
+      "l2Gas": 69551,
+      "mainnetL1Gas": 142,
+      "gasEach": 69693,
+      "ethAt2x": 0.00005594
+    },
+    {
+      "item": "relayed commitBySig, 1,536 B blob (worst case)",
+      "count": 40,
+      "payer": "operator (relayer)",
+      "tx": "0x3d6f5968629d07df5d33d576e3a6dc21b869e5503dea8e027f43626752df0718",
+      "testnetGasUsed": 95272,
+      "testnetGasUsedForL1": 0,
+      "l2Gas": 95272,
+      "mainnetL1Gas": 1133,
+      "gasEach": 96405,
+      "ethAt2x": 0.00015477
+    }
+  ],
+  "subtotalEthAt2x": 0.00029174,
+  "shareOfBudget": 16.3,
+  "remainderEthAt2x": 0.00149826,
+  "extraRelayedCommitsFromRemainder": 387,
+  "notOperatorCost": {
+    "WIF.approve + Scrimmage.pay": "signed and paid by the player",
+    "contract verification": "Blockscout source verification is off chain (no gas)",
+    "SemalamPaymaster deploy + deposit + smart-account deployment": "Tier 2 only; funded from the remainder if built"
+  },
+  "verdict": "FITS"
+}

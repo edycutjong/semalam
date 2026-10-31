@@ -1,5 +1,5 @@
 {
-  "note": "P1a SPIKE deploy on Robinhood Chain testnet 46630 — superseded by the P1c deploy. MockWIF is a labelled testnet stand-in.",
+  "note": "Feasibility deploy on Robinhood Chain testnet 46630 — superseded by the full testnet deploy. MockWIF is a labelled testnet stand-in.",
   "chainId": 46630,
   "genesis": 1793293200,
   "genesisUtc": "2026-10-29T17:00:00Z",

@@ -5,6 +5,7 @@ import {RoundClock} from "./RoundClock.sol";
 
 interface IScrimmageSeason {
     function paidInSeason(address account, uint256 season) external view returns (bool);
+    function GENESIS() external view returns (uint256);
 }
 
 /// @title Results — one result hash per night, bound to the drand beacon that seeded it. Holds no funds.
@@ -16,7 +17,7 @@ contract Results is RoundClock {
     address public immutable POSTER;
     IScrimmageSeason public immutable SCRIMMAGE;
     bytes32 public immutable HOUSE_SET_HASH;
-    bytes32 public immutable SIM_VERSION;
+    bytes32 public immutable SIM_VERSION; // keccak256("semalam-sim/1"); the result hash encodes the string itself
 
     mapping(uint256 => bytes32) public resultOf;
     mapping(uint256 => uint64) public drandRoundOf;
@@ -34,6 +35,7 @@ contract Results is RoundClock {
     error SeasonOpen();
     error AlreadyCrowned();
     error NotEligible();
+    error GenesisMismatch();
 
     constructor(
         address poster,
@@ -42,6 +44,7 @@ contract Results is RoundClock {
         bytes32 houseSetHash,
         bytes32 simVersion
     ) RoundClock(genesis) {
+        if (scrimmage.GENESIS() != genesis) revert GenesisMismatch();
         POSTER = poster;
         SCRIMMAGE = scrimmage;
         HOUSE_SET_HASH = houseSetHash;

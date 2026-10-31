@@ -133,6 +133,11 @@ contract SemalamTest is Test {
         assertEq(results.drandRoundOf(1), sr);
     }
 
+    function test_results_genesisMustMatchScrimmage() public {
+        vm.expectRevert(Results.GenesisMismatch.selector);
+        new Results(POSTER, IScrimmageSeason(address(scrim)), GENESIS + 1 days, HOUSE, SIMV);
+    }
+
     // ---------- Scrimmage ----------
     function test_pay_burns80() public {
         address p = address(0xA11CE);
