@@ -17,7 +17,7 @@ test("vectors: sfc32 first 8 words, block-1 reseat of 10, tie keys, policySetHas
   const next = sfc32(V.randomness);
   assert.deepEqual(Array.from({ length: 8 }, () => next()), V.sfc32First8);
   assert.deepEqual(reseat(Array.from({ length: 10 }, (_, i) => i), sfc32(V.randomness)), V.reseat10);
-  for (const t of V.tieKeys) assert.equal(tieKey(V.randomness, t.id), t.key);
+  for (const t of V.tieKeys) assert.equal(tieKey(V.randomness, t.id), t.hash);
   assert.equal(policySetHash(V.policySet.rows), V.policySet.hash);
   assert.equal(V.simVersion, SIM_VERSION);
   assert.deepEqual(V.payoff, PAYOFF);

@@ -28,7 +28,7 @@ contract VectorsTest is Test {
         for (uint256 i = 0; i < 2; i++) {
             string memory k = string.concat(".tieKeys[", vm.toString(i), "]");
             address id = vm.parseJsonAddress(json, string.concat(k, ".id"));
-            assertEq(keccak256(abi.encodePacked(randomness, id)), vm.parseJsonBytes32(json, string.concat(k, ".key")));
+            assertEq(keccak256(abi.encodePacked(randomness, id)), vm.parseJsonBytes32(json, string.concat(k, ".hash")));
         }
     }
 

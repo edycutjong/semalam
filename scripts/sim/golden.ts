@@ -87,7 +87,7 @@ function vectors() {
   return {
     note: "Byte-level vectors for semalam-sim/1. tieKey = keccak256(abi.encodePacked(bytes32 randomness, address id)); policySetHash = keccak256(abi.encode((address,bytes32)[] sorted by address)); resultHash = keccak256(abi.encode(string SIM_VERSION, uint256 round, uint64 drandRound, bytes32 randomness, bytes32 policySetHash, bytes32 houseSetHash, (address,uint256)[] ranking)).",
     simVersion: SIM_VERSION, payoff: PAYOFF, randomness, sfc32First8: words, reseat10: seats10,
-    tieKeys: ids.map((id) => ({ id, key: tieKey(randomness, id) })),
+    tieKeys: ids.map((id) => ({ id, hash: tieKey(randomness, id) })),
     policySet: { rows, hash: psh },
     resultHash: { round: 7, drandRound: 33548730, randomness, policySetHash: psh, houseSetHash: HOUSE_SET_HASH, ranking: ranking.map((r) => ({ id: r.id, coins: Number(r.coins) })), hash: keccak256(enc) },
     twoAgentNight: { ids, policies: [PRESETS[0].name, PRESETS[1].name], ranking: two.ranking.map((r) => ({ id: r.id, coins: r.coins })), resultHash: two.resultHash },
