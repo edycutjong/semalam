@@ -3,14 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "settle": "tsx settle/settle.ts"
   },
   "dependencies": {
     "@semalam/policy": "workspace:*",
     "drand-client": "^1.4.2",
     "tlock-js": "^0.9.0",
     "viem": "^2.57.13",
-    "zod": "^4.6.7"
+    "zod": "^4.6.7",
+    "@semalam/sim": "workspace:*",
+    "@semalam/beacon": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

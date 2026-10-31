@@ -17,3 +17,7 @@ cache/
 broadcast/
 *.tsbuildinfo
 next-env.d.ts
+
+# kitchen-only docs never enter build/ (Next dev may generate AGENTS.md)
+AGENTS.md
+CLAUDE.md

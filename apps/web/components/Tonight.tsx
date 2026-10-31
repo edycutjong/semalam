@@ -1,0 +1,160 @@
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { readback, type Policy } from "@semalam/policy";
+import { MAX_ORDERS, orderLength } from "@semalam/policy/compile";
+import Ticket from "./Ticket";
+import Countdown from "./Countdown";
+import Builder from "./Builder";
+import { commitSealed, readBack, sealPolicy, status, type Entered, type StatusJson } from "@/lib/commit";
+import { localSigner, walletSigner, restoreSigner, injected, type Signer } from "@/lib/wallet";
+import { txUrl } from "@/lib/config";
+
+type Compiled = { kind: "policy"; policy: Policy; readback: string[]; model: string } | { kind: "refusal"; reason: string } | { kind: "paused"; reason: string } | { kind: "invalid"; reason: string };
+type Phase = "write" | "build" | "readback" | "identity" | "sealing" | "sealed";
+
+export default function Tonight() {
+  const [st, setSt] = useState<StatusJson | null>(null);
+  const [stErr, setStErr] = useState<string | null>(null);
+  const [orders, setOrders] = useState("");
+  const [phase, setPhase] = useState<Phase>("write");
+  const [busy, setBusy] = useState(false);
+  const [hasWallet, setHasWallet] = useState(false);
+  useEffect(() => setHasWallet(Boolean(injected())), []);
+  const [res, setRes] = useState<Compiled | null>(null);
+  const [policy, setPolicy] = useState<Policy | null>(null);
+  const [viaLLM, setViaLLM] = useState(false);
+  const [signer, setSigner] = useState<Signer | null>(null);
+  const [entered, setEntered] = useState<(Entered & { policyHash: string }) | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [step, setStep] = useState("");
+
+  const refresh = useCallback(async (a?: string) => { try { setSt(await status(a as `0x${string}` | undefined)); setStErr(null); } catch (e) { setStErr((e as Error).message); } }, []);
+  useEffect(() => { const s = restoreSigner(); setSigner(s); refresh(s?.address); }, [refresh]);
+
+  const len = orderLength(orders);
+  const rb = policy ? readback(policy) : [];
+
+  async function compile() {
+    setBusy(true); setErr(null); setRes(null);
+    try {
+      const r = await fetch("/api/compile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orders }) });
+      const j = (await r.json()) as Compiled;
+      setRes(j);
+      if (j.kind === "policy") { setPolicy(j.policy); setViaLLM(true); setPhase("readback"); }
+      else if (j.kind === "refusal") setPhase("readback");
+    } catch { setRes({ kind: "paused", reason: "compiler paused — use the builder" }); }
+    setBusy(false);
+  }
+
+  async function seal(s: Signer) {
+    if (!policy || !st) return;
+    setPhase("sealing"); setErr(null);
+    try {
+      setStep("sealing your orders to the drand beacon…");
+      const sealed = await sealPolicy(policy, st.round);
+      setStep("reading your account…");
+      const fresh = await status(s.address);
+      setStep(s.mode === "local" ? "signing and sending through the relay…" : "approve the signature in your wallet…");
+      const e = await commitSealed(s, st.round, sealed, BigInt(fresh.nonce ?? "0"));
+      setStep("waiting for the chain to show your commit…");
+      const hit = await readBack(s.address, sealed.policyHash);
+      if (!hit) throw new Error("the commit was sent but the chain does not show it yet — check again in a minute; nothing was lost");
+      const done = { ...e, tx: hit.tx, url: e.url || txUrl(hit.tx), policyHash: sealed.policyHash };
+      setEntered(done);
+      localStorage.setItem(`semalam.committed.${st.round}`, JSON.stringify({ policy, policyHash: sealed.policyHash, tx: hit.tx, account: s.address, at: Date.now() }));
+      if (!localStorage.getItem(`semalam.first.${st.round}`)) localStorage.setItem(`semalam.first.${st.round}`, JSON.stringify({ policy, policyHash: sealed.policyHash, account: s.address }));
+      localStorage.setItem("semalam.draft", JSON.stringify(policy));
+      setPhase("sealed"); refresh(s.address);
+    } catch (e) {
+      setErr((e as Error).message); setPhase("identity");
+    }
+  }
+  async function pickLocal() { const s = localSigner(true)!; setSigner(s); await seal(s); }
+  async function pickWallet() { try { const s = await walletSigner(); setSigner(s); await seal(s); } catch (e) { setErr((e as Error).message); } }
+
+  const open = st && st.round > 0 && Math.floor(Date.now() / 1000) + (st.chainNow - Math.floor(Date.now() / 1000)) < st.closeTime;
+
+  return (
+    <div className="grid2">
+      <section aria-label="Write your orders">
+        <div className="eyebrow">{st ? `Round ${st.round}` : "Tonight"} {st?.testnet && <span className="badge test">testnet · {st.wifLabel}</span>}</div>
+        <h1>Tonight</h1>
+        <p className="lead">Write your orders before bed. At 00:00 WIB your agent plays the night market; replay it at breakfast.</p>
+        {st && <p className="data">closes in <Countdown round={st.round} closeTime={st.closeTime} chainNow={st.chainNow} serverNow={st.serverNow} /> · <span className={`badge ${st.relay ? "relay" : ""}`}>{st.relay ? "gasless · relay" : "relay empty — your wallet pays"}</span></p>}
+        {stErr && <p className="note warn" role="alert">{stErr}</p>}
+        {phase === "build" ? (
+          <>
+            <Builder onPolicy={(p) => { setPolicy(p); setViaLLM(false); setRes(null); setPhase("readback"); }} initial={policy ?? undefined} />
+            <p><button type="button" className="quiet" onClick={() => setPhase("write")}>← back to writing</button></p>
+          </>
+        ) : (
+          <>
+            <label htmlFor="orders">Your orders — plain language, up to {MAX_ORDERS} characters</label>
+            <textarea id="orders" value={orders} onChange={(e) => setOrders(e.target.value)} disabled={phase === "sealing" || phase === "sealed"}
+              placeholder="Be kind to neighbours who are kind to me. If someone steals from me, steal back — but never from the top ten." />
+            <div className="row" style={{ justifyContent: "space-between", margin: "6px 0 14px" }}>
+              <span className={`counter ${len > MAX_ORDERS ? "over" : ""}`}>{len}/{MAX_ORDERS}</span>
+              <span className="muted" style={{ fontSize: 15 }}>The AI path lets the operator read your words. The builder never does.</span>
+            </div>
+            <div className="row">
+              <button type="button" className="primary" onClick={compile} disabled={busy || !orders.trim() || len > MAX_ORDERS || !open || phase === "sealing" || phase === "sealed"}>{busy ? "Compiling…" : "Compile"}</button>
+              <button type="button" className="quiet" onClick={() => setPhase("build")} disabled={phase === "sealing" || phase === "sealed"}>Use the builder</button>
+            </div>
+            {!open && st && <p className="note">{st.round === 0 ? "The market has not opened yet." : "This round has closed — the next one opens at the stroke of midnight WIB."}</p>}
+            {res?.kind === "paused" && <p className="note warn" role="status">{res.reason}. The builder works without it.</p>}
+            {res?.kind === "invalid" && <p className="note warn" role="alert">{res.reason}</p>}
+          </>
+        )}
+      </section>
+
+      <section aria-label="Your stall ticket" aria-live="polite">
+        {phase === "write" && !res && (
+          <Ticket state="draft" title="Your stall ticket" lines={["Your agent will:", "- (compile your orders to see exactly what it will do)"]} stamp="DRAFT" />
+        )}
+        {res?.kind === "refusal" && phase === "readback" && (
+          <Ticket state="refused" title="Refused" lines={["The compiler could not use these orders:", `- ${res.reason}`]} stamp="REFUSED">
+            <p style={{ margin: "10px 0 0", fontSize: 16 }}>Orders can only describe how your stall plays — gather, guard, share, steal, and when. Try again, or use the builder.</p>
+          </Ticket>
+        )}
+        {policy && (phase === "readback" || phase === "identity" || phase === "sealing") && (
+          <>
+            <Ticket state="draft" title={policy.name} lines={rb} stamp={phase === "sealing" ? "SEALING…" : "DRAFT"} />
+            {viaLLM && <p className="note">Compiled by a language model and checked against a fixed schema (≤ 6 fields, ≤ 3 rules). The operator can see these words.</p>}
+            {phase === "readback" && (
+              <div className="row">
+                <button type="button" className="primary" onClick={() => setPhase("identity")} disabled={!open}>That's what I meant → Seal</button>
+                <button type="button" className="quiet" onClick={() => { setPhase(viaLLM ? "write" : "build"); }}>Edit</button>
+              </div>
+            )}
+          </>
+        )}
+        {(phase === "identity" || (phase === "sealing" && !entered)) && policy && (
+          <div className="card" style={{ marginTop: 18 }}>
+            <h3 style={{ fontSize: 20 }}>Who is playing?</h3>
+            <p className="muted" style={{ marginTop: 0 }}>One identity commits and pays. Sealing locks your orders to a public beacon: nobody — including us — can read them before midnight.</p>
+            {signer?.mode === "local" ? <p className="data">your key stays in this browser · {signer.address.slice(0, 8)}…{signer.address.slice(-6)}</p> : null}
+            <div className="row">
+              <button type="button" className="primary" onClick={pickLocal} disabled={phase === "sealing"}>Play without a wallet</button>
+              <button type="button" onClick={pickWallet} disabled={phase === "sealing" || !hasWallet}>Connect wallet</button>
+            </div>
+            <p className="muted" style={{ fontSize: 15 }}>Without a wallet we make a key in this browser (you pay nothing; gas is sponsored by the relay). Connect a wallet to keep one identity across devices.</p>
+            {phase === "sealing" && <p className="data" role="status">{step}</p>}
+            {err && <p className="note warn" role="alert">{err}</p>}
+          </div>
+        )}
+        {phase === "sealed" && entered && policy && st && (
+          <>
+            <Ticket state="sealed" title={policy.name} lines={rb} stamp={`SEALED · ROUND ${st.round}`} hash={entered.policyHash} tx={entered.tx} txUrl={entered.url} />
+            <p className="note">Entered. The chain shows your commit ({entered.mode === "relay" ? "gasless, through the relay" : "sent from your wallet"}). You can re-commit until the close; only your latest counts.</p>
+            <div className="row">
+              <Link className="btn" href="/scrimmage">Practise this draft</Link>
+              <Link className="btn" href={`/round/${st.round}`}>Where breakfast will be</Link>
+              <button type="button" className="quiet" onClick={() => { setPhase("write"); setEntered(null); setRes(null); }}>Rewrite</button>
+            </div>
+          </>
+        )}
+      </section>
+    </div>
+  );
+}
