@@ -9,6 +9,8 @@ import { bump, forget, ipOf, reserve, serial, throttle } from "@/lib/guard";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 const MAX_PER_ROUND = 3;
+/** ~3× the measured worst case (1,536 B blob: 97,936 incl. the L1 part) — room for an L1 price spike, never a gas bomb. */
+const RELAY_GAS_CAP = 300_000n;
 /** New gasless accounts stop at 600 distinct accounts (60% of the 1,000-account admission cap) so a flood of fresh keys cannot fill the round; a few concurrent requests may overshoot. */
 const ROUND_SPONSOR_CAP = 600;
 
@@ -31,6 +33,10 @@ export async function POST(req: Request) {
   const now = await chainNow();
   if (round !== currentRound(now) || now >= closeTime(round)) return fail(`round ${round} is not open for commits`, 409);
   if (EXCLUDED.includes(account.toLowerCase())) return fail("operator addresses cannot play");
+  // EOAs only: an account with code (a smart wallet, an EIP-7702 delegate) runs its own isValidSignature on our gas,
+  // which can be made arbitrarily expensive — those accounts send commit() themselves
+  const code = await publicClient.getCode({ address: account });
+  if (code && code !== "0x") return fail("smart accounts commit from their own wallet — the relay sponsors plain keys only", 403, { relay: false });
   const rkey = `${account}:${round}`;
   forget(`commitsOf:${account}:${round}`); // never trust a cached count for the quota
   const have = { length: Math.max((await commitsOf(account, round)).length, reserve(rkey)) }; // chain count or in-flight sends, whichever is higher
@@ -44,7 +50,7 @@ export async function POST(req: Request) {
     // one relayer key = one nonce stream: sends are serialised per instance; a cross-instance nonce clash retries once
     const send = () => serial("relayer", async () => {
       const { request } = await publicClient.simulateContract({ address: ORDERS, abi: ORDERS_ABI, functionName: "commitBySig", args, account: r.account });
-      return r.wallet.writeContract(request);
+      return r.wallet.writeContract({ ...request, gas: RELAY_GAS_CAP });
     });
     let hash: Hex;
     try { hash = await send(); } catch (e) { if (!/nonce/i.test((e as Error).message)) throw e; await new Promise((x) => setTimeout(x, 700)); hash = await send(); }

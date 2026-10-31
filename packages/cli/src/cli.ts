@@ -29,6 +29,9 @@ const RESULTS_ABI = [
   { type: "function", name: "HOUSE_SET_HASH", stateMutability: "view", inputs: [], outputs: [{ type: "bytes32" }] },
   { type: "function", name: "GENESIS", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
+const ORDERS_GENESIS_ABI = [
+  { type: "function", name: "GENESIS", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+] as const;
 const CHAMPION_ABI = [
   { type: "function", name: "championOf", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }] },
 ] as const;
@@ -102,15 +105,19 @@ async function client(a: Args, d: Dep): Promise<PublicClient> {
 const net = <T>(p: Promise<T>, what: string): Promise<T> =>
   p.catch((e: unknown) => { throw new Exit(3, `${what} failed: ${(e as Error).message?.split("\n")[0]}\n  hint: pass a working RPC with --rpc <url> (repeatable)`); });
 
-/** eth_getLogs in block ranges up to `to`, halving the range on any provider error. */
-async function logsPaged<T>(fetchRange: (from: bigint, to: bigint) => Promise<T[]>, from: bigint, to: bigint): Promise<T[]> {
+const FULL_PAGE = 1000;
+/** eth_getLogs in block ranges up to `to`, halving the range on any provider error or a page of ≥ FULL_PAGE logs. */
+export async function logsPaged<T>(fetchRange: (from: bigint, to: bigint) => Promise<T[]>, from: bigint, to: bigint): Promise<T[]> {
   const out: T[] = [];
   let span = 2_000_000n;
   let lo = from;
   while (lo <= to) {
     const hi = lo + span - 1n > to ? to : lo + span - 1n;
     try {
-      out.push(...(await fetchRange(lo, hi)));
+      const page = await fetchRange(lo, hi);
+      // a page this full may be one a node capped without an error: split it until it is clearly not (union is the same)
+      if (page.length >= FULL_PAGE && hi > lo) { span = (hi - lo + 1n) / 2n; continue; }
+      out.push(...page);
       lo = hi + 1n;
     } catch (e) {
       if (span <= 1_000n) throw e;
@@ -135,6 +142,9 @@ async function readChainRound(a: Args, round: number) {
     "reading Results",
   );
   checkPins(simV as Hex, houseH as Hex);
+  // players seal to Orders' clock and the replay decrypts with Results' clock: they must be the same GENESIS
+  const ordersGenesis = await net(c.readContract({ address: d.orders!, abi: ORDERS_GENESIS_ABI, functionName: "GENESIS" }), "reading Orders");
+  if (ordersGenesis !== genesis) throw new Exit(2, `REFUSED: Orders.GENESIS ${ordersGenesis} ≠ Results.GENESIS ${genesis} — these contracts are not one deployment`);
   const fin = await net(c.getBlock({ blockTag: "finalized" }), "reading the finalized block");
   // every commit of the round must be inside the finalized range, or the replay could miss the last ones
   if (Number(fin.timestamp) < closeTime(Number(genesis), round))
@@ -355,7 +365,10 @@ async function main(argv: string[]): Promise<number> {
   throw new Exit(64, `unknown command ${cmd}`);
 }
 
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === (await import("node:fs")).realpathSync(process.argv[1]);
+const { realpathSync } = await import("node:fs");
+const norm = (p: string) => { const r = realpathSync(p); return process.platform === "win32" ? r.toLowerCase() : r; };
+// both sides through the same realpath (symlinked npm bins, Windows drive-letter case): never a silent exit 0
+const isMain = Boolean(process.argv[1]) && norm(fileURLToPath(import.meta.url)) === norm(process.argv[1]);
 if (isMain)
   main(process.argv.slice(2)).then(
     (code) => process.exit(code),

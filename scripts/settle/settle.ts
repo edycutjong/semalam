@@ -53,7 +53,11 @@ async function pagedLogs<T>(f: (lo: bigint, hi: bigint) => Promise<T[]>, from: b
   let span = 2_000_000n, lo = from;
   while (lo <= to) {
     const hi = lo + span - 1n > to ? to : lo + span - 1n;
-    try { out.push(...(await f(lo, hi))); lo = hi + 1n; } catch (e) { if (span <= 1000n) throw e; span /= 2n; }
+    try {
+      const page = await f(lo, hi);
+      if (page.length >= 1000 && hi > lo) { span = (hi - lo + 1n) / 2n; continue; } // same rule as the CLI: a full page may be silently capped
+      out.push(...page); lo = hi + 1n;
+    } catch (e) { if (span <= 1000n) throw e; span /= 2n; }
   }
   return out;
 }
@@ -66,7 +70,7 @@ function cliRun(round: number) {
   const tmp = path.join(tmpdir(), `semalam-cli-${process.pid}-${round}.json`);
   // the CLI child never sees the POSTER key: it only reads public data
   const { POSTER_PRIVATE_KEY: _drop, ...env } = process.env;
-  const r = spawnSync("node", [dist, "replay", String(round), "--chain", chainId, "--rpc", rpc, "--json", tmp], { encoding: "utf8", env: { ...env, NO_COLOR: "1" } });
+  const r = spawnSync("node", [dist, "replay", String(round), "--chain", chainId, "--rpc", rpc, "--json", tmp], { encoding: "utf8", env: { ...env, NO_COLOR: "1" }, timeout: 300_000 }); // a hung replay costs this round, not the next ones
   const version = spawnSync("node", [dist, "--version"], { encoding: "utf8" }).stdout.trim();
   return { code: r.status ?? 70, out: `${r.stdout}${r.stderr}`, version, json: existsSync(tmp) ? JSON.parse(readFileSync(tmp, "utf8")) : null };
 }

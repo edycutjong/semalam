@@ -138,3 +138,16 @@ test("flags: --key=value equals --key value (a judge pasting --chain=4663 is not
   const a = parse(["replay", "3", "--chain=46630", "--rpc=https://a.example", "--rpc", "https://b.example"]);
   assert.deepEqual([a._, a.chain, a.rpc], [["replay", "3"], "46630", ["https://a.example", "https://b.example"]]);
 });
+
+test("logs: a page of ≥ 1,000 logs is split, so a node that caps results silently cannot shorten the night", async () => {
+  const { logsPaged } = await import("../src/cli.ts");
+  const perBlock = 3n; // blocks 0..999 hold 3 logs each = 3,000 logs
+  const node = async (lo: bigint, hi: bigint) => {
+    const all: bigint[] = [];
+    for (let b = lo; b <= hi; b++) for (let k = 0n; k < perBlock; k++) all.push(b * 10n + k);
+    return all.slice(0, 1000); // silently capped at 1,000 results, no error
+  };
+  const got = await logsPaged(node, 0n, 999n);
+  assert.equal(got.length, 3000);
+  assert.equal(new Set(got).size, 3000);
+});
