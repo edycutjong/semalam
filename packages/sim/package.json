@@ -10,11 +10,17 @@
   },
   "dependencies": {
     "@semalam/policy": "workspace:*",
-    "viem": "^2.57.13"
+    "viem": "^2.57.13",
+    "@semalam/beacon": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./house": "./src/house.ts",
+    "./round": "./src/round.ts"
   }
 }
