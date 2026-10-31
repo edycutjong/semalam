@@ -28,12 +28,15 @@ async function paged<T>(f: (lo: bigint, hi: bigint) => Promise<T[]>): Promise<T[
   return out;
 }
 export async function commitsOf(account: Address, round: number) {
+  return memoized(`commitsOf:${account}:${round}`, 3_000, () => commitsOfUncached(account, round));
+}
+async function commitsOfUncached(account: Address, round: number) {
   const logs = await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: ORDERS_ABI[4], args: { round: BigInt(round), account }, fromBlock: lo, toBlock: hi }));
   return logs.map((l) => ({ tx: l.transactionHash as Hex, block: Number(l.blockNumber), logIndex: l.logIndex, policyHash: l.args.policyHash as Hex, sealedBytes: ((l.args.sealedBlob as Hex).length - 2) / 2 }));
 }
-/** How many commit events the round has so far (any account) — the relay's global per-round cap reads this. */
+/** How many DISTINCT accounts have committed in the round so far — the relay's global per-round cap reads this (15 s memo; a few requests may overshoot it). */
 export async function commitCountOf(round: number): Promise<number> {
-  return memoized(`commits:${round}`, 15_000, async () => (await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: ORDERS_ABI[4], args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }))).length);
+  return memoized(`commits:${round}`, 15_000, async () => new Set((await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: ORDERS_ABI[4], args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }))).map((l) => (l.args.account as string).toLowerCase())).size);
 }
 
 export async function postedOf(round: number): Promise<{ resultHash: Hex; drandRound: number } | null> {

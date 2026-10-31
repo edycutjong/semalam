@@ -9,20 +9,21 @@ import ReplayPlayer, { type AgentRep } from "./ReplayPlayer";
 import Ticket from "./Ticket";
 import { rankLine, type Row } from "@/lib/rank";
 import { restoreSigner } from "@/lib/wallet";
+import { lsGet } from "@/lib/ls";
+import { MAX_VARIANTS, editedPolicy } from "@/lib/whatif";
 
 export type BreakfastData = {
   round: number; resultHash: string; drandRound: number; randomness: string; policySetHash: string; houseSetHash: string;
   players: number; agents: number; ranking: Row[]; replays: AgentRep[]; policies: { id: string; policy: Policy }[]; tx: string | null; txUrl: string | null;
 };
 
-const MAX_VARIANTS = 3;
 export default function Breakfast({ d }: { d: BreakfastData }) {
   const [addr, setAddr] = useState("");
   const [typed, setTyped] = useState("");
   const [off, setOff] = useState<Set<number>>(new Set());
   const [variants, setVariants] = useState<{ off: number[]; rank: number; coins: number }[]>([]);
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem(`semalam.committed.${d.round}`) ?? "null") as { account?: string } | null;
+    const saved = lsGet<{ account?: string } | null>(`semalam.committed.${d.round}`, null);
     setAddr(saved?.account ?? restoreSigner()?.address ?? "");
   }, [d.round]);
 
@@ -40,13 +41,17 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
   const [baseline, setBaseline] = useState<"checking" | "ok" | "differs">("checking");
   useEffect(() => {
     if (!myPolicy) return;
-    try { setBaseline(run(fieldWith(myPolicy), d.randomness as Hex, opts).resultHash.toLowerCase() === d.resultHash.toLowerCase() ? "ok" : "differs"); } catch { setBaseline("differs"); }
+    setBaseline("checking");
+    const t = setTimeout(() => { // off the first paint: a 1,000-agent run should not freeze a phone
+      try { setBaseline(run(fieldWith(myPolicy), d.randomness as Hex, opts).resultHash.toLowerCase() === d.resultHash.toLowerCase() ? "ok" : "differs"); } catch { setBaseline("differs"); }
+    }, 60);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myPolicy, d.resultHash]);
 
   function whatIf() {
     if (!myPolicy || variants.length >= MAX_VARIANTS || baseline !== "ok") return;
-    const edited: Policy = { ...myPolicy, rules: myPolicy.rules.filter((_, i) => !off.has(i)) };
+    const edited = editedPolicy(myPolicy, off);
     const res = run(fieldWith(edited), d.randomness as Hex, opts);
     const idx = res.ranking.findIndex((r) => r.id.toLowerCase() === addr.toLowerCase());
     setVariants((v) => [...v, { off: [...off], rank: idx + 1, coins: res.ranking[idx].coins }]);
@@ -80,6 +85,7 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
               </label>
             ))}
             <button type="button" onClick={whatIf} disabled={variants.length >= MAX_VARIANTS || off.size === 0 || baseline !== "ok"}>Re-run the night ({variants.length}/{MAX_VARIANTS})</button>
+            {baseline === "checking" && <p className="muted" role="status" style={{ margin: "8px 0 0" }}>checking that your browser reproduces this night…</p>}
             {baseline === "differs" && <p className="note warn" role="status">Re-running the unmodified night here does not reproduce the posted hash, so what-if is switched off for this round. Verify it with the CLI.</p>}
             {variants.map((v, i) => <p key={i} className="data" style={{ margin: "8px 0 0" }}>rules off [{v.off.map((x) => x + 1).join(", ")}] → rank {v.rank} of {d.agents}, {v.coins} coins (actual: {mine.rank}, {mine.coins})</p>)}
           </div>

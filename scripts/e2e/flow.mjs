@@ -51,7 +51,15 @@ if (process.env.SCRIM) {
   await page.waitForFunction(() => /your draft:/i.test(document.body.innerText) || document.querySelector("[role=alert]"), { timeout: 120000 });
   scrim.paid = await page.evaluate(() => document.querySelector("h2")?.textContent + " | " + (document.querySelector("[role=alert]")?.textContent ?? ""));
   await shot("5-scrimmage-paid");
+  // reload: the paid run is persisted; "Show again" re-checks the Paid receipt and reproduces the SAME result (A13)
+  const before = await page.$eval("h2", (e) => e.textContent);
+  await page.reload({ waitUntil: "networkidle0" });
+  await page.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => b.textContent.includes("Show again") && !b.disabled), { timeout: 40000 });
+  await clickText("Show again");
+  await page.waitForFunction(() => /your draft:/i.test(document.body.innerText), { timeout: 30000 });
+  scrim.again = await page.$eval("h2", (e) => e.textContent);
+  scrim.same = scrim.again === before;
 }
 console.log(JSON.stringify({ stamp, tx, scrim, errors }));
 await browser.close();
-process.exit(errors.length || !/SEALED/.test(stamp) || (process.env.SCRIM && !/your draft:/i.test(scrim.paid ?? "")) ? 1 : 0);
+process.exit(errors.length || !/SEALED/.test(stamp) || (process.env.SCRIM && (!/your draft:/i.test(scrim.paid ?? "") || !scrim.same)) ? 1 : 0);

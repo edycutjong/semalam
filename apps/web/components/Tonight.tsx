@@ -11,6 +11,7 @@ import { localSigner, walletSigner, restoreSigner, injected, type Signer } from 
 import { txUrl } from "@/lib/config";
 import HashLine from "./HashLine";
 import { exportLocalKey } from "@/lib/wallet";
+import { copyText, lsSet } from "@/lib/ls";
 
 type Compiled = { kind: "policy"; policy: Policy; readback: string[]; model: string } | { kind: "refusal"; reason: string } | { kind: "paused"; reason: string } | { kind: "invalid"; reason: string };
 type Phase = "write" | "build" | "readback" | "identity" | "sealing" | "sealed";
@@ -36,7 +37,7 @@ export default function Tonight() {
 
   // chain clock: skew measured at each status fetch; a rollover (or a 409 from the relay) refetches the round
   const [nowC, setNowC] = useState(0);
-  const lastRound = useRef(0);
+  const lastTry = useRef(0);
   useEffect(() => {
     if (!st) return;
     const skew = st.chainNow - Math.floor(Date.now() / 1000);
@@ -46,7 +47,8 @@ export default function Tonight() {
     return () => clearInterval(i);
   }, [st]);
   useEffect(() => {
-    if (st && nowC >= st.closeTime && lastRound.current !== st.round) { lastRound.current = st.round; refresh(signer?.address); }
+    // after the close, ask again every 5 s until the chain reports a newer round (a failed or stale answer never sticks)
+    if (st && nowC >= st.closeTime && nowC - lastTry.current >= 5) { lastTry.current = nowC; refresh(signer?.address); }
   }, [nowC, st, refresh, signer]);
 
   const len = orderLength(orders);
@@ -74,15 +76,15 @@ export default function Tonight() {
       const fresh = await status(s.address);
       setStep(s.mode === "local" ? "signing and sending through the relay…" : "approve the signature in your wallet…");
       if (fresh.round !== st.round) { setSt(fresh); throw new Error(`round ${st.round} closed while you were sealing — the new round ${fresh.round} is open; press Seal again`); }
-      const e = await commitSealed(s, st.round, sealed, BigInt(fresh.nonce ?? "0"), fresh.chainNow);
+      const e = await commitSealed(s, st.round, sealed, BigInt(fresh.nonce ?? "0"), fresh.chainNow, fresh.relay);
       setStep("waiting for the chain to show your commit…");
       const hit = await readBack(s.address, sealed.policyHash);
       if (!hit) throw new Error("the commit was sent but the chain does not show it yet — check again in a minute; nothing was lost");
       const done = { ...e, tx: hit.tx, url: e.url || txUrl(hit.tx), policyHash: sealed.policyHash };
       setEntered(done);
-      localStorage.setItem(`semalam.committed.${st.round}`, JSON.stringify({ policy, policyHash: sealed.policyHash, tx: hit.tx, account: s.address, at: Date.now() }));
-      if (!localStorage.getItem(`semalam.first.${st.round}`)) localStorage.setItem(`semalam.first.${st.round}`, JSON.stringify({ policy, policyHash: sealed.policyHash, account: s.address }));
-      localStorage.setItem("semalam.draft", JSON.stringify(policy));
+      lsSet(`semalam.committed.${st.round}`, { policy, policyHash: sealed.policyHash, tx: hit.tx, account: s.address, at: Date.now() });
+      if (!localStorage.getItem(`semalam.first.${st.round}`)) lsSet(`semalam.first.${st.round}`, { policy, policyHash: sealed.policyHash, account: s.address });
+      lsSet("semalam.draft", policy);
       setPhase("sealed"); refresh(s.address);
     } catch (e) {
       setErr((e as Error).message); setPhase("identity");
@@ -142,8 +144,8 @@ export default function Tonight() {
             {viaLLM && <p className="note">Compiled by a language model and checked against a fixed schema (≤ 6 fields, ≤ 3 rules). The operator can see these words.</p>}
             {phase === "readback" && (
               <div className="row">
-                <button type="button" className="primary" onClick={() => setPhase("identity")} disabled={!open}>That's what I meant → Seal</button>
-                <button type="button" className="quiet" onClick={() => { setPhase(viaLLM ? "write" : "build"); }}>Edit</button>
+                <button type="button" className="primary" onClick={() => { if (st && !st.relay && !signer) setSigner(localSigner(true)); setPhase("identity"); }} disabled={!open}>That's what I meant → Seal</button>
+                <button type="button" className="quiet" onClick={() => { if (viaLLM) { setPolicy(null); setRes(null); setViaLLM(false); } setPhase(viaLLM ? "write" : "build"); }}>Edit</button>
               </div>
             )}
           </>
@@ -152,12 +154,13 @@ export default function Tonight() {
           <div className="card" style={{ marginTop: 18 }}>
             <h3 style={{ fontSize: 20 }}>Who is playing?</h3>
             <p className="muted" style={{ marginTop: 0 }}>One identity commits and pays. Sealing locks your orders to a public beacon, so nobody can read them from the chain before midnight.{viaLLM ? " The words you typed went through the AI compiler, which the operator can see; the builder never shows anyone." : " Your words never left this browser."}</p>
-            {signer?.mode === "local" ? <p className="data">your key stays in this browser · <HashLine value={signer.address} short /></p> : null}
+            {signer?.mode === "local" ? <p className="data" style={{ wordBreak: "break-all" }}>your key stays in this browser · {st?.relay ? <HashLine value={signer.address} short /> : <HashLine value={signer.address} />}</p> : null}
             <div className="row">
               <button type="button" className="primary" onClick={pickLocal} disabled={phase === "sealing"}>Play without a wallet</button>
               <button type="button" onClick={pickWallet} disabled={phase === "sealing" || !hasWallet}>Connect wallet</button>
             </div>
             <p className="muted" style={{ fontSize: 15 }}>{st?.relay ? "Without a wallet we make a key in this browser; the relay pays the gas, so it costs you nothing." : "The relay is empty right now: a browser key needs a little testnet ETH to commit itself — send some to the address above, then press Seal again, or connect a wallet that has ETH."} Connect a wallet to keep one identity across devices.</p>
+            {signer?.mode === "local" && !st?.relay && <button type="button" className="quiet" onClick={() => { const k = exportLocalKey(); if (k) copyText(k); }}>Copy private key</button>}
             {phase === "sealing" && <p className="data" role="status">{step}</p>}
             {err && <p className="note warn" role="alert">{err}</p>}
           </div>
@@ -170,7 +173,7 @@ export default function Tonight() {
                 <summary style={{ minHeight: 44, cursor: "pointer", display: "flex", alignItems: "center" }}>Keep your agent — your play address and key</summary>
                 <p className="data" style={{ wordBreak: "break-all" }}>{signer.address}</p>
                 <p style={{ margin: "6px 0" }}>Clearing this browser's storage loses the key. To play from another device, copy it somewhere safe (it controls this address — nothing else; never share it).</p>
-                <button type="button" className="quiet" onClick={() => { const k = exportLocalKey(); if (k) navigator.clipboard?.writeText(k); }}>Copy private key</button>
+                <button type="button" className="quiet" onClick={() => { const k = exportLocalKey(); if (k) copyText(k); }}>Copy private key</button>
               </details>
             )}
             <p className="note">Entered. The chain shows your commit ({entered.mode === "relay" ? "gasless, through the relay" : "sent from your wallet"}). You can re-commit until the close; only your latest counts.</p>

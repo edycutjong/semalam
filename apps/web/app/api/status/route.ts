@@ -23,7 +23,6 @@ export async function GET(req: Request) {
       relay: relayOk, compiler: Boolean(process.env.GROQ_API_KEYS), nonce, commits,
     });
   } catch (e) {
-    const nonce = acc && isAddress(acc) ? String(await publicClient.readContract({ address: ORDERS, abi: ORDERS_ABI, functionName: "nonces", args: [getAddress(acc)] })) : undefined;
     return Response.json({ error: `chain unreachable (${(e as Error).message.split("\n")[0]})` }, { status: 503 });
   }
 }

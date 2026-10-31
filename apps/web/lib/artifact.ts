@@ -19,6 +19,9 @@ export type RoundArtifact = {
   /** every decrypted player policy (public once the night is settled) — the breakfast "what if" re-runs the night from these */
   policies: { id: string; policy: Policy }[];
 };
+/** A20 strings for a round that HAS an artifact but is not a clean post. */
+export const statusLabel = (st: RoundArtifact["status"]): string =>
+  st === "posted" ? "posted" : st === "hash-mismatch-not-posted" ? "hash mismatch — not posted" : st === "poster-reverted" ? "poster reverted" : "not posted yet — waiting for the runner";
 export type Named = { code: string; label: string; detail?: string };
 
 const dir = () => path.join(process.cwd(), "data", "rounds");
@@ -38,5 +41,5 @@ export function namedState(round: number, now: number, current: number, posted: 
   if (now < at) return { code: "waiting-drand", label: `waiting for drand round ${dr}`, detail: `the beacon is published ${Math.max(0, at - now)} s from now; the sealed orders open with it` };
   if (now < closeTime(round) + SEED_DELAY) return { code: "waiting-drand", label: `waiting for drand round ${dr}` };
   if (posted) return { code: "artifact-pending", label: "settled on chain — the replay data is landing", detail: "the result hash is already on chain; /verify works now" };
-  return { code: "unposted", label: "settling — the runner has not posted yet", detail: `any machine can run: npx semalam replay ${round} --chain <id>; the runner posts only when its hash equals the CLI's` };
+  return { code: "unposted", label: "not posted yet — waiting for the runner", detail: `any machine can run: npx semalam replay ${round} --chain <id>; the runner posts only when its hash equals the CLI's` };
 }

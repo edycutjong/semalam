@@ -9,7 +9,7 @@ import { ipOf, serial, throttle } from "@/lib/guard";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 const MAX_PER_ROUND = 3;
-/** Sponsored commits stop at 60% of the 1,000-account admission cap so a flood of fresh keys cannot fill the round. */
+/** New gasless accounts stop at 600 distinct accounts (60% of the 1,000-account admission cap) so a flood of fresh keys cannot fill the round; a few concurrent requests may overshoot. */
 const ROUND_SPONSOR_CAP = 600;
 
 const fail = (state: string, status = 400, extra: object = {}) => Response.json({ ok: false, state, ...extra }, { status });

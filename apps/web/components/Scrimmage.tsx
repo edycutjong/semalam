@@ -12,11 +12,13 @@ import { ERC20_ABI, SCRIMMAGE_ABI } from "@/lib/abi";
 import { CHAIN, DEP, IS_TESTNET, SCRIMMAGE, WIF, WIF_LABEL, txUrl } from "@/lib/config";
 import { publicRpc, restoreSigner, walletSigner, localSigner, injected, type Signer } from "@/lib/wallet";
 import { status, type StatusJson } from "@/lib/commit";
+import { lsGet, lsSet } from "@/lib/ls";
 
 const PRICE = 200n * 10n ** 18n;
 const PAID_STORE = "semalam.paid.v1";
-type PaidRun = { tx: Hex; round: number; account: Address; policy: Policy };
-const loadPaid = (): PaidRun[] => { try { return JSON.parse(localStorage.getItem(PAID_STORE) ?? "[]"); } catch { return []; } };
+/** src = the settled night whose top 30 was the field when the run was made (null = the house set) — a re-run uses the SAME field. */
+type PaidRun = { tx: Hex; round: number; account: Address; policy: Policy; src: number | null };
+const loadPaid = (): PaidRun[] => lsGet<PaidRun[]>(PAID_STORE, []);
 type Opp = { source: { round: number } | null; opponents: Opponent[]; mix: { house: number; players: number }; note?: string };
 
 export default function Scrimmage() {
@@ -25,7 +27,7 @@ export default function Scrimmage() {
   const [opp, setOpp] = useState<Opp | null>(null);
   const [draft, setDraft] = useState<Policy>(PRESETS[2]);
   const [editing, setEditing] = useState(false);
-  const [res, setRes] = useState<{ kind: "free" | "paid"; r: ScrimResult; tx?: string; policy: Policy } | null>(null);
+  const [res, setRes] = useState<{ kind: "free" | "paid"; r: ScrimResult; tx?: string; policy: Policy; account: Address } | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,7 +45,7 @@ export default function Scrimmage() {
       const x = await status(s?.address); setSt(x);
       setOpp(await (await fetch(`/api/opponents/${x.round}`)).json());
     } catch (e) { setErr((e as Error).message); }
-    try { const d = JSON.parse(localStorage.getItem("semalam.draft") ?? "null"); if (d) setDraft(d); } catch { /* keep the default */ }
+    const d = lsGet<Policy | null>("semalam.draft", null); if (d) setDraft(d);
   }, []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
@@ -51,7 +53,7 @@ export default function Scrimmage() {
     publicRpc().readContract({ address: WIF, abi: ERC20_ABI, functionName: "balanceOf", args: [signer.address] }).then(setBal).catch(() => setBal(null));
   }, [signer, res, tick]);
 
-  const first = st ? (JSON.parse(localStorage.getItem(`semalam.first.${st.round}`) ?? "null") as { policy: Policy; policyHash: Hex; account: Address } | null) : null;
+  const first = st ? lsGet<{ policy: Policy; policyHash: Hex; account: Address } | null>(`semalam.first.${st.round}`, null) : null;
   const firstOnChain = st?.commits[0];
   const sameAccount = Boolean(first && signer && first.account.toLowerCase() === signer.address.toLowerCase());
   const intact = Boolean(first && draftHash(first.policy).toLowerCase() === first.policyHash.toLowerCase()); // the stored policy is still the one that was sealed
@@ -59,7 +61,15 @@ export default function Scrimmage() {
 
   function runFree() {
     if (!first || !st || !opp || !signer) return;
-    setRes({ kind: "free", r: scrimmage({ id: signer.address, policy: first.policy }, opp.opponents, freeSeed(st.round, signer.address, first.policyHash), st.round), policy: first.policy });
+    // the free run is one deterministic result per (round, account): pin the field the first time, reuse it on every repeat
+    const pinKey = `semalam.freesrc.${st.round}.${signer.address.toLowerCase()}`;
+    const pinned = lsGet<{ src: number | null } | null>(pinKey, null);
+    (async () => {
+      const src = pinned ? pinned.src : (opp.source?.round ?? null);
+      if (!pinned) lsSet(pinKey, { src });
+      const field = pinned && src !== (opp.source?.round ?? null) ? ((await (await fetch(`/api/opponents/${st.round}?source=${src ?? "house"}`)).json()) as Opp) : opp;
+      setRes({ kind: "free", account: signer.address, r: scrimmage({ id: signer.address, policy: first.policy }, field.opponents, freeSeed(st.round, signer.address, first.policyHash), st.round), policy: first.policy });
+    })().catch((e) => setErr((e as Error).message));
   }
   async function connect(kind: "local" | "wallet") {
     try { const s = kind === "local" ? localSigner(true)! : await walletSigner(); setSigner(s); setSt(await status(s.address)); } catch (e) { setErr((e as Error).message); }
@@ -83,27 +93,28 @@ export default function Scrimmage() {
       if (allowance < PRICE) { setMsg(`approve exactly 200 ${WIF_LABEL}…`); await send("approve", [SCRIMMAGE, PRICE], WIF, ERC20_ABI); }
       setMsg("paying 200 — 160 burned, 40 to compute…");
       const tx = await send("pay", [BigInt(st.round), PRICE, dh], SCRIMMAGE, SCRIMMAGE_ABI);
-      const entry: PaidRun = { tx, round: st.round, account: signer.address, policy: draft };
-      const all = [...loadPaid().filter((x) => x.tx !== tx), entry]; localStorage.setItem(PAID_STORE, JSON.stringify(all)); setPaidRuns(all);
+      const entry: PaidRun = { tx, round: st.round, account: signer.address, policy: draft, src: opp.source?.round ?? null };
+      const all = [...loadPaid().filter((x) => x.tx !== tx), entry]; lsSet(PAID_STORE, all); setPaidRuns(all);
       await verifyAndRun(entry);
     } catch (e) { setErr((e as Error).message.split("\n")[0]); setMsg(null); }
     setBusy(false);
   }
   /** A13: the paid run exists only for a successful Paid receipt whose payer, round and draftHash match; same tx → same result. */
   async function verifyAndRun(e: PaidRun) {
-    if (!opp) throw new Error("the opponent list is still loading — try again in a moment");
     setMsg("checking the Paid receipt…");
     const r = await (await fetch(`/api/paid?tx=${e.tx}`)).json();
     if (r.error) throw new Error(r.error);
     if (r.payer.toLowerCase() !== e.account.toLowerCase() || r.round !== e.round || r.draftHash.toLowerCase() !== draftHash(e.policy).toLowerCase()) throw new Error("the Paid receipt does not match this draft");
-    setRes({ kind: "paid", tx: e.tx, policy: e.policy, r: scrimmage({ id: e.account, policy: e.policy }, opp.opponents, paidSeed(e.tx), e.round) });
+    const field = (await (await fetch(`/api/opponents/${e.round}?source=${e.src ?? "house"}`)).json()) as Opp;
+    if (!field.opponents) throw new Error("could not load the opponents this run was made against");
+    setRes({ kind: "paid", account: e.account, tx: e.tx, policy: e.policy, r: scrimmage({ id: e.account, policy: e.policy }, field.opponents, paidSeed(e.tx), e.round) });
     setMsg(null);
   }
   async function restore(e: PaidRun) { setBusy(true); setErr(null); try { await verifyAndRun(e); } catch (x) { setErr((x as Error).message.split("\n")[0]); setMsg(null); } setBusy(false); }
   async function restoreByTx() {
     setBusy(true); setErr(null);
     try {
-      const known = loadPaid().find((x) => x.tx.toLowerCase() === restoreTx.trim().toLowerCase());
+      const known = loadPaid().find((x) => x.tx.toLowerCase() === restoreTx.trim().toLowerCase() && (!signer || x.account.toLowerCase() === signer.address.toLowerCase()));
       if (!known) throw new Error("that payment is not saved in this browser — the draft that was paid for is needed to re-run it");
       await verifyAndRun(known);
     } catch (x) { setErr((x as Error).message.split("\n")[0]); setMsg(null); }
@@ -153,10 +164,10 @@ export default function Scrimmage() {
           )}
           <p className="muted" style={{ fontSize: 15 }}>The CLI runs the same simulation free on your own machine; the fee buys the instant in-app run and replay.</p>
         </div>
-        {paidRuns.filter((x) => st && x.round === st.round).length > 0 && (
+        {paidRuns.filter((x) => st && signer && x.round === st.round && x.account.toLowerCase() === signer.address.toLowerCase()).length > 0 && (
           <div className="card" style={{ marginTop: 16 }}>
             <h3 style={{ fontSize: 20 }}>Your paid runs this round</h3>
-            {paidRuns.filter((x) => st && x.round === st.round).map((x) => (
+            {paidRuns.filter((x) => st && signer && x.round === st.round && x.account.toLowerCase() === signer.address.toLowerCase()).map((x) => (
               <div className="row" key={x.tx} style={{ marginBottom: 8 }}>
                 <span className="data">{x.policy.name} · <a href={txUrl(x.tx)}>{x.tx.slice(0, 10)}…</a></span>
                 <button type="button" className="quiet" onClick={() => restore(x)} disabled={busy}>Show again</button>
@@ -174,7 +185,7 @@ export default function Scrimmage() {
             <h2 style={{ fontSize: 28 }}>{res.kind === "free" ? "Your first commit" : "Your draft"}: {res.r.rank} of {res.r.of}</h2>
             <p className="data">{res.r.coins} coins · {res.r.steals} steals · {res.kind === "paid" && res.tx ? <a href={txUrl(res.tx)}>payment {res.tx.slice(0, 10)}…</a> : "free run"} · not counted toward the score</p>
             <p className="data">scrimmage hash <HashLine value={res.r.resultHash} short /></p>
-            <ReplayPlayer replays={res.r.replays} mineId={signer?.address} houseIds={new Set(res.r.houseIds)} agents={res.r.of} />
+            <ReplayPlayer replays={res.r.replays} mineId={res.account} houseIds={new Set(res.r.houseIds)} agents={res.r.of} />
           </>
         ) : <p className="muted">The replay of your scrimmage appears here.</p>}
       </section>

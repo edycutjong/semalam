@@ -1,5 +1,5 @@
 import { currentRound } from "@/lib/clock";
-import { namedState, readArtifact } from "@/lib/artifact";
+import { namedState, readArtifact, statusLabel } from "@/lib/artifact";
 import { chainNow, postedOf } from "@/lib/chain";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ n: string }> }) {
   const n = Number((await ctx.params).n);
   if (!Number.isInteger(n) || n < 1) return Response.json({ error: "round must be a positive integer" }, { status: 400 });
   const art = await readArtifact(n);
-  if (art) return Response.json({ state: { code: art.status, label: art.status }, artifact: art });
+  if (art) return Response.json({ state: { code: art.status, label: statusLabel(art.status) }, artifact: art });
   try {
     const now = await chainNow();
     const posted = await postedOf(n);
