@@ -4,7 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { keccak256, toBytes, getAddress, type Hex, type PublicClient } from "viem";
-import { deps, replayLive, parse, seasonTable, Exit } from "../src/cli.ts";
+import { deps, replayLive, parse, seasonTable, main, Exit } from "../src/cli.ts";
+import { cleanReason } from "@semalam/policy/compile";
 import { SIM_VERSION } from "@semalam/sim";
 import { HOUSE_SET_HASH } from "@semalam/sim/house";
 import { closeTime, type Settled } from "@semalam/sim/round";
@@ -14,7 +15,7 @@ const g = JSON.parse(readFileSync(new URL("../../../fixtures/golden/round-b.json
 const FROM = BigInt(deployments["46630"].fromBlock);
 const FIN = FROM + 600_000n;
 
-type Opts = { posted?: Hex | null; finTs?: number; house?: Hex; maxSpan?: bigint; beacon?: typeof g.beacon | "425" };
+type Opts = { posted?: Hex | null; pendingPost?: boolean; finTs?: number; house?: Hex; maxSpan?: bigint; beacon?: typeof g.beacon | "425" };
 function chain(o: Opts) {
   let calls = 0;
   const committed = g.logs.map((l: { account: Hex; policyHash: Hex; blob: number; blockNumber: number; logIndex: number }, i: number) => ({
@@ -25,8 +26,9 @@ function chain(o: Opts) {
     readContract: async ({ functionName }: { functionName: string }) =>
       ({ SIM_VERSION: keccak256(toBytes(SIM_VERSION)), HOUSE_SET_HASH: o.house ?? HOUSE_SET_HASH, GENESIS: BigInt(g.genesis) })[functionName],
     getBlock: async () => ({ number: FIN, timestamp: BigInt(o.finTs ?? closeTime(g.genesis, g.round) + 3600) }),
-    getLogs: async ({ event, fromBlock, toBlock }: { event: { name: string }; fromBlock: bigint; toBlock: bigint }) => {
+    getLogs: async ({ event, fromBlock, toBlock }: { event: { name: string }; fromBlock: bigint; toBlock: bigint | "latest" }) => {
       calls++;
+      if (toBlock === "latest") return o.pendingPost && event.name === "Posted" ? [{ blockNumber: FIN + 5n, args: { round: BigInt(g.round), resultHash: g.expect.resultHash, drandRound: BigInt(g.expect.drandRound) } }] : [];
       if (toBlock - fromBlock + 1n > (o.maxSpan ?? 10n ** 12n)) throw new Error("query exceeds max block range");
       const inRange = (b: bigint) => b >= fromBlock && b <= toBlock;
       if (event.name === "Committed") return committed.filter((l: { blockNumber: bigint }) => inRange(l.blockNumber));
@@ -110,4 +112,22 @@ test("season table: operators and house never score; crown needs paid + points +
   assert.equal(t.board[0].eligible, false); // A never paid
   assert.equal(t.champion?.id, B);
   assert.equal(t.board[2].eligible, false); // C paid but never in the top half (ranks 9, 8, 7 of 10)
+});
+
+test("live: a post above the finalized head → exit 4 'posted … not final yet', never compared", async () => {
+  const r = await live({ posted: null, pendingPost: true });
+  assert.equal(r.code, 4);
+  assert.match(r.out, new RegExp(`posted in block ${FIN + 5n}, not final yet`));
+  assert.doesNotMatch(r.out, /MATCH/);
+});
+
+test("usage: season needs an integer ≥ 1; --json is refused with --fixture (exit 64)", async () => {
+  for (const argv of [["season", "x"], ["season", "0"], ["season", "1.5"], ["replay", "--fixture", "golden", "--json", "out.json"]])
+    await assert.rejects(main(argv), (e: unknown) => e instanceof Exit && e.code === 64, argv.join(" "));
+});
+
+test("refusal text never carries a link, a bare domain or an address", () => {
+  for (const r of ["go to evil.com/claim now", "visit https://x.io", "send to 0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e", "see www.example.org"])
+    assert.doesNotMatch(cleanReason(r), /evil\.com|x\.io|0x5b84|example\.org/, r);
+  assert.equal(cleanReason("request conflicts with game rules"), "request conflicts with game rules");
 });

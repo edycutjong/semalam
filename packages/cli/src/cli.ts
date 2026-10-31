@@ -3,14 +3,15 @@
 //   semalam replay --fixture golden            (offline: the three golden rounds shipped in this package)
 //   semalam season <s> [--chain …]             (season points + crown eligibility, as Results.crown must match)
 //   semalam house                              (house-set hash + the 30 policies)
-// Exit codes: 0 match · 1 MISMATCH (hash, or Results.post names another drand round)
+// Exit codes: 0 match · 1 MISMATCH (hash, Results.post names another drand round, or Paid logs disagree with the chain)
 //             2 refused (bad beacon signature / beacon for the wrong round / house-set or SIM_VERSION pin mismatch)
-//             3 network · 4 waiting (not final yet, beacon not published, or not posted — prints the computed hash)
+//             3 network · 4 waiting (chain not final past close, beacon not published, or round not posted / post not
+//             final yet — only the last case has a computed hash to print)
 //             64 usage · 70 internal error
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPublicClient, fallback, http, keccak256, toBytes, parseAbiItem, getAddress, type Address, type Hex, type PublicClient } from "viem";
+import { createPublicClient, http, keccak256, toBytes, parseAbiItem, getAddress, type Address, type Hex, type PublicClient } from "viem";
 import { readback } from "@semalam/policy";
 import { verifyBeacon, fetchBeacon, open, DRAND_URLS, type Beacon } from "@semalam/beacon";
 import { SIM_VERSION } from "@semalam/sim";
@@ -70,10 +71,25 @@ function dep(a: Args): Dep {
 }
 /** Test seam: inject a chain client and a fetch for drand. Production never sets these. */
 export const deps: { client?: PublicClient; fetchFn?: typeof fetch } = {};
-function client(a: Args, d: Dep): PublicClient {
+/**
+ * ONE RPC endpoint per run: the first in the list that answers with the right chain id. Mixing nodes mid-run could read
+ * the finalized head from one node and logs from a node that has not indexed that far — a silent false MISMATCH.
+ */
+async function client(a: Args, d: Dep): Promise<PublicClient> {
   if (deps.client) return deps.client;
   const urls = a.rpc.length ? a.rpc : d.rpcs;
-  return createPublicClient({ transport: fallback(urls.map((u) => http(u, { retryCount: 3, retryDelay: 500, timeout: 20_000 }))) }) as PublicClient;
+  const errs: string[] = [];
+  for (const u of urls) {
+    const c = createPublicClient({ transport: http(u, { retryCount: 3, retryDelay: 500, timeout: 20_000 }) }) as PublicClient;
+    try {
+      const id = await c.getChainId();
+      if (String(id) === a.chain) return c;
+      errs.push(`${u}: chain id ${id}, expected ${a.chain}`);
+    } catch (e) {
+      errs.push(`${u}: ${(e as Error).message.split("\n")[0]}`);
+    }
+  }
+  throw new Exit(3, `no RPC answered for chain ${a.chain}:\n  ${errs.join("\n  ")}\n  hint: pass a working RPC with --rpc <url> (repeatable)`);
 }
 const net = <T>(p: Promise<T>, what: string): Promise<T> =>
   p.catch((e: unknown) => { throw new Exit(3, `${what} failed: ${(e as Error).message?.split("\n")[0]}\n  hint: pass a working RPC with --rpc <url> (repeatable)`); });
@@ -105,7 +121,7 @@ export function checkPins(simV: Hex, houseH: Hex, house: Hex = HOUSE_SET_HASH) {
 
 async function readChainRound(a: Args, round: number) {
   const d = dep(a);
-  const c = client(a, d);
+  const c = await client(a, d);
   const [simV, houseH, genesis] = await net(
     Promise.all(RESULTS_ABI.map((f) => c.readContract({ address: d.results!, abi: RESULTS_ABI, functionName: f.name }))),
     "reading Results",
@@ -156,7 +172,7 @@ function printAgent(s: Settled, agent: string) {
 function report(s: Settled, posted: { resultHash: Hex; drandRound: number } | null, extra: { commits: number; beaconNote: string; excluded: number; against?: string; pendingPostBlock?: bigint | null }) {
   const house = s.ranking.filter((r) => r.house).length;
   const where = extra.against === "fixture" ? "the fixture's" : "on-chain";
-  console.log(`sim         ${SIM_VERSION} == ${where} SIM_VERSION ${ok("✓")}`);
+  console.log(extra.against === "fixture" ? `sim         ${SIM_VERSION}` : `sim         ${SIM_VERSION} == on-chain SIM_VERSION ${ok("✓")}`);
   console.log(`house set   ${short(s.houseSetHash)} == ${where} HOUSE_SET_HASH ${ok("✓")}`);
   console.log(`drand       round ${s.drandRound} = seedRound(${s.round}) ${ok("✓")} · ${extra.beaconNote}`);
   console.log(`commits     ${extra.commits} events · ${s.ranking.filter((r) => !r.house).length + s.voids.length} admitted accounts · ${s.overCapacity.length} over capacity`);
@@ -255,7 +271,7 @@ async function seasonCmd(a: Args, s: number): Promise<number> {
     nights.push(st);
   }
   const d = dep(a);
-  const c = client(a, d);
+  const c = await client(a, d);
   const fin = await net(c.getBlock({ blockTag: "finalized" }), "reading the finalized block");
   const paid = await net(
     logsPaged((lo, hi) => c.getLogs({ address: d.scrimmage!, event: PAID, fromBlock: lo, toBlock: hi }), BigInt(d.fromBlock), fin.number!),
@@ -278,7 +294,7 @@ function help() {
   semalam replay --fixture golden [--agent <address>]   offline: the golden rounds shipped with this package
   semalam season <s> [--chain …]                         season points and the crown-eligible champion
   semalam house                                          the 30 house agents and HOUSE_SET_HASH
-exit: 0 match · 1 mismatch · 2 refused · 3 network · 4 waiting (not final / not published / not posted) · 70 internal`);
+exit: 0 match · 1 mismatch · 2 refused · 3 network · 4 waiting (not final / beacon not published / not posted) · 64 usage · 70 internal`);
 }
 
 async function main(argv: string[]): Promise<number> {
@@ -292,7 +308,10 @@ async function main(argv: string[]): Promise<number> {
     return 0;
   }
   if (cmd === "replay") {
-    if (a.fixture) return replayFixture(a);
+    if (a.fixture) {
+      if (a.json) throw new Exit(64, "--json writes a live round; with --fixture the expected values are already in the fixture file");
+      return replayFixture(a);
+    }
     const round = Number(arg);
     if (!Number.isInteger(round) || round < 1) throw new Exit(64, "usage: semalam replay <round>");
     const { code, s } = await replayLive(a, round);

@@ -35,7 +35,7 @@ export function checkOrders(orders: unknown): string | null {
 
 /** Model-written refusal reasons are shown to players: no links, no addresses, printable, short. */
 export function cleanReason(r: string): string {
-  const s = r.replace(/https?:\/\/\S+|www\.\S+|0x[0-9a-fA-F]{6,}/g, "[removed]").replace(/[^\p{L}\p{N}\p{P}\p{Zs}]/gu, "").trim().slice(0, 120);
+  const s = r.replace(/https?:\/\/\S+|www\.\S+|\b[\w-]+(?:\.[\w-]+)*\.[a-z]{2,24}\b(?:\/\S*)?|0x[0-9a-fA-F]{6,}/gi, "[removed]").replace(/[^\p{L}\p{N}\p{P}\p{Zs}]/gu, "").trim().slice(0, 120);
   return s || "these orders are not about how the stall should play";
 }
 
