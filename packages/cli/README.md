@@ -19,7 +19,8 @@ What `replay` does, in order:
    simulator version and `house-set.json`.
 2. Stops with exit 4 ("waiting") unless the finalized chain is past the round's close, so no late commit can be missed.
    It reads everything from ONE RPC endpoint per run (the first that answers with the right chain id).
-3. Fetches every `Orders.Committed` event of the round (paged `eth_getLogs`, ordered RPC failover, `--rpc` to override).
+3. Fetches every `Orders.Committed` event of the round with paged `eth_getLogs`, from the first RPC in the list that
+   answers with the right chain id and a finalized head (`--rpc` to override).
 4. Fetches drand quicknet beacon `seedRound(round)` — the first round at or after close + 300 s — and verifies its BLS
    signature against the pinned quicknet key. Any other round, or a bad signature, is refused (exit 2).
 5. Admits the first 1,000 accounts by first commit, takes each one's latest commit, timelock-decrypts it with that

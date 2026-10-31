@@ -80,10 +80,12 @@ async function client(a: Args, d: Dep): Promise<PublicClient> {
   const urls = a.rpc.length ? a.rpc : d.rpcs;
   const errs: string[] = [];
   for (const u of urls) {
-    const c = createPublicClient({ transport: http(u, { retryCount: 3, retryDelay: 500, timeout: 20_000 }) }) as PublicClient;
+    // fast probe (no retries): right chain id AND a finalized head; the chosen endpoint then gets normal retries
+    const probe = createPublicClient({ transport: http(u, { retryCount: 0, timeout: 10_000 }) }) as PublicClient;
     try {
-      const id = await c.getChainId();
-      if (String(id) === a.chain) return c;
+      const id = await probe.getChainId();
+      await probe.getBlock({ blockTag: "finalized" });
+      if (String(id) === a.chain) return createPublicClient({ transport: http(u, { retryCount: 3, retryDelay: 500, timeout: 20_000 }) }) as PublicClient;
       errs.push(`${u}: chain id ${id}, expected ${a.chain}`);
     } catch (e) {
       errs.push(`${u}: ${(e as Error).message.split("\n")[0]}`);
