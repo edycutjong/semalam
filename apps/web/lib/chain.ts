@@ -1,14 +1,15 @@
 // Server-side chain reads and the relayer. Never imported by client components.
-import { createPublicClient, createWalletClient, http, type Address, type Hex, type PublicClient } from "viem";
+import { createPublicClient, createWalletClient, fallback, http, type Address, type Hex, type PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { CHAIN, DEP, ORDERS, RESULTS, SCRIMMAGE } from "./config";
-import { ORDERS_ABI, RESULTS_ABI, SCRIMMAGE_ABI } from "./abi";
+import { COMMITTED_EVENT, ORDERS_ABI, PAID_EVENT, RESULTS_ABI, SCRIMMAGE_ABI } from "./abi";
 import { memoized } from "./guard";
 
-export const publicClient: PublicClient = createPublicClient({
-  chain: CHAIN,
-  transport: http(DEP.rpcs[0], { retryCount: 2, retryDelay: 400, timeout: 15_000 }),
-}) as PublicClient;
+/** Public RPCs from deployments.json, then server-only extras (RPC_FALLBACK_URLS, comma-separated) — the next node takes
+ * over when one is down or rate-limited. Log reads stay paged, so a node with a narrow getLogs range still works. */
+export const RPCS = [...DEP.rpcs, ...(process.env.RPC_FALLBACK_URLS ?? "").split(",").map((u) => u.trim()).filter(Boolean)];
+const transport = () => fallback(RPCS.map((u) => http(u, { retryCount: 1, retryDelay: 400, timeout: 15_000 })));
+export const publicClient: PublicClient = createPublicClient({ chain: CHAIN, transport: transport() }) as PublicClient;
 
 /** The L2 clock: chain time, not the server's. */
 export async function chainNow(): Promise<number> {
@@ -31,12 +32,12 @@ export async function commitsOf(account: Address, round: number) {
   return memoized(`commitsOf:${account}:${round}`, 3_000, () => commitsOfUncached(account, round));
 }
 async function commitsOfUncached(account: Address, round: number) {
-  const logs = await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: ORDERS_ABI[4], args: { round: BigInt(round), account }, fromBlock: lo, toBlock: hi }));
+  const logs = await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: COMMITTED_EVENT, args: { round: BigInt(round), account }, fromBlock: lo, toBlock: hi }));
   return logs.map((l) => ({ tx: l.transactionHash as Hex, block: Number(l.blockNumber), logIndex: l.logIndex, policyHash: l.args.policyHash as Hex, sealedBytes: ((l.args.sealedBlob as Hex).length - 2) / 2 }));
 }
 /** How many DISTINCT accounts have committed in the round so far — the relay's global per-round cap reads this (15 s memo; a few requests may overshoot it). */
 export async function commitCountOf(round: number): Promise<number> {
-  return memoized(`commits:${round}`, 15_000, async () => new Set((await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: ORDERS_ABI[4], args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }))).map((l) => (l.args.account as string).toLowerCase())).size);
+  return memoized(`commits:${round}`, 15_000, async () => new Set((await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: COMMITTED_EVENT, args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }))).map((l) => (l.args.account as string).toLowerCase())).size);
 }
 
 export async function postedOf(round: number): Promise<{ resultHash: Hex; drandRound: number } | null> {
@@ -64,7 +65,7 @@ export function relayer() {
   const k = process.env.RELAYER_PRIVATE_KEY;
   if (!k) return null;
   const account = privateKeyToAccount(k as Hex);
-  return { account, wallet: createWalletClient({ account, chain: CHAIN, transport: http(DEP.rpcs[0], { timeout: 20_000 }) }) };
+  return { account, wallet: createWalletClient({ account, chain: CHAIN, transport: transport() }) };
 }
 /** Relayer stops below this balance (named state "relay empty — use your own wallet"). */
 export const RELAY_FLOOR_WEI = BigInt(process.env.RELAY_FLOOR_WEI ?? "300000000000000"); // 0.0003 ETH
@@ -92,7 +93,7 @@ export const RELAY_SAYS: Record<Exclude<RelayState, "ok">, string> = {
 /** Everyone who paid for a scrimmage, with the round they paid in (for season crown-eligibility). Memoised 30 s. */
 export async function paidLogs() {
   return memoized("paid", 30_000, async () =>
-    (await paged((lo, hi) => publicClient.getLogs({ address: SCRIMMAGE, event: SCRIMMAGE_ABI[2], fromBlock: lo, toBlock: hi }))).map((l) => ({
+    (await paged((lo, hi) => publicClient.getLogs({ address: SCRIMMAGE, event: PAID_EVENT, fromBlock: lo, toBlock: hi }))).map((l) => ({
       payer: l.args.payer as string, round: Number(l.args.round), draftHash: l.args.draftHash as Hex, burned: l.args.burned as bigint, tx: l.transactionHash as Hex,
     })));
 }

@@ -25,6 +25,7 @@ export async function POST(req: Request) {
   try { account = getAddress(b.account); round = Number(b.round); deadline = BigInt(String(b.deadline ?? "0")); } catch { return fail("malformed commit"); }
   if (!Number.isInteger(round)) return fail("malformed round");
   if ((sealed.length - 2) / 2 > MAX_SEALED) return fail(`sealed orders are larger than ${MAX_SEALED} bytes`);
+  if (sig.length > 2 + 2 * 1024) return fail("signature too long"); // 65 B for a key; generous room for ERC-1271 wallets
   const r = relayer();
   if (!r) return fail("relay empty — use your own wallet", 503, { relay: false });
   const now = await chainNow();

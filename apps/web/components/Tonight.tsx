@@ -70,6 +70,8 @@ export default function Tonight() {
     if (!policy || !st) return;
     setPhase("sealing"); setErr(null);
     try {
+      // the drand round is derived from GENESIS: if this app's copy disagrees with the contract, every seal would void
+      if (st.genesisOk === false) throw new Error("sealing paused — this app's round clock does not match the contract (operator fix needed); your orders were not sent");
       setStep("sealing your orders to the drand beacon…");
       const sealed = await sealPolicy(policy, st.round);
       setStep("reading your account…");

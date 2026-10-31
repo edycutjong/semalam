@@ -1,4 +1,4 @@
-import { parseAbi } from "viem";
+import { getAbiItem, parseAbi } from "viem";
 
 export const ORDERS_ABI = parseAbi([
   "function commit(uint256 round, bytes32 policyHash, bytes sealedBlob)",
@@ -36,3 +36,7 @@ export const COMMIT_TYPES = {
     { name: "deadline", type: "uint256" },
   ],
 } as const;
+
+/** Events by name, never by array index (an inserted ABI entry would silently point the log reads at a function). */
+export const COMMITTED_EVENT = getAbiItem({ abi: ORDERS_ABI, name: "Committed" });
+export const PAID_EVENT = getAbiItem({ abi: SCRIMMAGE_ABI, name: "Paid" });

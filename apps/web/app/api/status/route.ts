@@ -1,8 +1,8 @@
 import { getAddress, isAddress } from "viem";
 import { closeTime, currentRound } from "@/lib/clock";
 import { chainNow, commitsOf, publicClient, relayState } from "@/lib/chain";
-import { ipOf, throttle } from "@/lib/guard";
-import { CHAIN_ID, IS_TESTNET, ORDERS, WIF_LABEL } from "@/lib/config";
+import { ipOf, memoized, throttle } from "@/lib/guard";
+import { CHAIN_ID, GENESIS, IS_TESTNET, ORDERS, WIF_LABEL } from "@/lib/config";
 import { ORDERS_ABI } from "@/lib/abi";
 
 export const dynamic = "force-dynamic";
@@ -15,11 +15,13 @@ export async function GET(req: Request) {
     const now = await chainNow();
     const round = currentRound(now);
     const rs = await relayState(round);
+    // GENESIS is immutable: one read per instance-hour; the seal path refuses if deployments.json disagrees with the chain
+    const chainGenesis = await memoized("genesis", 3_600_000, () => publicClient.readContract({ address: ORDERS, abi: ORDERS_ABI, functionName: "GENESIS" }));
     const commits = acc && isAddress(acc) ? await commitsOf(getAddress(acc), round) : [];
     const nonce = acc && isAddress(acc) ? String(await publicClient.readContract({ address: ORDERS, abi: ORDERS_ABI, functionName: "nonces", args: [getAddress(acc)] })) : undefined;
     return Response.json({
       chainId: CHAIN_ID, testnet: IS_TESTNET, wifLabel: WIF_LABEL, chainNow: now, serverNow: Math.floor(Date.now() / 1000), round, closeTime: closeTime(round),
-      relay: rs === "ok", relayState: rs, compiler: Boolean(process.env.GROQ_API_KEYS), nonce, commits,
+      relay: rs === "ok", relayState: rs, genesisOk: Number(chainGenesis) === GENESIS, compiler: Boolean(process.env.GROQ_API_KEYS), nonce, commits,
     });
   } catch (e) {
     return Response.json({ error: `chain unreachable (${(e as Error).message.split("\n")[0]})` }, { status: 503 });

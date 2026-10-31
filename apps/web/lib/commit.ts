@@ -54,7 +54,7 @@ export async function commitSealed(signer: Signer, round: number, s: Sealed, non
 
 export type StatusJson = {
   chainId: number; testnet: boolean; wifLabel: string; chainNow: number; serverNow: number; round: number; closeTime: number;
-  relay: boolean; relayState?: "ok" | "empty" | "spent-tonight"; compiler: boolean; nonce?: string; commits: { tx: string; block: number; policyHash: string; sealedBytes: number }[]; error?: string;
+  relay: boolean; relayState?: "ok" | "empty" | "spent-tonight"; genesisOk?: boolean; compiler: boolean; nonce?: string; commits: { tx: string; block: number; policyHash: string; sealedBytes: number }[]; error?: string;
 };
 export async function status(account?: Address): Promise<StatusJson> {
   const r = await fetch(`/api/status${account ? `?account=${account}` : ""}`, { cache: "no-store" });
