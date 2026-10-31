@@ -140,6 +140,8 @@ pnpm -r --if-present test          # 72 TypeScript tests
 cd contracts && forge test         # 39 Foundry tests; the fork test needs a chain 4663 RPC
 ```
 
+CI workflows (`.github/workflows`): `ci` (Foundry, a Node 20/22 × Linux/macOS/Windows TypeScript matrix, web build, and a determinism job that replays the golden rounds in two fresh processes), `security` (gitleaks on full history, `pnpm audit`) and `codeql`. Vulnerability reports: [SECURITY.md](SECURITY.md).
+
 ## 📁 Project Structure
 
 ```

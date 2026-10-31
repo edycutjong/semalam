@@ -52,4 +52,29 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @semalam/web typecheck
+      - run: pnpm --filter @semalam/web test
       - run: pnpm --filter @semalam/web build
+
+  determinism:
+    needs: typescript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter semalam build
+      - name: two fresh processes print identical result hashes, and they equal the pinned golden hashes
+        run: |
+          node packages/cli/dist/semalam.mjs replay --fixture golden | grep -E 'resultHash|MATCH' > run1.txt
+          node packages/cli/dist/semalam.mjs replay --fixture golden | grep -E 'resultHash|MATCH' > run2.txt
+          diff run1.txt run2.txt
+          test "$(grep -c '✓ MATCH' run1.txt)" = 3
+      - name: simulator golden test, run twice in separate processes
+        run: |
+          pnpm --filter @semalam/sim test
+          pnpm --filter @semalam/sim test
