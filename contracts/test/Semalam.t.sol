@@ -184,6 +184,10 @@ contract SemalamTest is Test {
         results.crown(1, p, bytes32(0));
         vm.warp(GENESIS + 4 days + 300); // round 4 closed + 300 s
         results.post(4, keccak256("r4"), results.seedRound(4));
+        vm.expectRevert(Results.SeasonOpen.selector); // rounds 2 and 3 not posted yet
+        results.crown(1, p, bytes32(0));
+        results.post(2, keccak256("r2"), results.seedRound(2));
+        results.post(3, keccak256("r3"), results.seedRound(3));
         vm.expectRevert(Results.NotEligible.selector);
         results.crown(1, address(0xB0B), bytes32(0));
         results.crown(1, p, keccak256("policy"));

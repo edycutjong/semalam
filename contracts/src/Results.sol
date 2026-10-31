@@ -36,6 +36,7 @@ contract Results is RoundClock {
     error AlreadyCrowned();
     error NotEligible();
     error GenesisMismatch();
+    error ZeroAddress();
 
     constructor(
         address poster,
@@ -44,6 +45,7 @@ contract Results is RoundClock {
         bytes32 houseSetHash,
         bytes32 simVersion
     ) RoundClock(genesis) {
+        if (poster == address(0)) revert ZeroAddress();
         if (scrimmage.GENESIS() != genesis) revert GenesisMismatch();
         POSTER = poster;
         SCRIMMAGE = scrimmage;
@@ -71,7 +73,11 @@ contract Results is RoundClock {
     function crown(uint256 s, address account, bytes32 policyHash) external {
         if (msg.sender != POSTER) revert NotPoster();
         if (s == 0) revert BadSeason();
-        if (resultOf[3 * s + 1] == bytes32(0)) revert SeasonOpen();
+        // every night of the season (rounds 3s-1, 3s, 3s+1) is posted, not just the last one
+        for (uint256 r = 3 * s - 1; r <= 3 * s + 1; r++) {
+            if (resultOf[r] == bytes32(0)) revert SeasonOpen();
+        }
+        if (account == address(0)) revert NotEligible();
         if (championOf[s] != address(0)) revert AlreadyCrowned();
         if (!SCRIMMAGE.paidInSeason(account, s)) revert NotEligible();
         championOf[s] = account;

@@ -43,6 +43,36 @@ contract FeeWIF {
     }
 }
 
+/// @dev No fee, but `burn` silently does nothing — the post-burn balance check must refuse it (I1).
+contract NoopBurnWIF {
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    function mint(address to, uint256 a) external {
+        balanceOf[to] += a;
+    }
+
+    function approve(address s, uint256 a) external returns (bool) {
+        allowance[msg.sender][s] = a;
+        return true;
+    }
+
+    function transfer(address to, uint256 a) external returns (bool) {
+        balanceOf[msg.sender] -= a;
+        balanceOf[to] += a;
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 a) external returns (bool) {
+        allowance[from][msg.sender] -= a;
+        balanceOf[from] -= a;
+        balanceOf[to] += a;
+        return true;
+    }
+
+    function burn(uint256) external {}
+}
+
 /// @dev ERC-1271 smart account: accepts exactly one digest.
 contract Wallet1271 {
     bytes32 public okDigest;
@@ -271,6 +301,28 @@ contract AttacksTest is Test {
         assertFalse(s2.paidInSeason(p, 0)); // the revert rolls the flag back
     }
 
+    function test_pay_noopBurn_refused() public {
+        NoopBurnWIF nb = new NoopBurnWIF();
+        Scrimmage s2 = new Scrimmage(IWIF(address(nb)), COMPUTE, GENESIS);
+        address p = address(0xA11CE);
+        nb.mint(p, 1000e18);
+        vm.startPrank(p);
+        nb.approve(address(s2), 1000e18);
+        vm.expectRevert(Scrimmage.BurnFailed.selector);
+        s2.pay(1, 200e18, bytes32(0));
+        vm.stopPrank();
+        assertEq(nb.balanceOf(address(s2)), 0);
+    }
+
+    function test_constructors_rejectZeroAddresses() public {
+        vm.expectRevert(Scrimmage.ZeroAddress.selector);
+        new Scrimmage(IWIF(address(0)), COMPUTE, GENESIS);
+        vm.expectRevert(Scrimmage.ZeroAddress.selector);
+        new Scrimmage(IWIF(address(wif)), address(0), GENESIS);
+        vm.expectRevert(Results.ZeroAddress.selector);
+        new Results(address(0), IScrimmageSeason(address(scrim)), GENESIS, bytes32(uint256(1)), bytes32(uint256(2)));
+    }
+
     function test_pay_withoutAllowance_reverts() public {
         address p = address(0xA11CE);
         wif.mint(p, 1000e18);
@@ -281,11 +333,35 @@ contract AttacksTest is Test {
     }
 
     // ---------- crown (A16) ----------
-    function test_crown_notPoster_houseIdNeverEligible() public {
+    function _postSeason1() internal {
         vm.warp(GENESIS + 4 days + 300);
-        uint64 sr4 = results.seedRound(4); // read before prank: an external call would consume it
+        for (uint256 r = 2; r <= 4; r++) {
+            uint64 sr = results.seedRound(r); // read before prank: an external call would consume it
+            vm.prank(POSTER);
+            results.post(r, keccak256(abi.encode(r)), sr);
+        }
+    }
+
+    function test_crown_needsEveryNightOfTheSeason_andNoZeroAccount() public {
+        vm.warp(GENESIS + 4 days + 300);
+        uint64 sr4 = results.seedRound(4);
         vm.prank(POSTER);
-        results.post(4, keccak256("r4"), sr4);
+        results.post(4, keccak256("r4"), sr4); // last night posted, rounds 2 and 3 not
+        vm.prank(POSTER);
+        vm.expectRevert(Results.SeasonOpen.selector);
+        results.crown(1, address(0xA11CE), bytes32(0));
+        for (uint256 r = 2; r <= 3; r++) {
+            uint64 sr = results.seedRound(r);
+            vm.prank(POSTER);
+            results.post(r, keccak256(abi.encode(r)), sr);
+        }
+        vm.prank(POSTER);
+        vm.expectRevert(Results.NotEligible.selector);
+        results.crown(1, address(0), bytes32(0)); // would leave championOf[1] empty and allow endless Crowned events
+    }
+
+    function test_crown_notPoster_houseIdNeverEligible() public {
+        _postSeason1();
         vm.expectRevert(Results.NotPoster.selector);
         results.crown(1, address(0xA11CE), bytes32(0));
         vm.startPrank(POSTER);

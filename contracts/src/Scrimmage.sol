@@ -29,8 +29,11 @@ contract Scrimmage is RoundClock {
     error WrongAmount();
     error TransferShort();
     error TransferFailed();
+    error BurnFailed();
+    error ZeroAddress();
 
     constructor(IWIF wif, address compute, uint256 genesis) RoundClock(genesis) {
+        if (address(wif) == address(0) || compute == address(0)) revert ZeroAddress();
         WIF = wif;
         COMPUTE = compute;
     }
@@ -49,6 +52,8 @@ contract Scrimmage is RoundClock {
         uint256 burned = amount - toCompute;
         if (!WIF.transfer(COMPUTE, toCompute)) revert TransferFailed();
         WIF.burn(burned);
+        // I1: nothing stays behind — a burn that silently did nothing would leave 160 WIF here
+        if (WIF.balanceOf(address(this)) != before) revert BurnFailed();
 
         emit Paid(msg.sender, round, draftHash, amount, burned, toCompute);
     }
