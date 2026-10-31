@@ -343,6 +343,7 @@ async function seasonCmd(a: Args, s: number): Promise<number> {
   const want = [...nights].reverse().map((n) => n.ranking.find((r) => r.id.toLowerCase() === champion.id.toLowerCase())?.policyHash).find(Boolean) ?? null;
   const ev = (await net(logsPaged((lo, hi) => c.getLogs({ address: d.results!, event: CROWNED, args: { season: BigInt(s) }, fromBlock: lo, toBlock: hi }), BigInt(d.fromBlock), fin.number!), "eth_getLogs(Crowned)"))[0];
   const gotPolicy = (ev?.args.policyHash as Hex | undefined) ?? null;
+  if (!gotPolicy) { console.log(dim("crown       posted but its Crowned log is not final yet — re-run in a few minutes")); return 4; }
   if (gotPolicy && want && gotPolicy.toLowerCase() !== want.toLowerCase()) { console.log(bad(`✗ MISMATCH — Crowned.policyHash ${short(gotPolicy)} is not the champion's played policy ${short(want)}`)); return 1; }
   console.log(ok("✓ MATCH — the posted crown is the computed champion"));
   return 0;

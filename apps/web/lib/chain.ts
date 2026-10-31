@@ -24,7 +24,11 @@ async function paged<T>(f: (lo: bigint, hi: bigint) => Promise<T[]>): Promise<T[
   let lo = BigInt(DEP.fromBlock), span = 2_000_000n;
   while (lo <= head) {
     const hi = lo + span - 1n > head ? head : lo + span - 1n;
-    try { out.push(...(await f(lo, hi))); lo = hi + 1n; } catch (e) { if (span <= 1000n) throw e; span /= 2n; }
+    try {
+      const page = await f(lo, hi);
+      if (page.length >= 1000 && hi > lo) { span = (hi - lo + 1n) / 2n; continue; } // same rule as the CLI: a full page may be silently capped
+      out.push(...page); lo = hi + 1n;
+    } catch (e) { if (span <= 1000n) throw e; span /= 2n; }
   }
   return out;
 }

@@ -168,7 +168,7 @@ async function main() {
     const file = path.join(outDir, `${round}.json`);
     const prev = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
     // a retried round whose outcome did not change is not rewritten (no commit + redeploy every loop)
-    const same = prev && prev.status === art.status && prev.settled?.resultHash === art.settled.resultHash && prev.onchain?.resultHash === art.onchain?.resultHash;
+    const same = prev && prev.status === art.status && prev.settled?.resultHash === art.settled.resultHash && prev.onchain?.resultHash === art.onchain?.resultHash && prev.onchain?.tx === art.onchain?.tx;
     if (!dry && !same) writeFileSync(file, JSON.stringify(art, (_, v) => (typeof v === "bigint" ? v.toString() : v)) + "\n");
     log(`round ${round}: ${status} · hash ${runHash.slice(0, 10)}… · ${run.st.players} players of ${run.st.agents} agents${dry ? " (dry)" : ""}`);
   }
