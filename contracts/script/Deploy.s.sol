@@ -15,7 +15,7 @@ contract Deploy is Script {
         address compute = vm.envAddress("COMPUTE");
         address wif = vm.envOr("WIF", address(0));
         bytes32 houseSetHash = vm.envBytes32("HOUSE_SET_HASH");
-        bytes32 simVersion = keccak256(bytes(vm.envOr("SIM_VERSION", string("semalam-sim/1"))));
+        bytes32 simVersion = keccak256(bytes("semalam-sim/1")); // must equal SIM_VERSION in packages/sim
         require(genesis % 1 days == 17 hours, "GENESIS must be a 17:00 UTC instant");
 
         vm.startBroadcast();

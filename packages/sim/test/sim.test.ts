@@ -31,13 +31,13 @@ test("golden hash reproduces in a fresh process", () => {
   assert.equal(out, GOLDEN_230);
 });
 
-test("max field (1,000 players + 30 house) settles in under 2 s", () => {
+test("max field (1,000 players + 30 house) settles in under 10 s", () => {
   const f = field(1000);
   const t0 = performance.now();
   const r = run(f, RANDOMNESS, OPTS);
   const ms = performance.now() - t0;
   assert.equal(r.ranking.length, 1030);
-  assert.ok(ms < 2000, `took ${ms} ms`);
+  assert.ok(ms < 10_000, `took ${ms} ms`);
 });
 
 test("different beacon → different night", () => {

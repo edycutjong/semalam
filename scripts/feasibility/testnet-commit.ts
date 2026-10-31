@@ -43,14 +43,14 @@ async function main() {
   const out: Record<string, unknown> = { chainId: 46630, orders: ORDERS, round: Number(round), seedRound };
 
   // 1) direct commit (deployer pays)
-  const a = await seal({ v: 1, name: "spike-direct", opening: "GATHER", default: "GATHER", grudge: 5, rules: [] }, seedRound);
+  const a = await seal({ v: 1, name: "feasibility-direct", opening: "GATHER", default: "GATHER", grudge: 5, rules: [] }, seedRound);
   const w1 = createWalletClient({ account: deployer, chain: testnet, transport: http() });
   const tx1 = await w1.writeContract({ address: ORDERS, abi, functionName: "commit", args: [round, a.policyHash, a.sealed] });
   const r1 = await pub.waitForTransactionReceipt({ hash: tx1 });
 
   // 2) self-relay: a fresh local signer with 0 ETH signs; the relayer pays
   const player = privateKeyToAccount(generatePrivateKey());
-  const b = await seal({ v: 1, name: "spike-relay", opening: "GUARD", default: "SHARE", grudge: 3, rules: [] }, seedRound);
+  const b = await seal({ v: 1, name: "feasibility-relay", opening: "GUARD", default: "SHARE", grudge: 3, rules: [] }, seedRound);
   const nonce = await pub.readContract({ address: ORDERS, abi, functionName: "nonces", args: [player.address] });
   const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
   const signature = await player.signTypedData({

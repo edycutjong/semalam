@@ -32,12 +32,16 @@ async function mainnetL1(to: Hex, creation: boolean, data: Hex) {
 }
 
 async function receiptRow(item: string, count: number, hash: Hex, payer: string) {
-  const [tx, r] = await Promise.all([test.getTransaction({ hash }), test.getTransactionReceipt({ hash })]);
-  const l1Testnet = Number((r as unknown as { gasUsedForL1?: bigint }).gasUsedForL1 ?? 0n);
-  const l2 = Number(r.gasUsed) - l1Testnet;
+  const [tx, raw] = await Promise.all([
+    test.getTransaction({ hash }),
+    test.request({ method: "eth_getTransactionReceipt", params: [hash] }) as Promise<Record<string, string>>,
+  ]);
+  if (raw.gasUsedForL1 === undefined) throw new Error(`receipt ${hash} has no gasUsedForL1`);
+  const l1Testnet = Number(BigInt(raw.gasUsedForL1));
+  const l2 = Number(BigInt(raw.gasUsed)) - l1Testnet;
   const creation = tx.to === null;
   const l1Mainnet = await mainnetL1(creation ? dep.deployer : (tx.to as Hex), creation, tx.input);
-  return { item, count, payer, tx: hash, testnetGasUsed: Number(r.gasUsed), testnetGasUsedForL1: l1Testnet, l2Gas: l2, mainnetL1Gas: l1Mainnet, gasEach: l2 + l1Mainnet };
+  return { item, count, payer, tx: hash, testnetGasUsed: Number(BigInt(raw.gasUsed)), testnetGasUsedForL1: l1Testnet, l2Gas: l2, mainnetL1Gas: l1Mainnet, gasEach: l2 + l1Mainnet };
 }
 
 async function main() {
@@ -73,9 +77,15 @@ async function main() {
     return { ...r, ethAt2x: +(wei / 1e18).toFixed(8) };
   });
   const relayEach = rows[4].gasEach * price;
+  // L1 stress: the L1 component is a single sample of today's L1 price; re-price it at 10x
+  const stress = rows.reduce((a, r) => a + r.count * (r.l2Gas + 10 * r.mainnetL1Gas) * price, 0);
   const out = {
     at: new Date().toISOString(),
-    method: "L2 gas = testnet 46630 receipt gasUsed - gasUsedForL1; mainnet L1 gas = NodeInterface(0xC8).gasEstimateL1Component on 4663 for the same tx input; priced at 2x eth_gasPrice(4663)",
+    method: "L2 gas = testnet 46630 raw receipt gasUsed - gasUsedForL1 (testnet L1 price is ~0, so the testnet L1 part reads 0); mainnet L1 gas = NodeInterface(0xC8).gasEstimateL1Component on 4663 for the same tx input — a single sample of today's L1 price, stress-tested at 10x below; everything priced at 2x eth_gasPrice(4663)",
+    notes: [
+      "The three testnet deploys predate two small edits (Results constructor reads Scrimmage.GENESIS; Scrimmage writes paidInSeason before the WIF calls); the deploy-gas delta is under 1% and does not touch the post or relay rows.",
+      "40 relayed commits is the minimum the budget must carry; the relayer runs with a daily ETH stop, and further relays draw on the remainder.",
+    ],
     mainnetGasPriceWei: gasPrice,
     budgetPriceWei: price,
     budgetEth: 0.00179,
@@ -83,7 +93,8 @@ async function main() {
     subtotalEthAt2x: +(spent / 1e18).toFixed(8),
     shareOfBudget: +((100 * spent) / budget).toFixed(1),
     remainderEthAt2x: +((budget - spent) / 1e18).toFixed(8),
-    extraRelayedCommitsFromRemainder: Math.floor((budget - spent) / relayEach),
+    extraRelayedCommitsAtTodaysL1Price: Math.floor((budget - spent) / relayEach),
+    shareOfBudgetWithL1At10x: +((100 * stress) / budget).toFixed(1),
     notOperatorCost: {
       "WIF.approve + Scrimmage.pay": "signed and paid by the player",
       "contract verification": "Blockscout source verification is off chain (no gas)",

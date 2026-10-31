@@ -1,8 +1,12 @@
 {
-  "at": "2026-10-31T12:56:30.948Z",
-  "method": "L2 gas = testnet 46630 receipt gasUsed - gasUsedForL1; mainnet L1 gas = NodeInterface(0xC8).gasEstimateL1Component on 4663 for the same tx input; priced at 2x eth_gasPrice(4663)",
-  "mainnetGasPriceWei": 20068000,
-  "budgetPriceWei": 40136000,
+  "at": "2026-10-31T12:59:17.176Z",
+  "method": "L2 gas = testnet 46630 raw receipt gasUsed - gasUsedForL1 (testnet L1 price is ~0, so the testnet L1 part reads 0); mainnet L1 gas = NodeInterface(0xC8).gasEstimateL1Component on 4663 for the same tx input — a single sample of today's L1 price, stress-tested at 10x below; everything priced at 2x eth_gasPrice(4663)",
+  "notes": [
+    "The three testnet deploys predate two small edits (Results constructor reads Scrimmage.GENESIS; Scrimmage writes paidInSeason before the WIF calls); the deploy-gas delta is under 1% and does not touch the post or relay rows.",
+    "40 relayed commits is the minimum the budget must carry; the relayer runs with a daily ETH stop, and further relays draw on the remainder."
+  ],
+  "mainnetGasPriceWei": 20028000,
+  "budgetPriceWei": 40056000,
   "budgetEth": 0.00179,
   "rows": [
     {
@@ -13,8 +17,8 @@
       "testnetGasUsed": 766897,
       "testnetGasUsedForL1": 0,
       "l2Gas": 766897,
-      "mainnetL1Gas": 1140,
-      "gasEach": 768037,
+      "mainnetL1Gas": 2693,
+      "gasEach": 769590,
       "ethAt2x": 0.00003083
     },
     {
@@ -25,8 +29,8 @@
       "testnetGasUsed": 598558,
       "testnetGasUsedForL1": 0,
       "l2Gas": 598558,
-      "mainnetL1Gas": 876,
-      "gasEach": 599434,
+      "mainnetL1Gas": 2058,
+      "gasEach": 600616,
       "ethAt2x": 0.00002406
     },
     {
@@ -37,8 +41,8 @@
       "testnetGasUsed": 650148,
       "testnetGasUsedForL1": 0,
       "l2Gas": 650148,
-      "mainnetL1Gas": 1029,
-      "gasEach": 651177,
+      "mainnetL1Gas": 2422,
+      "gasEach": 652570,
       "ethAt2x": 0.00002614
     },
     {
@@ -49,9 +53,9 @@
       "testnetGasUsed": 69551,
       "testnetGasUsedForL1": 0,
       "l2Gas": 69551,
-      "mainnetL1Gas": 142,
-      "gasEach": 69693,
-      "ethAt2x": 0.00005594
+      "mainnetL1Gas": 331,
+      "gasEach": 69882,
+      "ethAt2x": 0.00005598
     },
     {
       "item": "relayed commitBySig, 1,536 B blob (worst case)",
@@ -61,15 +65,16 @@
       "testnetGasUsed": 95272,
       "testnetGasUsedForL1": 0,
       "l2Gas": 95272,
-      "mainnetL1Gas": 1133,
-      "gasEach": 96405,
-      "ethAt2x": 0.00015477
+      "mainnetL1Gas": 2664,
+      "gasEach": 97936,
+      "ethAt2x": 0.00015692
     }
   ],
-  "subtotalEthAt2x": 0.00029174,
-  "shareOfBudget": 16.3,
-  "remainderEthAt2x": 0.00149826,
-  "extraRelayedCommitsFromRemainder": 387,
+  "subtotalEthAt2x": 0.00029393,
+  "shareOfBudget": 16.4,
+  "remainderEthAt2x": 0.00149607,
+  "extraRelayedCommitsAtTodaysL1Price": 381,
+  "shareOfBudgetWithL1At10x": 18.8,
   "notOperatorCost": {
     "WIF.approve + Scrimmage.pay": "signed and paid by the player",
     "contract verification": "Blockscout source verification is off chain (no gas)",
