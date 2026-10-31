@@ -1,0 +1,578 @@
+{
+ "v": 1,
+ "note": "SEMALAM house set: 30 frozen, public, labelled agents. Synthetic ids address(uint160(1..30)) \u2014 never EOAs, never players, no points, no crown. HOUSE_SET_HASH = keccak256(utf8(canonical(this file))) is pinned in the Results constructor.",
+ "agents": [
+  {
+   "n": 1,
+   "id": "0x0000000000000000000000000000000000000001",
+   "label": "house-01",
+   "style": "pure",
+   "policy": {
+    "v": 1,
+    "name": "always-gather",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": []
+   }
+  },
+  {
+   "n": 2,
+   "id": "0x0000000000000000000000000000000000000002",
+   "label": "house-02",
+   "style": "pure",
+   "policy": {
+    "v": 1,
+    "name": "always-guard",
+    "opening": "GUARD",
+    "default": "GUARD",
+    "grudge": 0,
+    "rules": []
+   }
+  },
+  {
+   "n": 3,
+   "id": "0x0000000000000000000000000000000000000003",
+   "label": "house-03",
+   "style": "pure",
+   "policy": {
+    "v": 1,
+    "name": "always-share",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 0,
+    "rules": []
+   }
+  },
+  {
+   "n": 4,
+   "id": "0x0000000000000000000000000000000000000004",
+   "label": "house-04",
+   "style": "pure",
+   "policy": {
+    "v": 1,
+    "name": "always-steal",
+    "opening": "STEAL",
+    "default": "STEAL",
+    "grudge": 0,
+    "rules": []
+   }
+  },
+  {
+   "n": 5,
+   "id": "0x0000000000000000000000000000000000000005",
+   "label": "house-05",
+   "style": "pure",
+   "policy": {
+    "v": 1,
+    "name": "smile-then-steal",
+    "opening": "SHARE",
+    "default": "STEAL",
+    "grudge": 0,
+    "rules": []
+   }
+  },
+  {
+   "n": 6,
+   "id": "0x0000000000000000000000000000000000000006",
+   "label": "house-06",
+   "style": "pure",
+   "policy": {
+    "v": 1,
+    "name": "always-copy",
+    "opening": "COPY_LEADER",
+    "default": "COPY_LEADER",
+    "grudge": 0,
+    "rules": []
+   }
+  },
+  {
+   "n": 7,
+   "id": "0x0000000000000000000000000000000000000007",
+   "label": "house-07",
+   "style": "reciprocal",
+   "policy": {
+    "v": 1,
+    "name": "tit-for-tat",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 1,
+    "rules": [
+     {
+      "if": "partner_stole_from_me",
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 8,
+   "id": "0x0000000000000000000000000000000000000008",
+   "label": "house-08",
+   "style": "reciprocal",
+   "policy": {
+    "v": 1,
+    "name": "grudger",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 20,
+    "rules": [
+     {
+      "if": "partner_stole_from_me",
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 9,
+   "id": "0x0000000000000000000000000000000000000009",
+   "label": "house-09",
+   "style": "reciprocal",
+   "policy": {
+    "v": 1,
+    "name": "forgiver",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 2,
+    "rules": [
+     {
+      "if": "partner_stole_from_me",
+      "then": "GUARD"
+     }
+    ]
+   }
+  },
+  {
+   "n": 10,
+   "id": "0x000000000000000000000000000000000000000a",
+   "label": "house-10",
+   "style": "reciprocal",
+   "policy": {
+    "v": 1,
+    "name": "thief-hunter",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_is_thief",
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 11,
+   "id": "0x000000000000000000000000000000000000000b",
+   "label": "house-11",
+   "style": "reciprocal",
+   "policy": {
+    "v": 1,
+    "name": "sharer-friend",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_shared_with_me",
+      "then": "SHARE"
+     }
+    ]
+   }
+  },
+  {
+   "n": 12,
+   "id": "0x000000000000000000000000000000000000000c",
+   "label": "house-12",
+   "style": "reciprocal",
+   "policy": {
+    "v": 1,
+    "name": "guard-the-thieves",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_is_thief",
+      "then": "GUARD"
+     }
+    ]
+   }
+  },
+  {
+   "n": 13,
+   "id": "0x000000000000000000000000000000000000000d",
+   "label": "house-13",
+   "style": "reciprocal",
+   "policy": {
+    "v": 1,
+    "name": "gentle-mirror",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 3,
+    "rules": [
+     {
+      "if": "partner_stole_from_me",
+      "then": "GUARD"
+     },
+     {
+      "if": "partner_shared_with_me",
+      "then": "SHARE"
+     }
+    ]
+   }
+  },
+  {
+   "n": 14,
+   "id": "0x000000000000000000000000000000000000000e",
+   "label": "house-14",
+   "style": "reciprocal",
+   "policy": {
+    "v": 1,
+    "name": "reciprocator",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 5,
+    "rules": [
+     {
+      "if": "partner_shared_with_me",
+      "then": "SHARE"
+     },
+     {
+      "if": "partner_is_thief",
+      "then": "GUARD"
+     },
+     {
+      "if": "partner_stole_from_me",
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 15,
+   "id": "0x000000000000000000000000000000000000000f",
+   "label": "house-15",
+   "style": "rank",
+   "policy": {
+    "v": 1,
+    "name": "rob-the-leader",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_is_leader",
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 16,
+   "id": "0x0000000000000000000000000000000000000010",
+   "label": "house-16",
+   "style": "rank",
+   "policy": {
+    "v": 1,
+    "name": "guard-when-leading",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "i_am_leading",
+      "then": "GUARD"
+     }
+    ]
+   }
+  },
+  {
+   "n": 17,
+   "id": "0x0000000000000000000000000000000000000011",
+   "label": "house-17",
+   "style": "rank",
+   "policy": {
+    "v": 1,
+    "name": "share-when-behind",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "i_am_behind",
+      "then": "SHARE"
+     }
+    ]
+   }
+  },
+  {
+   "n": 18,
+   "id": "0x0000000000000000000000000000000000000012",
+   "label": "house-18",
+   "style": "rank",
+   "policy": {
+    "v": 1,
+    "name": "rob-the-rich",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_richer",
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 19,
+   "id": "0x0000000000000000000000000000000000000013",
+   "label": "house-19",
+   "style": "rank",
+   "policy": {
+    "v": 1,
+    "name": "help-the-poor",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_poorer",
+      "then": "SHARE"
+     }
+    ]
+   }
+  },
+  {
+   "n": 20,
+   "id": "0x0000000000000000000000000000000000000014",
+   "label": "house-20",
+   "style": "rank",
+   "policy": {
+    "v": 1,
+    "name": "copy-when-behind",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "i_am_behind",
+      "then": "COPY_LEADER"
+     }
+    ]
+   }
+  },
+  {
+   "n": 21,
+   "id": "0x0000000000000000000000000000000000000015",
+   "label": "house-21",
+   "style": "rank",
+   "policy": {
+    "v": 1,
+    "name": "steal-when-behind",
+    "opening": "GUARD",
+    "default": "GUARD",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "i_am_behind",
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 22,
+   "id": "0x0000000000000000000000000000000000000016",
+   "label": "house-22",
+   "style": "rank",
+   "policy": {
+    "v": 1,
+    "name": "wary-of-the-rich",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_richer",
+      "then": "GUARD"
+     },
+     {
+      "if": "i_am_leading",
+      "then": "GATHER"
+     }
+    ]
+   }
+  },
+  {
+   "n": 23,
+   "id": "0x0000000000000000000000000000000000000017",
+   "label": "house-23",
+   "style": "timing",
+   "policy": {
+    "v": 1,
+    "name": "late-thief",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "turn_after",
+      "n": 150,
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 24,
+   "id": "0x0000000000000000000000000000000000000018",
+   "label": "house-24",
+   "style": "timing",
+   "policy": {
+    "v": 1,
+    "name": "late-guard",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "turn_after",
+      "n": 200,
+      "then": "GUARD"
+     }
+    ]
+   }
+  },
+  {
+   "n": 25,
+   "id": "0x0000000000000000000000000000000000000019",
+   "label": "house-25",
+   "style": "timing",
+   "policy": {
+    "v": 1,
+    "name": "last-orders-thief",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "turn_after",
+      "n": 270,
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "n": 26,
+   "id": "0x000000000000000000000000000000000000001a",
+   "label": "house-26",
+   "style": "timing",
+   "policy": {
+    "v": 1,
+    "name": "early-raider",
+    "opening": "STEAL",
+    "default": "STEAL",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "turn_after",
+      "n": 50,
+      "then": "GATHER"
+     }
+    ]
+   }
+  },
+  {
+   "n": 27,
+   "id": "0x000000000000000000000000000000000000001b",
+   "label": "house-27",
+   "style": "timing",
+   "policy": {
+    "v": 1,
+    "name": "slow-starter",
+    "opening": "GUARD",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "turn_after",
+      "n": 100,
+      "then": "SHARE"
+     }
+    ]
+   }
+  },
+  {
+   "n": 28,
+   "id": "0x000000000000000000000000000000000000001c",
+   "label": "house-28",
+   "style": "timing",
+   "policy": {
+    "v": 1,
+    "name": "late-copier",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "turn_after",
+      "n": 150,
+      "then": "COPY_LEADER"
+     }
+    ]
+   }
+  },
+  {
+   "n": 29,
+   "id": "0x000000000000000000000000000000000000001d",
+   "label": "house-29",
+   "style": "timing",
+   "policy": {
+    "v": 1,
+    "name": "midnight-switch",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_is_thief",
+      "then": "STEAL"
+     },
+     {
+      "if": "turn_after",
+      "n": 150,
+      "then": "GUARD"
+     }
+    ]
+   }
+  },
+  {
+   "n": 30,
+   "id": "0x000000000000000000000000000000000000001e",
+   "label": "house-30",
+   "style": "timing",
+   "policy": {
+    "v": 1,
+    "name": "last-call",
+    "opening": "GATHER",
+    "default": "GATHER",
+    "grudge": 10,
+    "rules": [
+     {
+      "if": "partner_stole_from_me",
+      "then": "STEAL"
+     },
+     {
+      "if": "turn_after",
+      "n": 290,
+      "then": "STEAL"
+     }
+    ]
+   }
+  }
+ ]
+}

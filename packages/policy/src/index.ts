@@ -54,3 +54,54 @@ export function canonical(v: unknown): string {
 }
 
 export const policyHash = (p: Policy) => keccak256(toBytes(canonical(p)));
+
+// ---------- plain-English readback (A4) ----------
+const ACTION_WORDS: Record<(typeof ACTIONS)[number], string> = {
+  GATHER: "GATHER (work your own stall)",
+  GUARD: "GUARD (protect your coins)",
+  SHARE: "SHARE (trade generously)",
+  STEAL: "STEAL (rob your neighbour)",
+  COPY_LEADER: "COPY_LEADER (do what the top agent did last turn)",
+};
+function conditionWords(r: z.infer<typeof Rule>, grudge: number): string {
+  const w: Record<(typeof CONDITIONS)[number], [string, string]> = {
+    partner_stole_from_me: [`my neighbour stole from me in the last ${grudge} turns`, `my neighbour has not stolen from me in the last ${grudge} turns`],
+    partner_is_thief: ["my neighbour stole from anyone in the last 10 turns", "my neighbour has not stolen from anyone in the last 10 turns"],
+    partner_shared_with_me: ["my neighbour shared with me in the last 10 turns", "my neighbour has not shared with me in the last 10 turns"],
+    partner_richer: ["my neighbour has more coins than me", "my neighbour does not have more coins than me"],
+    partner_poorer: ["my neighbour has fewer coins than me", "my neighbour does not have fewer coins than me"],
+    partner_is_leader: ["my neighbour is in the top 10", "my neighbour is not in the top 10"],
+    i_am_leading: ["I am in the top 10", "I am not in the top 10"],
+    i_am_behind: ["I am in the bottom half", "I am not in the bottom half"],
+    turn_after: [`it is after turn ${r.n}`, `it is turn ${r.n} or earlier`],
+  };
+  return w[r.if][r.not ? 1 : 0];
+}
+/** Plain words, in order, every rule; the UI and the CLI print exactly this. */
+export function readback(p: Policy): string[] {
+  const lines = [`Your agent "${p.name}" will:`, `- Turns 1–10: ${ACTION_WORDS[p.opening]}.`];
+  if (p.rules.length) lines.push("- From turn 11, first matching rule wins:");
+  p.rules.forEach((r, i) => lines.push(`  ${i + 1}. If ${conditionWords(r, p.grudge)} → ${ACTION_WORDS[r.then]}.`));
+  lines.push(`- ${p.rules.length ? "Otherwise" : "From turn 11"}: ${ACTION_WORDS[p.default]}.`);
+  if (!p.rules.some((r) => r.if === "partner_stole_from_me")) lines.push(`- Remembers a theft against it for ${p.grudge} turns.`);
+  return lines;
+}
+
+// ---------- no-LLM builder presets (P0b T10) ----------
+const preset = (name: string, opening: Policy["opening"], dflt: Policy["default"], grudge: number, rules: Policy["rules"]): Policy =>
+  Policy.parse({ v: 1, name, opening, default: dflt, grudge, rules });
+/** 8 client-side presets — the fallback when the compiler is down and the private path. */
+export const PRESETS: Policy[] = [
+  preset("steady-gatherer", "GATHER", "GATHER", 0, []),
+  preset("tit-for-tat", "SHARE", "SHARE", 1, [{ if: "partner_stole_from_me", then: "STEAL" }]),
+  preset("night-nurse", "GATHER", "GATHER", 5, [
+    { if: "partner_is_leader", then: "GATHER" },
+    { if: "partner_stole_from_me", then: "STEAL" },
+    { if: "i_am_leading", then: "GUARD" },
+  ]),
+  preset("copy-the-winner", "GATHER", "COPY_LEADER", 0, []),
+  preset("thief-hunter", "GATHER", "SHARE", 0, [{ if: "partner_is_thief", then: "GUARD" }, { if: "partner_stole_from_me", then: "STEAL" }]),
+  preset("generous-neighbour", "SHARE", "GATHER", 3, [{ if: "partner_shared_with_me", then: "SHARE" }, { if: "partner_is_thief", then: "GUARD" }]),
+  preset("late-bloomer", "GUARD", "GATHER", 0, [{ if: "turn_after", n: 240, then: "STEAL" }, { if: "partner_poorer", then: "SHARE" }]),
+  preset("rob-the-rich", "GATHER", "GATHER", 4, [{ if: "partner_richer", then: "STEAL" }, { if: "partner_stole_from_me", then: "GUARD" }]),
+];

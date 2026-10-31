@@ -1,5 +1,5 @@
 // SEMALAM night-market simulator — plain code, no LLM. Same inputs → same ranking → same resultHash.
-// Rule set v1. Payoffs are tuned against the house set, then frozen and hashed before the first mainnet night.
+// Rule set v1. Payoffs tuned against the house set and frozen (below); SIM_VERSION pins them.
 // resultHash = keccak256(abi.encode(string SIM_VERSION, round, drandRound, randomness, policySetHash, houseSetHash,
 // (address, coins)[] ranking)); Results.SIM_VERSION on chain stores keccak256(bytes(SIM_VERSION)).
 import { encodeAbiParameters, keccak256, concat, toBytes, type Hex } from "viem";
@@ -17,17 +17,22 @@ export type Act = "GATHER" | "GUARD" | "SHARE" | "STEAL";
 const IDX: Record<Act, number> = { GATHER: 0, GUARD: 1, SHARE: 2, STEAL: 3 };
 const ACTS: Act[] = ["GATHER", "GUARD", "SHARE", "STEAL"];
 // PAYOFF[me][partner] — coins to the row agent
-export const PAYOFF: number[][] = [
-  [3, 3, 5, -1],
-  [1, 1, 3, 3],
-  [2, 2, 4, -2],
-  [5, -3, 7, -1],
-];
+// Frozen 2026-10-31 after tuning over 48 seeds (scripts/sim/tune.ts → evidence/sim-tuning.json): a pure action wins
+// 1 of 48 house+preset nights (P0a draft: 5) and 5 of 48 random 238-agent fields (draft: 6); 15 distinct winners on
+// the thin nights. Changing it changes every resultHash.
+export const PAYOFF: readonly (readonly number[])[] = Object.freeze([
+  Object.freeze([2, 2, 4, -2]),
+  Object.freeze([1, 1, 2, 3]),
+  Object.freeze([2, 2, 5, -3]),
+  Object.freeze([4, -3, 6, -1]),
+]);
 export const ALONE = 3; // unpaired stall gathers alone
 
 export type Agent = { id: Hex; policy: Policy; house?: boolean };
 export type Standing = { id: Hex; coins: number; steals: number; house: boolean };
-export type NightResult = { ranking: Standing[]; resultHash: Hex; turns: number; agents: number; trace?: Act[][] };
+/** Per-turn record (only with opts.trace): field order = agents sorted by id. fired: -2 opening, -1 default, 0..2 rule. */
+export type Turn = { act: Uint8Array; fired: Int8Array; partner: Int32Array; coins: Int32Array; rank: Int32Array };
+export type NightResult = { ranking: Standing[]; resultHash: Hex; turns: number; agents: number; field: Agent[]; trace?: Turn[] };
 
 /** sfc32 seeded from the 32-byte drand randomness (first four big-endian words), warmed up. */
 export function sfc32(randomness: Hex) {
@@ -59,8 +64,9 @@ function below(next: () => number, n: number) {
 export function run(
   agents: Agent[],
   randomness: Hex,
-  opts: { round: bigint; drandRound: bigint; policySetHash: Hex; houseSetHash: Hex; trace?: boolean },
+  opts: { round: bigint; drandRound: bigint; policySetHash: Hex; houseSetHash: Hex; trace?: boolean; payoff?: readonly (readonly number[])[] },
 ): NightResult {
+  const PAY = opts?.payoff ?? PAYOFF; // payoff override = tuning script only; the runner and the CLI never pass it
   if (!opts?.policySetHash || !opts?.houseSetHash || opts.round === undefined || opts.drandRound === undefined)
     throw new Error("run(): round, drandRound, policySetHash and houseSetHash are required");
   const field = [...agents].sort((x, y) => (x.id.toLowerCase() < y.id.toLowerCase() ? -1 : 1));
@@ -76,7 +82,8 @@ export function run(
   let rank = rankOf(coins, steals, tie); // rank[i] = 1-based
   let leader = rank.indexOf(1);
   const seat = field.map((_, i) => i);
-  const trace: Act[][] = [];
+  const trace: Turn[] = [];
+  const fired = new Int8Array(N);
 
   for (let t = 1; t <= TURNS; t++) {
     if ((t - 1) % BLOCK === 0) {
@@ -93,7 +100,7 @@ export function run(
     const delta = new Array<number>(N).fill(0);
     for (let i = 0; i < N; i++) {
       const p = partner[i];
-      delta[i] = p < 0 ? ALONE : PAYOFF[IDX[act[i]]][IDX[act[p]]];
+      delta[i] = p < 0 ? ALONE : PAY[IDX[act[i]]][IDX[act[p]]];
     }
     for (let i = 0; i < N; i++) {
       coins[i] = Math.max(0, coins[i] + delta[i]);
@@ -109,7 +116,14 @@ export function run(
     for (let i = 0; i < N; i++) lastAct[i] = partner[i] < 0 ? "GATHER" : act[i];
     rank = rankOf(coins, steals, tie);
     leader = rank.indexOf(1);
-    if (opts.trace) trace.push([...act]);
+    if (opts.trace)
+      trace.push({
+        act: Uint8Array.from(act, (a) => IDX[a]),
+        fired: fired.slice(),
+        partner: Int32Array.from(partner),
+        coins: Int32Array.from(coins),
+        rank: Int32Array.from(rank),
+      });
   }
 
   function resolve(i: number, a: Policy["default"], t: number, pol: Policy): Act {
@@ -121,8 +135,9 @@ export function run(
 
   function decide(i: number, p: number, t: number): Act {
     const pol = field[i].policy;
-    if (t <= OPENING_TURNS) return resolve(i, pol.opening, t, pol);
-    for (const r of pol.rules) {
+    if (t <= OPENING_TURNS) return (fired[i] = -2), resolve(i, pol.opening, t, pol);
+    for (let k = 0; k < pol.rules.length; k++) {
+      const r = pol.rules[k];
       let hit: boolean;
       switch (r.if) {
         case "partner_stole_from_me": hit = p >= 0 && t - (stoleFromMe[i].get(p) ?? -1e9) <= pol.grudge; break;
@@ -136,8 +151,9 @@ export function run(
         case "turn_after": hit = t > (r.n ?? TURNS); break;
       }
       if (r.not) hit = !hit;
-      if (hit) return resolve(i, r.then, t, pol);
+      if (hit) return (fired[i] = k), resolve(i, r.then, t, pol);
     }
+    fired[i] = -1;
     return resolve(i, pol.default, t, pol);
   }
 
@@ -155,7 +171,7 @@ export function run(
       ],
     ),
   );
-  return { ranking, resultHash, turns: TURNS, agents: N, trace: opts.trace ? trace : undefined };
+  return { ranking, resultHash, turns: TURNS, agents: N, field, trace: opts.trace ? trace : undefined };
 }
 
 /**
@@ -185,3 +201,40 @@ function rankOf(coins: number[], steals: number[], tie: Hex[]): number[] {
 }
 
 export { ACTS };
+
+/** Points for one night from the FULL-field rank; house agents never score. */
+export const points = (fieldRank: number, house = false) => (house ? 0 : Math.max(0, 100 - fieldRank + 1));
+
+export type Keyframe = { t: number; coins: number; rank: number };
+export type Decisive = { t: number; action: Act; partner: Hex | null; partnerAction: Act | null; delta: number; rule: number; why: string };
+export type AgentReplay = { id: Hex; keyframes: Keyframe[]; decisive: Decisive };
+
+/**
+ * ≤ 30 keyframes (every 10th turn) + the decisive turn for one agent: the turn where one of its own rules fired with the
+ * largest coin swing (ties → earliest); if no rule ever fired, the largest swing of the night.
+ */
+export function replayOf(res: NightResult, id: Hex): AgentReplay {
+  if (!res.trace) throw new Error("replayOf(): run with { trace: true }");
+  const i = res.field.findIndex((a) => a.id.toLowerCase() === id.toLowerCase());
+  if (i < 0) throw new Error(`replayOf(): ${id} not in this night`);
+  const tr = res.trace;
+  const keyframes: Keyframe[] = [];
+  for (let t = 10; t <= tr.length; t += 10) keyframes.push({ t, coins: tr[t - 1].coins[i], rank: tr[t - 1].rank[i] });
+  let best = -1, bestAbs = -1, bestRule = -1, bestRuleAbs = -1;
+  for (let t = 1; t <= tr.length; t++) {
+    const d = Math.abs(tr[t - 1].coins[i] - (t === 1 ? START_COINS : tr[t - 2].coins[i]));
+    if (d > bestAbs) (bestAbs = d), (best = t);
+    if (tr[t - 1].fired[i] >= 0 && d > bestRuleAbs) (bestRuleAbs = d), (bestRule = t);
+  }
+  const t = bestRule > 0 ? bestRule : best;
+  const row = tr[t - 1];
+  const p = row.partner[i];
+  const delta = row.coins[i] - (t === 1 ? START_COINS : tr[t - 2].coins[i]);
+  const pol = res.field[i].policy;
+  const rule = row.fired[i];
+  const action = ACTS[row.act[i]];
+  const partnerAction = p >= 0 ? ACTS[row.act[p]] : null;
+  const src = rule >= 0 ? `rule ${rule + 1} (${pol.rules[rule].not ? "not " : ""}${pol.rules[rule].if})` : rule === -2 ? "opening" : "default";
+  const why = `turn ${t}: ${src} → ${action}${partnerAction ? ` vs ${partnerAction}` : " alone"}, ${delta >= 0 ? "+" : ""}${delta} coins`;
+  return { id: res.field[i].id, keyframes, decisive: { t, action, partner: p >= 0 ? res.field[p].id : null, partnerAction, delta, rule, why } };
+}
