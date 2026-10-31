@@ -36,6 +36,8 @@ export async function walletSigner(): Promise<Signer> {
   }
   const now = String(await eth.request({ method: "eth_chainId" })).toLowerCase();
   if (now !== idHex) throw new Error(`your wallet is on chain ${parseInt(now, 16)}, not ${CHAIN.id} — switch it and try again`);
+  const [active] = (await eth.request({ method: "eth_accounts" })) as Address[]; // some wallets change the account on a switch
+  if (active && active.toLowerCase() !== address.toLowerCase()) throw new Error("your wallet changed account while switching chains — connect again");
   return { mode: "wallet", address, client: createWalletClient({ account: address, chain: CHAIN, transport: custom(eth) }) };
 }
 

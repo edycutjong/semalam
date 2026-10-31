@@ -32,6 +32,7 @@ const RESULTS_ABI = [
 const ORDERS_GENESIS_ABI = [
   { type: "function", name: "GENESIS", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
+const CROWNED = parseAbiItem("event Crowned(uint256 indexed season, address account, bytes32 policyHash)");
 const CHAMPION_ABI = [
   { type: "function", name: "championOf", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "address" }] },
 ] as const;
@@ -84,8 +85,17 @@ export const deps: { client?: PublicClient; fetchFn?: typeof fetch } = {};
  * ONE RPC endpoint per run: the first in the list that answers with the right chain id. Mixing nodes mid-run could read
  * the finalized head from one node and logs from a node that has not indexed that far — a silent false MISMATCH.
  */
+let picked: { key: string; c: PublicClient } | null = null;
 async function client(a: Args, d: Dep): Promise<PublicClient> {
   if (deps.client) return deps.client;
+  // one endpoint for the whole run (a season replays three nights + reads Paid/crown: all from the same node)
+  const key = `${a.chain}|${(a.rpc.length ? a.rpc : d.rpcs).join(",")}`;
+  if (picked?.key === key) return picked.c;
+  const c = await pickClient(a, d);
+  picked = { key, c };
+  return c;
+}
+async function pickClient(a: Args, d: Dep): Promise<PublicClient> {
   const urls = a.rpc.length ? a.rpc : d.rpcs;
   const errs: string[] = [];
   for (const u of urls) {
@@ -287,7 +297,9 @@ export function seasonTable(nights: Settled[], payers: Set<string>) {
     }
   const board = [...tally.entries()]
     .map(([id, t]) => ({ id: getAddress(id), ...t, eligible: payers.has(id) && t.topHalf && t.points > 0 }))
-    .sort((x, y) => y.points - x.points || y.coins - x.coins || (keccak256(x.id) < keccak256(y.id) ? -1 : 1));
+    .map((b) => ({ b, t: keccak256(b.id as Hex) }))
+    .sort((x, y) => y.b.points - x.b.points || y.b.coins - x.b.coins || (x.t < y.t ? -1 : x.t > y.t ? 1 : 0))
+    .map((x) => x.b);
   return { board, champion: board.find((b) => b.eligible) ?? null };
 }
 
@@ -327,6 +339,11 @@ async function seasonCmd(a: Args, s: number): Promise<number> {
   console.log(crownLine());
   if (!none && crowned.toLowerCase() !== champion.id.toLowerCase()) { console.log(bad(`✗ MISMATCH — the posted crown is not the champion computed from the three nights`)); return 1; }
   if (none) return 4; // waiting: the season is verified but the crown is not on chain yet
+  // the crown's policyHash must be the champion's latest PLAYED policy of the season (last night they appear in)
+  const want = [...nights].reverse().map((n) => n.ranking.find((r) => r.id.toLowerCase() === champion.id.toLowerCase())?.policyHash).find(Boolean) ?? null;
+  const ev = (await net(logsPaged((lo, hi) => c.getLogs({ address: d.results!, event: CROWNED, args: { season: BigInt(s) }, fromBlock: lo, toBlock: hi }), BigInt(d.fromBlock), fin.number!), "eth_getLogs(Crowned)"))[0];
+  const gotPolicy = (ev?.args.policyHash as Hex | undefined) ?? null;
+  if (gotPolicy && want && gotPolicy.toLowerCase() !== want.toLowerCase()) { console.log(bad(`✗ MISMATCH — Crowned.policyHash ${short(gotPolicy)} is not the champion's played policy ${short(want)}`)); return 1; }
   console.log(ok("✓ MATCH — the posted crown is the computed champion"));
   return 0;
 }

@@ -107,11 +107,12 @@ async function main() {
   }
   if (!todo.length) return log("nothing to settle");
   mkdirSync(outDir, { recursive: true });
-  const wallet = createWalletClient({ account: privateKeyToAccount(posterKey()), chain, transport: http(rpc, { timeout: 20_000 }) });
+  // --dry replays and reports without the POSTER key (anyone can run it)
+  const wallet = dry ? null : createWalletClient({ account: privateKeyToAccount(posterKey()), chain, transport: http(rpc, { timeout: 20_000 }) });
   // a post is ~70k gas: warn while there is still room for these rounds plus three more nights, not after a post fails
-  const [bal, gp] = await Promise.all([pub.getBalance({ address: wallet.account.address }), pub.getGasPrice()]);
+  const [bal, gp] = wallet ? await Promise.all([pub.getBalance({ address: wallet.account.address }), pub.getGasPrice()]) : [0n, 0n];
   const need = 70_000n * gp * 2n * BigInt(todo.length + 3);
-  if (bal < need) log(`POSTER LOW: ${wallet.account.address} holds ${bal} wei, needs ≥ ${need} for ${todo.length} post(s) + 3 nights — top it up from the deployer (HUMAN-TODO)`);
+  if (wallet && bal < need) log(`POSTER LOW: ${wallet!.account.address} holds ${bal} wei, needs ≥ ${need} for ${todo.length} post(s) + 3 nights — top it up from the deployer (HUMAN-TODO)`);
   for (const round of todo) {
     // one bad round (RPC error, drand outage) must not stop the later ones in the same run
     try { await settleOne(round); } catch (e) { log(`round ${round}: FAILED — ${(e as Error).message.split("\n")[0]} (retried next run)`); }
@@ -128,7 +129,7 @@ async function main() {
     let onchain: { resultHash: string; drandRound: number; tx: string | null } | null = null;
     const existing = await pub.readContract({ address: d.results, abi: RES, functionName: "resultOf", args: [BigInt(round)] });
     if (!/^0x0+$/.test(existing)) {
-      const p = (await pagedLogs((lo, hi) => pub.getLogs({ address: d.results, event: EV[1], args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }), BigInt(d.fromBlock), fin.number!))[0];
+      const p = (await pagedLogs((lo, hi) => pub.getLogs({ address: d.results, event: EV[1], args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }), BigInt(d.fromBlock), await pub.getBlockNumber()))[0];
       onchain = { resultHash: existing, drandRound: Number(p?.args.drandRound ?? run.st.drandRound), tx: p?.transactionHash ?? null };
       status = existing.toLowerCase() === runHash.toLowerCase() && match ? "posted" : "hash-mismatch-not-posted";
     } else if (!match) {
@@ -136,7 +137,7 @@ async function main() {
       log(`round ${round}: runner ${runHash} != CLI ${cliHash} — NOT POSTED`);
     } else if (!dry) {
       try {
-        const hash = await wallet.writeContract({ address: d.results, abi: RES, functionName: "post", args: [BigInt(round), runHash, BigInt(run.st.drandRound)] });
+        const hash = await wallet!.writeContract({ address: d.results, abi: RES, functionName: "post", args: [BigInt(round), runHash, BigInt(run.st.drandRound)] });
         const rc = await pub.waitForTransactionReceipt({ hash, timeout: 60_000 });
         onchain = { resultHash: runHash, drandRound: run.st.drandRound, tx: hash };
         status = rc.status === "success" ? "posted" : "poster-reverted";
@@ -156,6 +157,7 @@ async function main() {
     const pol = new Map(run.agents.map((a) => [a.id.toLowerCase(), a.policy]));
     const houseP = new Map(HOUSE.agents.map((h) => [h.id.toLowerCase(), h.policy]));
     const opponents = run.st.ranking.slice(0, 30).map((r) => ({ id: r.id, label: r.label, house: r.house, rank: r.rank, coins: r.coins, policy: (r.house ? houseP : pol).get(r.id.toLowerCase())! }));
+    if (opponents.some((o) => !o.policy)) throw new Error("an opponent's policy is missing from the artifact pass — not writing a half artifact");
     const art = {
       v: 1, chainId: Number(chainId), round, settledAt: new Date().toISOString(), status, onchain,
       cli: { version: cli.version, resultHash: cliHash, match },
