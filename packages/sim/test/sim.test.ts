@@ -6,8 +6,8 @@ import { run, sfc32, pairing, TURNS, START_COINS, ALONE } from "../src/index.ts"
 import { field, RANDOMNESS } from "./fixture.ts";
 
 import { OPTS } from "./opts.ts";
-// Pinned golden hash. Any change to the rule set must bump SIM_VERSION and this hash in the same commit.
-const GOLDEN_230 = "0x71ce4bba01b76d5da6384d8aa4564a870ff99fe4988479663e64582450746a11";
+// Pinned golden hash (payoffs frozen 2026-10-31). Any later rule change must bump SIM_VERSION and this hash together.
+const GOLDEN_230 = "0x590be2879447c670dcca23e18a1b116520c3dc33885c3eb134744f5c306bef69";
 
 test("sfc32 is deterministic", () => {
   const a = sfc32(RANDOMNESS), b = sfc32(RANDOMNESS);

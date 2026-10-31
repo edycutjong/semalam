@@ -8,7 +8,9 @@ coverage/
 .DS_Store
 .vercel/
 *.pdf
-fixtures/
+/fixtures/*
+!/fixtures/golden/
+!/fixtures/injection.json
 .venv/
 out/
 cache/
