@@ -12,6 +12,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ round: string }
   const prev = src === "house" ? undefined : src ? Number(src) : (await settledRounds()).filter((r) => r < round).pop();
   if (src && src !== "house" && !(Number.isInteger(prev) && (prev as number) >= 1 && (prev as number) < round)) return Response.json({ error: "source must be an earlier round or 'house'" }, { status: 400 });
   const art = prev ? await readArtifact(prev) : null;
+  if (src && src !== "house" && !art) return Response.json({ error: `the field from round ${src} is not available` }, { status: 404 }); // a pinned run must never silently fall back to another field
   const house = HOUSE.agents.map((h, i) => ({ id: h.id, label: h.label, house: true, policy: h.policy, rank: i + 1, coins: 0 }));
   const opponents = art?.opponents ?? house;
   return Response.json({

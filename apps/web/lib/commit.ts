@@ -31,7 +31,7 @@ export async function commitSealed(signer: Signer, round: number, s: Sealed, non
     const args = [BigInt(round), s.policyHash, s.sealedBlob] as const;
     const hash = signer.mode === "wallet"
       ? await signer.client.writeContract({ account: signer.address, chain: CHAIN, address: ORDERS, abi: ORDERS_ABI, functionName: "commit", args })
-      : await createWalletClient({ account: signer.account, chain: CHAIN, transport: http(DEP.rpcs[0]) }).writeContract({ chain: CHAIN, address: ORDERS, abi: ORDERS_ABI, functionName: "commit", args }).catch(() => { throw new Error(`${why} — this browser key has no ETH to commit by itself; send a little to ${signer.address} and press Seal again`); });
+      : await createWalletClient({ account: signer.account, chain: CHAIN, transport: http(DEP.rpcs[0]) }).writeContract({ chain: CHAIN, address: ORDERS, abi: ORDERS_ABI, functionName: "commit", args }).catch((e: Error) => { throw new Error(/insufficient|exceeds the balance|funds/i.test(e.message) ? `${why} — this browser key has no ETH to commit by itself; send a little to ${signer.address} and press Seal again` : e.message.split("\n")[0]); });
     return { tx: hash, url: "", mode: "wallet", blockOk: true };
   };
   if (!relayOk) return direct("the relay is empty");
@@ -44,7 +44,7 @@ export async function commitSealed(signer: Signer, round: number, s: Sealed, non
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ account: signer.address, round, policyHash: s.policyHash, sealedBlob: s.sealedBlob, deadline: deadline.toString(), signature }),
   });
-  const j = await res.json();
+  const j = await res.json().catch(() => ({}));
   if (res.ok && j.ok) return { tx: j.tx, url: j.url, mode: "relay", blockOk: true };
   // The relay says it is out of gas or at its cap (relay:false) -> the player's own account sends the commit. A plain rate-limit
   // (429 without relay:false) is NOT that: say so and let them retry.
@@ -63,10 +63,11 @@ export async function status(account?: Address): Promise<StatusJson> {
   return j;
 }
 /** Polls until the account's latest Committed event carries this policy hash. */
-export async function readBack(account: Address, policyHash: string, tries = 12): Promise<StatusJson["commits"][number] | null> {
+/** `before` = how many commits the chain showed before sending, so an identical earlier commit is never mistaken for this one. */
+export async function readBack(account: Address, policyHash: string, before = 0, tries = 12): Promise<StatusJson["commits"][number] | null> {
   for (let i = 0; i < tries; i++) {
     const s = await status(account);
-    const hit = [...s.commits].reverse().find((c) => c.policyHash.toLowerCase() === policyHash.toLowerCase());
+    const hit = s.commits.slice(before).reverse().find((c) => c.policyHash.toLowerCase() === policyHash.toLowerCase());
     if (hit) return hit;
     await new Promise((r) => setTimeout(r, 1500));
   }

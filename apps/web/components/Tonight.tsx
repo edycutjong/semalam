@@ -28,7 +28,7 @@ export default function Tonight() {
   const [policy, setPolicy] = useState<Policy | null>(null);
   const [viaLLM, setViaLLM] = useState(false);
   const [signer, setSigner] = useState<Signer | null>(null);
-  const [entered, setEntered] = useState<(Entered & { policyHash: string }) | null>(null);
+  const [entered, setEntered] = useState<(Entered & { policyHash: string; round: number }) | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [step, setStep] = useState("");
 
@@ -78,9 +78,9 @@ export default function Tonight() {
       if (fresh.round !== st.round) { setSt(fresh); throw new Error(`round ${st.round} closed while you were sealing — the new round ${fresh.round} is open; press Seal again`); }
       const e = await commitSealed(s, st.round, sealed, BigInt(fresh.nonce ?? "0"), fresh.chainNow, fresh.relay);
       setStep("waiting for the chain to show your commit…");
-      const hit = await readBack(s.address, sealed.policyHash);
+      const hit = await readBack(s.address, sealed.policyHash, fresh.commits.length);
       if (!hit) throw new Error("the commit was sent but the chain does not show it yet — check again in a minute; nothing was lost");
-      const done = { ...e, tx: hit.tx, url: e.url || txUrl(hit.tx), policyHash: sealed.policyHash };
+      const done = { ...e, tx: hit.tx, url: e.url || txUrl(hit.tx), policyHash: sealed.policyHash, round: st.round };
       setEntered(done);
       lsSet(`semalam.committed.${st.round}`, { policy, policyHash: sealed.policyHash, tx: hit.tx, account: s.address, at: Date.now() });
       if (!localStorage.getItem(`semalam.first.${st.round}`)) lsSet(`semalam.first.${st.round}`, { policy, policyHash: sealed.policyHash, account: s.address });
@@ -167,7 +167,7 @@ export default function Tonight() {
         )}
         {phase === "sealed" && entered && policy && st && (
           <>
-            <Ticket state="sealed" title={policy.name} lines={rb} stamp={`SEALED · ROUND ${st.round}`} hash={entered.policyHash} tx={entered.tx} txUrl={entered.url} />
+            <Ticket state="sealed" title={policy.name} lines={rb} stamp={`SEALED · ROUND ${entered.round}`} hash={entered.policyHash} tx={entered.tx} txUrl={entered.url} />
             {signer?.mode === "local" && (
               <details className="note" style={{ marginBottom: 12 }}>
                 <summary style={{ minHeight: 44, cursor: "pointer", display: "flex", alignItems: "center" }}>Keep your agent — your play address and key</summary>
@@ -179,7 +179,7 @@ export default function Tonight() {
             <p className="note">Entered. The chain shows your commit ({entered.mode === "relay" ? "gasless, through the relay" : "sent from your wallet"}). You can re-commit until the close; only your latest counts.</p>
             <div className="row">
               <Link className="btn" href="/scrimmage">Practise this draft</Link>
-              <Link className="btn" href={`/round/${st.round}`}>Where breakfast will be</Link>
+              <Link className="btn" href={`/round/${entered.round}`}>Where breakfast will be</Link>
               <button type="button" className="quiet" onClick={() => { setPhase("write"); setEntered(null); setRes(null); }}>Rewrite</button>
             </div>
           </>

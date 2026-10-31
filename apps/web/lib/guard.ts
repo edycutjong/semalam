@@ -27,3 +27,13 @@ export function serial<T>(key: string, f: () => Promise<T>): Promise<T> {
   tails.set(key, run.catch(() => undefined));
   return run;
 }
+export const forget = (key: string) => { memo.delete(key); };
+/** In-flight reservations per key, so back-to-back requests cannot all read the same stale on-chain count. */
+const reserved = new Map<string, { n: number; at: number }>();
+export function reserve(key: string, ttlMs = 30_000): number {
+  const now = Date.now(), cur = reserved.get(key);
+  const n = cur && now - cur.at < ttlMs ? cur.n : 0;
+  reserved.set(key, { n, at: cur && now - cur.at < ttlMs ? cur.at : now });
+  return n;
+}
+export function bump(key: string, d: number) { const c = reserved.get(key); if (c) c.n = Math.max(0, c.n + d); else if (d > 0) reserved.set(key, { n: d, at: Date.now() }); }

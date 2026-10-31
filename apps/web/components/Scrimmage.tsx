@@ -68,6 +68,7 @@ export default function Scrimmage() {
       const src = pinned ? pinned.src : (opp.source?.round ?? null);
       if (!pinned) lsSet(pinKey, { src });
       const field = pinned && src !== (opp.source?.round ?? null) ? ((await (await fetch(`/api/opponents/${st.round}?source=${src ?? "house"}`)).json()) as Opp) : opp;
+      if (!field.opponents) throw new Error("the field this run was pinned to is not available");
       setRes({ kind: "free", account: signer.address, r: scrimmage({ id: signer.address, policy: first.policy }, field.opponents, freeSeed(st.round, signer.address, first.policyHash), st.round), policy: first.policy });
     })().catch((e) => setErr((e as Error).message));
   }
@@ -88,6 +89,8 @@ export default function Scrimmage() {
     if (!signer || !st || !opp) return;
     setBusy(true); setErr(null);
     try {
+      const fresh = await status(signer.address); // a tab left open overnight must not pay into a closed round
+      if (fresh.round !== st.round) { setSt(fresh); throw new Error(`round ${st.round} has closed — round ${fresh.round} is open now; check the opponents and pay again`); }
       const dh = draftHash(draft);
       const allowance = await publicRpc().readContract({ address: WIF, abi: ERC20_ABI, functionName: "allowance", args: [signer.address, SCRIMMAGE] });
       if (allowance < PRICE) { setMsg(`approve exactly 200 ${WIF_LABEL}…`); await send("approve", [SCRIMMAGE, PRICE], WIF, ERC20_ABI); }

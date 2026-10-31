@@ -4,7 +4,7 @@ import { ORDERS, EXCLUDED, txUrl } from "@/lib/config";
 import { MAX_SEALED } from "@semalam/sim/round";
 import { closeTime, currentRound } from "@/lib/clock";
 import { chainNow, commitCountOf, commitsOf, publicClient, relayer, RELAY_FLOOR_WEI } from "@/lib/chain";
-import { ipOf, serial, throttle } from "@/lib/guard";
+import { bump, forget, ipOf, reserve, serial, throttle } from "@/lib/guard";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -30,11 +30,14 @@ export async function POST(req: Request) {
   const now = await chainNow();
   if (round !== currentRound(now) || now >= closeTime(round)) return fail(`round ${round} is not open for commits`, 409);
   if (EXCLUDED.includes(account.toLowerCase())) return fail("operator addresses cannot play");
-  const have = await commitsOf(account, round);
+  const rkey = `${account}:${round}`;
+  forget(`commitsOf:${account}:${round}`); // never trust a cached count for the quota
+  const have = { length: Math.max((await commitsOf(account, round)).length, reserve(rkey)) }; // chain count or in-flight sends, whichever is higher
   if (have.length >= MAX_PER_ROUND) return fail(`at most ${MAX_PER_ROUND} sponsored commits per account per round — use your own wallet`, 429, { relay: false });
   if (have.length === 0 && (await commitCountOf(round)) >= ROUND_SPONSOR_CAP) return fail("relay full for this round — use your own wallet", 429, { relay: false });
   const bal = await publicClient.getBalance({ address: r.account.address });
   if (bal < RELAY_FLOOR_WEI) return fail("relay empty — use your own wallet", 503, { relay: false });
+  bump(rkey, 1); // reserved until the chain shows it (failures release it below)
   try {
     const args = [account, BigInt(round), ph as Hex, sealed as Hex, deadline, sig as Hex] as const;
     // one relayer key = one nonce stream: sends are serialised per instance; a cross-instance nonce clash retries once
@@ -46,13 +49,14 @@ export async function POST(req: Request) {
     try { hash = await send(); } catch (e) { if (!/nonce/i.test((e as Error).message)) throw e; await new Promise((x) => setTimeout(x, 700)); hash = await send(); }
     try {
       const rc = await publicClient.waitForTransactionReceipt({ hash, timeout: 20_000 });
-      if (rc.status !== "success") return fail("the commit transaction reverted", 502, { tx: hash });
+      if (rc.status !== "success") { bump(rkey, -1); return fail("the commit transaction reverted", 502, { tx: hash }); }
     } catch {
       return Response.json({ ok: true, tx: hash, url: txUrl(hash), mode: "relay", pending: true }); // sent; the client reads the chain back
     }
     return Response.json({ ok: true, tx: hash, url: txUrl(hash), mode: "relay", sealedKeccak: keccak256(sealed as Hex) });
   } catch (e) {
     const m = (e as Error).message ?? "";
+    bump(rkey, -1);
     const named = /Expired/.test(m) ? "signature expired — sign again" : /BadSignature/.test(m) ? "signature does not match this account and draft" : /WrongRound/.test(m) ? `round ${round} is not open` : /SealedTooLarge/.test(m) ? "sealed orders too large" : /nonce/i.test(m) ? "relay busy — try again in a moment" : "the chain refused this commit";
     return fail(named, 422);
   }
