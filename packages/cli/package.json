@@ -1,0 +1,26 @@
+{
+  "name": "semalam",
+  "version": "0.1.0",
+  "description": "Replay any SEMALAM night from chain logs + the drand beacon and check the posted resultHash.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "semalam": "dist/semalam.mjs" },
+  "files": ["dist", "house-set.json", "fixtures", "README.md"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "prepack": "node build.mjs"
+  },
+  "devDependencies": {
+    "@semalam/beacon": "workspace:*",
+    "@semalam/policy": "workspace:*",
+    "@semalam/sim": "workspace:*",
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "viem": "^2.57.13"
+  }
+}
