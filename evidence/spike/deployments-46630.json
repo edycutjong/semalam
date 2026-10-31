@@ -1,0 +1,16 @@
+{
+  "note": "P1a SPIKE deploy on Robinhood Chain testnet 46630 — superseded by the P1c deploy. MockWIF is a labelled testnet stand-in.",
+  "chainId": 46630,
+  "genesis": 1793293200,
+  "genesisUtc": "2026-10-29T17:00:00Z",
+  "deployer": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+  "poster": "0xaf343675E4942BF4071af6C838F871713A6f776D",
+  "relayer": "0x944bC964C60856BFd62CdAF971f53988B57D13A9",
+  "houseSetHash": "keccak256(\"semalam-spike-house-set-v0\")",
+  "contracts": {
+    "MockWIF": "0xAAA4D7abdC7FE91d2D4827CA559887eF6288e0C2",
+    "Orders": "0xed6afbC314187C3e0D7EB3ABCb2962e6375C676C",
+    "Scrimmage": "0x313FBC505aac82b1257F4849A28f4461a3e09e25",
+    "Results": "0x984d171DAA87eAd45601cB415591230007c5c024"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "chainId": 46630,
+  "orders": "0xed6afbC314187C3e0D7EB3ABCb2962e6375C676C",
+  "round": 2,
+  "seedRound": 33554312,
+  "direct": {
+    "tx": "0xf086f6022ee4956b7512e477e07aac6d7b3a5c1bd1e0a8548321aea488aba88b",
+    "status": "success",
+    "gasUsed": 36459,
+    "effectiveGasPrice": 10000000,
+    "sealedBytes": 448,
+    "readbackOk": true
+  },
+  "relay": {
+    "tx": "0x2f3eb1ea2c5a76f463c5f1d751b953ab157714d3e761d363ced68640f1d94ba4",
+    "status": "success",
+    "gasUsed": 68700,
+    "effectiveGasPrice": 10000000,
+    "sealedBytes": 445,
+    "account": "0xA54D06B3dA11a4bc71053a07168D348B3fd53781",
+    "playerEthBalance": 0,
+    "readbackOk": true
+  }
+}

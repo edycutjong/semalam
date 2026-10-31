@@ -1,0 +1,54 @@
+{
+  "chain": 4663,
+  "gasPriceWei": 20032000,
+  "budgetPriceWei": 40064000,
+  "budgetEth": 0.00179,
+  "rows": [
+    {
+      "item": "deploy Orders",
+      "count": 1,
+      "gasEach": 768423,
+      "ethAt2x": 3.079e-05,
+      "source": "anvil fork of 4663 @102548634"
+    },
+    {
+      "item": "deploy Scrimmage",
+      "count": 1,
+      "gasEach": 599892,
+      "ethAt2x": 2.403e-05,
+      "source": "anvil fork"
+    },
+    {
+      "item": "deploy Results",
+      "count": 1,
+      "gasEach": 651686,
+      "ethAt2x": 2.611e-05,
+      "source": "anvil fork"
+    },
+    {
+      "item": "POSTER Results.post (2 x 10 nights)",
+      "count": 20,
+      "gasEach": 69551,
+      "ethAt2x": 5.573e-05,
+      "source": "anvil fork"
+    },
+    {
+      "item": "relayer commitBySig 1,536 B blob (>= 40)",
+      "count": 40,
+      "gasEach": 96798,
+      "ethAt2x": 0.00015512,
+      "source": "testnet 46630 tx 0x3d6f5968\u20260718"
+    }
+  ],
+  "subtotalEthAt2x": 0.00029178,
+  "remainderEthAt2x": 0.00149822,
+  "extraRelayedCommitsFromRemainder": 386,
+  "other": {
+    "Orders.commit direct 1,536 B (fork)": 84810,
+    "WIF.approve (fork, real WIF)": 45961,
+    "Scrimmage.pay (fork, real WIF)": 96784,
+    "commitBySig 445 B (testnet tx 0x2f3eb1ea\u2026a4ba)": 68700,
+    "commit direct 448 B (testnet tx 0xf086f602\u2026b88b)": 36459
+  },
+  "verdict": "FITS: Tier-1 mainnet budget uses 16.3% of 0.00179 ETH at 2x today's gas price; remainder funds the paymaster deposit / extra relays"
+}
