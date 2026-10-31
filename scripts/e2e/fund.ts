@@ -8,6 +8,6 @@ const chain = defineChain({ id: 46630, name: "t", nativeCurrency: { name: "E", s
 const dep = readFileSync(`${homedir()}/.config/semalam/deployer.env`, "utf8").match(/DEPLOYER_PRIVATE_KEY=(.+)/)![1].trim() as Hex;
 const w = createWalletClient({ account: privateKeyToAccount(dep), chain, transport: http() });
 const pub = createPublicClient({ chain, transport: http() });
-const h = await w.sendTransaction({ to, value: parseEther("0.0005") });
+const h = await w.sendTransaction({ to, value: parseEther("0.0001") });
 await pub.waitForTransactionReceipt({ hash: h });
 console.log("funded", to, h);
