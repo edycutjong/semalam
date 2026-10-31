@@ -75,6 +75,8 @@ test("live: a different posted hash → exit 1 MISMATCH; nothing posted → exit
   const bad = await live({ posted: keccak256(toBytes("not the night")) });
   assert.equal(bad.code, 1);
   assert.match(bad.out, /✗ MISMATCH/);
+  assert.match(bad.out, /another node \(--rpc <url>/); // a judge is told how to rule out their RPC before disputing
+  assert.match(bad.out, /github\.com\/edycutjong\/semalam\/issues/);
   const none = await live({ posted: null });
   assert.equal(none.code, 4);
   assert.match(none.out, new RegExp(`${g.expect.resultHash}.*not posted yet`));

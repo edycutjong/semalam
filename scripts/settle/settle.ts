@@ -90,6 +90,10 @@ async function main() {
   if (!todo.length) return log("nothing to settle");
   mkdirSync(outDir, { recursive: true });
   const wallet = createWalletClient({ account: privateKeyToAccount(posterKey()), chain, transport: http(rpc, { timeout: 20_000 }) });
+  // a post is ~70k gas: warn while there is still room for these rounds plus three more nights, not after a post fails
+  const [bal, gp] = await Promise.all([pub.getBalance({ address: wallet.account.address }), pub.getGasPrice()]);
+  const need = 70_000n * gp * 2n * BigInt(todo.length + 3);
+  if (bal < need) log(`POSTER LOW: ${wallet.account.address} holds ${bal} wei, needs ≥ ${need} for ${todo.length} post(s) + 3 nights — top it up from the deployer (HUMAN-TODO)`);
   for (const round of todo) {
     log(`round ${round}: settling (finalized block ${fin.number})`);
     const cli = cliRun(round);

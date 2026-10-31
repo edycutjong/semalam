@@ -36,9 +36,11 @@ export default async function Verify({ params }: { params: Promise<{ n: string }
         <dt>Randomness</dt><dd>{s ? <HashLine value={s.randomness} short /> : "—"}</dd>
         <dt>Players (accounts, house excluded)</dt><dd className="data">{s ? `${s.players} (${s.playersAll - s.players} operator address${s.playersAll - s.players === 1 ? "" : "es"} excluded)${s.playersAll === 0 ? " · house-only night" : ""}` : "—"} · excluded: {EXCLUDED.map((a) => a.slice(0, 8)).join(", ") || "none"}</dd>
         <dt>Void commits</dt><dd className="data">{s ? (s.voids.length ? s.voids.map((v) => `${v.account.slice(0, 8)}… ${v.reason}`).join(" · ") : "none") : "—"}</dd>
+        <dt>Commit logs read · policy set hash</dt><dd className="data">{art && s ? <>{art.commitTxs.length} · <HashLine value={s.policySetHash} short /></> : "—"}</dd>
         <dt>Contracts</dt><dd className="data"><a href={addrUrl(ORDERS)}>Orders</a> · <a href={addrUrl(RESULTS)}>Results</a> · <a href={addrUrl(SCRIMMAGE)}>Scrimmage</a></dd>
         <dt>Commit transactions</dt><dd className="data">{art ? (art.commitTxs.length ? art.commitTxs.slice(0, 12).map((c, i) => <span key={c.tx}>{i ? " · " : ""}<a href={txUrl(c.tx)}>{c.tx.slice(0, 10)}…</a></span>) : "none") : "—"}{art && art.commitTxs.length > 12 ? ` · +${art.commitTxs.length - 12} more` : ""}</dd>
       </dl>
+      <p className="note">Your replay says ✗ MISMATCH? Re-run it with another node (<span className="data">--rpc &lt;url&gt;</span>): one that has not indexed every commit log gives a false mismatch — compare the commit count and policy set hash above. Still different: the night is disputed. A post is final on chain and is never re-posted; open an issue on the <a href="https://github.com/edycutjong/semalam/issues">repo</a> with the CLI output. The full artifact is <a href={`/api/round/${n}`}>/api/round/{n}</a>.</p>
       <p className="note">Orders compiled by the AI path are visible to the operator; the builder path never leaves the browser. Sealed orders cannot be read by anyone until the drand round above is published.</p>
       <Link className="btn quiet" href={`/round/${n}`}>Replay</Link>
     </>

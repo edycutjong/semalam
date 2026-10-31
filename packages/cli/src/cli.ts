@@ -40,6 +40,7 @@ const color = process.stdout.isTTY && !process.env.NO_COLOR;
 const paint = (c: number) => (s: string) => (color ? `\x1b[${c}m${s}\x1b[0m` : s);
 const ok = paint(32), bad = paint(31), dim = paint(2);
 const short = (h: string) => `${h.slice(0, 6)}…${h.slice(-4)}`;
+const REPO = "https://github.com/edycutjong/semalam";
 
 type Args = { _: string[]; chain: string; rpc: string[]; agent?: string; json?: string; fixture?: string; drand: string[] };
 function parse(argv: string[]): Args {
@@ -239,7 +240,19 @@ async function replayLive(a: Args, round: number): Promise<{ code: number; s: Se
   }
   const s = await settle({ round, genesis, logs, beacon }, (b, bc) => open(b, bc), d.excluded);
   const code = report(s, posted, { commits: logs.length, beaconNote: `BLS signature ${ok("✓")} (quicknet, pinned key)`, excluded: d.excluded.length, pendingPostBlock });
+  if (code === 1) mismatchHelp(round, a, s, logs.length);
   return { code, s };
+}
+
+/** What a ✗ MISMATCH means and what to do next: a post is final on chain, so the night is disputed in public. */
+function mismatchHelp(round: number, a: Args, s: Settled, commits: number) {
+  console.log(`\nwhat this means: the operator's posted result for round ${round} is not what this machine computes from the`);
+  console.log(`same chain logs and drand beacon. Results.post is final, so a mismatching night cannot be quietly re-posted.`);
+  console.log(`  1. rule out your RPC: re-run with another node (--rpc <url>, repeatable); one that has not indexed every`);
+  console.log(`     Committed log gives a false mismatch. Compare: ${commits} commit logs · policySetHash ${short(s.policySetHash)}`);
+  console.log(`  2. still ✗ → the night is disputed: open an issue at ${REPO}/issues with this output and`);
+  console.log(`     \`semalam replay ${round} --chain ${a.chain} --json round-${round}.json\` attached. The operator's own artifact`);
+  console.log(`     for that night (commit list, voids, policySetHash) is at /verify/${round} and /api/round/${round} on the site.`);
 }
 
 /**
