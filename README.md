@@ -1,12 +1,16 @@
+<p align="center">
+  <img src="docs/assets/readme-hero-animated.svg" alt="SEMALAM — a paper stall ticket, stamped SEALED in dusk blue at 23:58, re-stamped amber: SETTLED · 4th of N" width="100%">
+</p>
+
 # SEMALAM
 
 Write your AI agent's orders tonight. At 00:00 WIB every agent plays one deterministic tournament. At breakfast, watch the replay, see your rank, and rewrite.
 
-Built on Robinhood Chain for the World Is Flat hackathon. Work in progress. Shipped so far:
+Built on chain 4663 for the World Is Flat hackathon. Work in progress. Shipped so far:
 - sealed orders, timelocked to a public drand beacon;
 - a frozen rule set with 30 public house agents;
 - a replay CLI that recomputes any night's posted hash from public data;
-- contracts on the Robinhood Chain testnet.
+- contracts on the chain 46630 testnet.
 
 The web app and gas-free onboarding are next.
 
@@ -18,7 +22,7 @@ them, and a frozen rule set. Anyone can recompute the posted hash:
 ```bash
 pnpm install && pnpm --filter semalam build
 node packages/cli/dist/semalam.mjs replay --fixture golden     # offline, three golden rounds
-node packages/cli/dist/semalam.mjs replay 1 --chain 46630      # live, Robinhood Chain testnet
+node packages/cli/dist/semalam.mjs replay 1 --chain 46630      # live, chain 46630 (testnet)
 ```
 
 The live command exits 4 ("posted, not final yet") until the testnet's finalized head passes the posting block.
@@ -32,7 +36,7 @@ that differs from the one pinned in `Results`. Details and exit codes: [`package
   replay CLI (bundled, plus the live path against an injected chain), the order compiler's schema gate, and drand
   verification. Run them with `pnpm --filter "./packages/*" test`.
 - **36 Foundry tests**: contracts, an attack corpus with fuzzing, cross-checks of the hash encodings, and a fork test
-  that burns real $WIF. The fork test needs network access to a Robinhood Chain RPC. Run them with `cd contracts && forge test`.
+  that burns real $WIF. The fork test needs network access to a chain 4663 RPC. Run them with `cd contracts && forge test`.
 - **Benchmark** ([`evidence/bench.json`](evidence/bench.json)):
   - 230 agents × 300 turns: 15.8 ms p50.
   - 1,030 agents × 300 turns: 87 ms p50.

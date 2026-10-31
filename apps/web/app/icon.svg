@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="SEMALAM — a paper stall ticket hanging from the lamp row, re-stamped amber: settled">
+  <title>SEMALAM</title>
+  <defs>
+    <style>
+      .plate  { fill: var(--bg-base, #1B1530); }
+      .paper  { fill: var(--paper, #F7E9CC); }
+      .ink    { stroke: var(--paper-ink, #2A2140); }
+      .string { stroke: #6A5A92; }
+      .stamp  { stroke: #B5650A; fill: none; }
+      .stampf { fill: #B5650A; }
+    </style>
+    <radialGradient id="sky" cx="50%" cy="18%" r="75%">
+      <stop offset="0%" style="stop-color: var(--accent, #FFB547); stop-opacity: .30"/>
+      <stop offset="45%" style="stop-color: var(--primary, #7C8CC4); stop-opacity: .10"/>
+      <stop offset="100%" style="stop-color: var(--bg-base, #1B1530); stop-opacity: 0"/>
+    </radialGradient>
+    <radialGradient id="lamp" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#FFF6DE"/>
+      <stop offset="45%" style="stop-color: var(--accent, #FFB547)"/>
+      <stop offset="100%" stop-color="#E08A1E"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color: var(--accent, #FFB547); stop-opacity: .55"/>
+      <stop offset="100%" style="stop-color: var(--accent, #FFB547); stop-opacity: 0"/>
+    </radialGradient>
+    <linearGradient id="paperShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF4DC"/>
+      <stop offset="100%" stop-color="#EBD9B4"/>
+    </linearGradient>
+    <mask id="notch">
+      <rect x="-200" y="-40" width="400" height="300" fill="#fff"/>
+      <circle cx="-118" cy="200" r="22" fill="#000"/>
+      <circle cx="118" cy="200" r="22" fill="#000"/>
+    </mask>
+    <filter id="drop" x="-30%" y="-20%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="9"/>
+      <feOffset dy="10"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".55"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- plate: self-sufficient on GitHub light and dark -->
+  <rect class="plate" x="0" y="0" width="512" height="512" rx="112"/>
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#sky)"/>
+
+  <!-- the lamp row: one string, two dim lamps, one lit -->
+  <path class="string" d="M 20 92 Q 256 196 492 92" fill="none" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="104" cy="122" r="15" fill="#6C6280"/>
+  <circle cx="408" cy="122" r="15" fill="#F2D16B" opacity=".55"/>
+  <circle cx="256" cy="150" r="76" fill="url(#halo)"/>
+  <rect x="240" y="114" width="32" height="14" rx="4" fill="#3A2F55"/>
+  <circle cx="256" cy="152" r="30" fill="url(#lamp)"/>
+
+  <!-- the stall ticket hanging from the lit lamp, swung a few degrees -->
+  <g transform="translate(256 196) rotate(-7)">
+    <line class="ink" x1="0" y1="-14" x2="0" y2="12" stroke-width="5" stroke-linecap="round" style="stroke: #6A5A92"/>
+    <g filter="url(#drop)">
+      <rect x="-118" y="10" width="236" height="250" rx="18" fill="url(#paperShade)" mask="url(#notch)"/>
+    </g>
+    <circle cx="0" cy="30" r="8" class="plate"/>
+    <!-- tear line above the stub -->
+    <line class="ink" x1="-96" y1="200" x2="96" y2="200" stroke-width="4" stroke-dasharray="10 9" opacity=".35"/>
+    <rect x="-70" y="220" width="96" height="10" rx="5" fill="#2A2140" opacity=".28"/>
+    <rect x="36" y="220" width="34" height="10" rx="5" fill="#2A2140" opacity=".28"/>
+    <!-- the amber SETTLED stamp: double ring, two print bars, no letters -->
+    <g transform="translate(0 116) rotate(-12)">
+      <circle class="stamp" r="62" stroke-width="11"/>
+      <circle class="stamp" r="44" stroke-width="4"/>
+      <rect class="stampf" x="-30" y="-15" width="60" height="11" rx="3"/>
+      <rect class="stampf" x="-20" y="5" width="40" height="11" rx="3"/>
+    </g>
+  </g>
+</svg>
