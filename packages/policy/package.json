@@ -1,0 +1,14 @@
+{
+  "name": "@semalam/policy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "viem": "^2.57.13",
+    "zod": "^4.6.7"
+  }
+}
