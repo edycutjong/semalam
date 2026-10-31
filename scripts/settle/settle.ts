@@ -20,7 +20,7 @@ import deployments from "../../packages/cli/src/deployments.json" with { type: "
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const argv = process.argv.slice(2);
 const arg = (k: string) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undefined);
-const chainId = arg("--chain") ?? "46630";
+const chainId = arg("--chain") ?? process.env.SEMALAM_CHAIN ?? "46630";
 const only = arg("--round") ? Number(arg("--round")) : undefined;
 const dry = argv.includes("--dry");
 const d = (deployments as Record<string, any>)[chainId];

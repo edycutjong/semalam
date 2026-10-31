@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "settle": "tsx settle/settle.ts"
+    "settle": "tsx settle/settle.ts",
+    "settle:watch": "bash settle/nightly.sh"
   },
   "dependencies": {
     "@semalam/policy": "workspace:*",

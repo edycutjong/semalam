@@ -1,0 +1,58 @@
+{
+ "chainId": 4663,
+ "measuredAt": "2026-10-31T14:08:08.335Z",
+ "method": "block.timestamp(latest) minus the local UTC clock at the RPC round-trip midpoint; 12 samples 1.5 s apart",
+ "samples": [
+  {
+   "block": 102610214,
+   "driftSeconds": -1.62
+  },
+  {
+   "block": 102610233,
+   "driftSeconds": -1.44
+  },
+  {
+   "block": 102610248,
+   "driftSeconds": -1.21
+  },
+  {
+   "block": 102610267,
+   "driftSeconds": -0.98
+  },
+  {
+   "block": 102610281,
+   "driftSeconds": -1.75
+  },
+  {
+   "block": 102610300,
+   "driftSeconds": -1.52
+  },
+  {
+   "block": 102610314,
+   "driftSeconds": -1.29
+  },
+  {
+   "block": 102610330,
+   "driftSeconds": -1.35
+  },
+  {
+   "block": 102610350,
+   "driftSeconds": -1.41
+  },
+  {
+   "block": 102610370,
+   "driftSeconds": -1.17
+  },
+  {
+   "block": 102610385,
+   "driftSeconds": -0.94
+  },
+  {
+   "block": 102610405,
+   "driftSeconds": -0.7
+  }
+ ],
+ "maxAbsDriftSeconds": 1.75,
+ "seedDelaySeconds": 300,
+ "verdict": "PASS — drift is far inside the 300 s seed buffer"
+}

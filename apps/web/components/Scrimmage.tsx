@@ -29,6 +29,7 @@ export default function Scrimmage() {
   const [hasWallet, setHasWallet] = useState(false);
   useEffect(() => setHasWallet(Boolean(injected())), []);
   const [bal, setBal] = useState<bigint | null>(null);
+  const [tick, setTick] = useState(0);
 
   const load = useCallback(async () => {
     const s = restoreSigner(); setSigner(s);
@@ -42,7 +43,7 @@ export default function Scrimmage() {
   useEffect(() => {
     if (!signer) return;
     publicRpc().readContract({ address: WIF, abi: ERC20_ABI, functionName: "balanceOf", args: [signer.address] }).then(setBal).catch(() => setBal(null));
-  }, [signer, res]);
+  }, [signer, res, tick]);
 
   const first = st ? (JSON.parse(localStorage.getItem(`semalam.first.${st.round}`) ?? "null") as { policy: Policy; policyHash: Hex; account: Address } | null) : null;
   const firstOnChain = st?.commits[0];
@@ -84,7 +85,7 @@ export default function Scrimmage() {
   }
   async function mint() {
     setBusy(true); setErr(null);
-    try { setMsg(`minting 1,000 ${WIF_LABEL}…`); await send("mint", [signer!.address, 1000n * 10n ** 18n], WIF, ERC20_ABI); setBal(null); } catch (e) { setErr((e as Error).message.split("\n")[0]); }
+    try { setMsg(`minting 1,000 ${WIF_LABEL}…`); await send("mint", [signer!.address, 1000n * 10n ** 18n], WIF, ERC20_ABI); setTick((t) => t + 1); } catch (e) { setErr((e as Error).message.split("\n")[0]); }
     setMsg(null); setBusy(false);
   }
 

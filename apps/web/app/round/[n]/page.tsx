@@ -37,7 +37,7 @@ export default async function RoundPage({ params }: { params: Promise<{ n: strin
   return (
     <Breakfast d={{
       round: n, resultHash: s.resultHash, drandRound: s.drandRound, randomness: s.randomness, policySetHash: s.policySetHash, houseSetHash: s.houseSetHash,
-      players: s.players, agents: s.agents, ranking: s.ranking, replays: s.replays as never, policies: art.policies,
+      players: s.players, agents: s.agents, ranking: s.ranking, replays: s.replays as never, policies: art.policies ?? [],
       tx: art.onchain?.tx ?? null, txUrl: art.onchain?.tx ? txUrl(art.onchain.tx) : null,
     }} />
   );

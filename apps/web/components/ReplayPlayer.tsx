@@ -34,15 +34,16 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents }: { re
     c.width = w * dpr; c.height = h * dpr;
     const g = c.getContext("2d")!; g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
     g.strokeStyle = "#3A2F55"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(0, 26); g.quadraticCurveTo(w / 2, 6, w, 26); g.stroke(); // the string the lamps hang from
-    const cols = Math.max(1, Math.min(sorted.length, Math.floor(w / 14)));
+    const cell = Math.max(10, Math.sqrt((w * (h - 56)) / Math.max(1, sorted.length)));
+    const cols = Math.max(1, Math.min(sorted.length, Math.floor(w / cell)));
     const rows = Math.ceil(sorted.length / cols);
-    const cw = w / cols, rh = Math.min(30, (h - 44) / rows);
+    const cw = w / cols, rh = (h - 56) / rows, base = Math.min(10, cell * 0.3);
     sorted.forEach((r, i) => {
       const f = r.keyframes[Math.min(idx, r.keyframes.length - 1)];
       const bright = 1 - (f.rank - 1) / Math.max(1, agents);
       const isMine = r.id.toLowerCase() === mineId?.toLowerCase();
-      const x = (i % cols) * cw + cw / 2, y = 40 + Math.floor(i / cols) * rh;
-      const rad = isMine ? 7 : 3 + 3 * bright;
+      const x = (i % cols) * cw + cw / 2, y = 48 + Math.floor(i / cols) * rh + rh / 2;
+      const rad = isMine ? Math.max(7, base * 1.3) : base * (0.5 + 0.5 * bright);
       g.globalAlpha = isMine ? 1 : 0.25 + 0.75 * bright;
       if (isMine) { g.shadowColor = "#FFB547"; g.shadowBlur = 18; }
       g.fillStyle = isMine ? "#FFB547" : houseIds.has(r.id.toLowerCase()) ? "#6c6280" : "#F2D16B";

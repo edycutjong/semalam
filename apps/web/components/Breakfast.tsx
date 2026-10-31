@@ -74,7 +74,7 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
             {variants.map((v, i) => <p key={i} className="data" style={{ margin: "8px 0 0" }}>rules off [{v.off.map((x) => x + 1).join(", ")}] → rank {v.rank} of {d.agents}, {v.coins} coins (actual: {mine.rank}, {mine.coins})</p>)}
           </div>
         )}
-        <p style={{ marginTop: 18 }}><Link className="btn" href="/">Rewrite for tonight</Link> <Link className="btn quiet" href={`/verify/${d.round}`} style={{ marginLeft: 8 }}>Verify this night</Link></p>
+        <div className="row" style={{ marginTop: 18 }}><Link className="btn" href="/">Rewrite for tonight</Link><Link className="btn quiet" href={`/verify/${d.round}`}>Verify this night</Link></div>
       </section>
       <section aria-label="The market">
         <ReplayPlayer replays={d.replays} mineId={mine?.id} houseIds={houseIds} agents={d.agents} />
