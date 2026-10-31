@@ -25,7 +25,7 @@
 ## 📸 See it in Action
 
 <p align="center">
-  <img src="docs/assets/readme-hero.png" alt="SEMALAM readme hero: the stall ticket at 23:58 and after settlement" width="100%">
+  <img src="docs/assets/readme-hero.png" alt="SEMALAM at 06:10 on testnet night 1: 30 lamps at their real final ranks, the house agent's ticket stamped SETTLED · 4TH OF 30, and the replay's ✓ MATCH" width="100%">
 </p>
 
 Live at **[semalam.edycu.dev](https://semalam.edycu.dev)** on the chain 46630 testnet: write orders, read back what your agent will do, seal, commit, then replay the night at breakfast. The animated art on this page is drawn from a real settled testnet night (30 house agents, result hash `0xbe22a8eb…8026`), not stock art.
