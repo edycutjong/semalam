@@ -1,16 +1,24 @@
 {
   "46630": {
     "name": "Robinhood Chain testnet",
-    "rpcs": ["https://rpc.testnet.chain.robinhood.com"],
-    "orders": "0xed6afbC314187C3e0D7EB3ABCb2962e6375C676C",
-    "results": "0x984d171DAA87eAd45601cB415591230007c5c024",
-    "scrimmage": "0x313FBC505aac82b1257F4849A28f4461a3e09e25",
-    "fromBlock": 145939865,
-    "excluded": []
+    "rpcs": [
+      "https://rpc.testnet.chain.robinhood.com"
+    ],
+    "orders": "0x64a5fDe6466A64B2C517dAA6DBe038dd052C1145",
+    "results": "0x38BBc173698e54f2D7280bA124008B34650c9587",
+    "scrimmage": "0x023c8d15874a0330e63082c7698899E2D40D075e",
+    "fromBlock": 145967291,
+    "excluded": [
+      "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+      "0xaf343675E4942BF4071af6C838F871713A6f776D",
+      "0x944bC964C60856BFd62CdAF971f53988B57D13A9"
+    ]
   },
   "4663": {
     "name": "Robinhood Chain",
-    "rpcs": ["https://rpc.mainnet.chain.robinhood.com"],
+    "rpcs": [
+      "https://rpc.mainnet.chain.robinhood.com"
+    ],
     "orders": null,
     "results": null,
     "scrimmage": null,

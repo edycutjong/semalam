@@ -4,12 +4,21 @@
   "description": "Replay any SEMALAM night from chain logs + the drand beacon and check the posted resultHash.",
   "license": "MIT",
   "type": "module",
-  "bin": { "semalam": "dist/semalam.mjs" },
-  "files": ["dist", "house-set.json", "fixtures", "README.md"],
-  "engines": { "node": ">=20" },
+  "bin": {
+    "semalam": "dist/semalam.mjs"
+  },
+  "files": [
+    "dist",
+    "house-set.json",
+    "fixtures",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "node build.mjs",
-    "test": "tsx --test test/*.test.ts",
+    "test": "tsx --test test/cli.test.ts test/live.test.ts",
     "typecheck": "tsc --noEmit",
     "prepack": "node build.mjs"
   },

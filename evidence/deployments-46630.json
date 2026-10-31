@@ -1,0 +1,33 @@
+{
+ "note": "Robinhood Chain testnet 46630 deploy with the frozen pins (house set + semalam-sim/1). MockWIF is a labelled testnet stand-in. Supersedes evidence/feasibility/deployments-46630.json.",
+ "chainId": 46630,
+ "genesis": 1793293200,
+ "genesisUtc": "2026-10-29T17:00:00Z",
+ "houseSetHash": "0x85305c0278d44fb4d5d20df919cc4acd594e75612564eee4c4fbaa574f800fbc",
+ "simVersion": "semalam-sim/1",
+ "deployer": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+ "poster": "0xaf343675E4942BF4071af6C838F871713A6f776D",
+ "compute": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+ "contracts": {
+  "MockWIF": {
+   "address": "0x4059105C779d46C1905c0437483b60c1DEbF1B47",
+   "block": 145967283,
+   "tx": "0xf878bf26cd917a2824812ec34ec74a8caa50397e6f105fdbab01686afb534d22"
+  },
+  "Orders": {
+   "address": "0x64a5fDe6466A64B2C517dAA6DBe038dd052C1145",
+   "block": 145967291,
+   "tx": "0xefb58126866e06314a6ad26cdccaa2fbc2eba7cce2fef9e87bd2e904afefa6ca"
+  },
+  "Scrimmage": {
+   "address": "0x023c8d15874a0330e63082c7698899E2D40D075e",
+   "block": 145967301,
+   "tx": "0xbc549fd2a540b8092813313217b0c12753b3b7745fdd51b8ad0b9c2a6229f44b"
+  },
+  "Results": {
+   "address": "0x38BBc173698e54f2D7280bA124008B34650c9587",
+   "block": 145967326,
+   "tx": "0x9ca980f4b51b3cd164cba063b9029bab7ec3d25ff1e4a18a512d09eb59f1f37e"
+  }
+ }
+}

@@ -20,14 +20,14 @@ const cli = (...args: string[]) => spawnSync("node", [bin, ...args], { cwd: tmp,
 const golden = (n: string) => JSON.parse(readFileSync(join(pkg, "../../fixtures/golden", `${n}.json`), "utf8"));
 const writeFx = (name: string, f: unknown) => { const p = join(tmp, name); writeFileSync(p, JSON.stringify(f)); return p; };
 
-test("A9: bundled CLI replays all golden rounds offline from a clean directory → exit 0, 3× MATCH", () => {
+test("bundled CLI replays all golden rounds offline from a clean directory → exit 0, 3× MATCH (A9)", () => {
   const r = cli("replay", "--fixture", "golden");
   assert.equal(r.status, 0, r.stderr);
   assert.equal(r.stdout.match(/✓ MATCH/g)?.length, 3);
   assert.match(r.stdout, /1000 over capacity/);
 });
 
-test("A9: a tampered beacon signature → exit 2 (refused)", () => {
+test("a tampered beacon signature → exit 2 (refused) (A9)", () => {
   const f = golden("round-b");
   f.beacon.signature = f.beacon.signature.slice(0, 10) + (f.beacon.signature[10] === "a" ? "b" : "a") + f.beacon.signature.slice(11);
   const r = cli("replay", "--fixture", writeFx("bad-sig.json", f));
@@ -35,7 +35,7 @@ test("A9: a tampered beacon signature → exit 2 (refused)", () => {
   assert.match(r.stderr, /REFUSED/);
 });
 
-test("A9: a beacon for any drand round but seedRound(round) → exit 2", () => {
+test("a beacon for any drand round but seedRound(round) → exit 2 (A9)", () => {
   const f = golden("round-b");
   f.round = f.round + 1; // the shipped beacon is now the wrong round for this round
   const r = cli("replay", "--fixture", writeFx("wrong-round.json", f));
@@ -43,7 +43,7 @@ test("A9: a beacon for any drand round but seedRound(round) → exit 2", () => {
   assert.match(r.stderr, /need/);
 });
 
-test("A9: a changed commit set → MISMATCH, exit 1", () => {
+test("a changed commit set → MISMATCH, exit 1 (A9)", () => {
   const f = golden("round-b");
   f.logs = f.logs.slice(1);
   const r = cli("replay", "--fixture", writeFx("mismatch.json", f));
@@ -51,10 +51,10 @@ test("A9: a changed commit set → MISMATCH, exit 1", () => {
   assert.match(r.stdout, /✗ MISMATCH/);
 });
 
-test("A9: house-set or SIM_VERSION pin mismatch → refused (exit 2)", () => {
+test("house-set or SIM_VERSION pin mismatch → refused (exit 2) (A9)", () => {
   const sim = keccak256(toBytes(SIM_VERSION));
   assert.doesNotThrow(() => checkPins(sim, HOUSE_SET_HASH));
-  for (const [s, h] of [[sim, keccak256(toHex("semalam-spike-house-set-v0"))], [keccak256(toHex("semalam-sim/0")), HOUSE_SET_HASH]] as const) {
+  for (const [s, h] of [[sim, keccak256(toHex("an-older-house-set"))], [keccak256(toHex("semalam-sim/0")), HOUSE_SET_HASH]] as const) {
     assert.throws(() => checkPins(s, h), (e: unknown) => e instanceof Exit && e.code === 2);
   }
 });
