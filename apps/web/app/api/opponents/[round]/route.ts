@@ -1,5 +1,6 @@
 import { HOUSE } from "@semalam/sim/house";
 import { readArtifact, settledRounds } from "@/lib/artifact";
+import { CHAIN_ID } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ round: string }
   // ?source=<n> pins the opponents to that settled night (a run saved earlier re-runs against the SAME field); source=house = the 30 house agents
   const src = new URL(req.url).searchParams.get("source");
   // only a verified night (posted on chain AND equal to the CLI's fresh-process hash) can be a field
-  const verified = async (r: number) => { const a = await readArtifact(r); return a && a.status === "posted" && a.cli.match ? a : null; };
+  const verified = async (r: number) => { const a = await readArtifact(r); return a && a.chainId === CHAIN_ID && a.status === "posted" && a.cli.match ? a : null; };
   let prev: number | undefined;
   if (src && src !== "house") prev = Number(src);
   else if (!src) for (const r of (await settledRounds()).filter((x) => x < round).reverse()) if (await verified(r)) { prev = r; break; }

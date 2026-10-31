@@ -64,7 +64,7 @@ export async function fetchBeacon(round: number, urls = DRAND_URLS, fetchFn: typ
       const j = (await r.json()) as Beacon;
       return verifyBeacon({ round: j.round, randomness: j.randomness, signature: j.signature }, round);
     } catch (e) {
-      if (String(e).includes("BAD SIGNATURE") || String(e).includes("sha256(signature)")) throw e;
+      // a mirror that serves a bad beacon is skipped; refuse only when no mirror gives one that verifies
       last = e;
     }
   }

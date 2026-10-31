@@ -326,7 +326,8 @@ async function seasonCmd(a: Args, s: number): Promise<number> {
   console.log(`champion    ${champion.id} · ${champion.points} pts ${ok("✓ paidInSeason")}`);
   console.log(crownLine());
   if (!none && crowned.toLowerCase() !== champion.id.toLowerCase()) { console.log(bad(`✗ MISMATCH — the posted crown is not the champion computed from the three nights`)); return 1; }
-  if (!none) console.log(ok("✓ MATCH — the posted crown is the computed champion"));
+  if (none) return 4; // waiting: the season is verified but the crown is not on chain yet
+  console.log(ok("✓ MATCH — the posted crown is the computed champion"));
   return 0;
 }
 

@@ -93,3 +93,14 @@ test("refusal reasons are sanitized; a non-JSON reply falls through to the next 
   assert.equal(ok.kind, "policy");
   assert.equal(calls, 2);
 });
+
+test("compile: one total time budget — a hanging provider ends as 'paused' (builder fallback), never a function timeout", async () => {
+  const { compileOrders } = await import("../src/compile.ts");
+  const hang = ((_: string, init: { signal: AbortSignal }) => new Promise((_ok, no) => init.signal.addEventListener("abort", () => no(new Error("aborted"))))) as unknown as typeof fetch;
+  const keep = setTimeout(() => {}, 10_000); // AbortSignal.timeout timers are unref'd: keep the loop alive while the fake provider hangs
+  const t0 = Date.now();
+  const r = await compileOrders("share with sharers, guard against thieves", { keys: ["k1", "k2", "k3"], fetchFn: hang, budgetMs: 2_000 });
+  clearTimeout(keep);
+  assert.equal(r.kind, "paused");
+  assert.ok(Date.now() - t0 < 4_000, `took ${Date.now() - t0} ms`);
+});

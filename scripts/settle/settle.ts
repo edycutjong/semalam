@@ -66,7 +66,15 @@ let rebuilt = false;
 function cliRun(round: number) {
   const dist = path.join(root, "packages/cli/dist/semalam.mjs");
   // always rebuild: a stale bundle would disagree with the runner's fresh libraries and cost the night (fail-safe, but lost)
-  if (!rebuilt) { spawnSync("node", ["build.mjs"], { cwd: path.join(root, "packages/cli"), stdio: "inherit" }); rebuilt = true; }
+  if (!rebuilt) {
+    const b = spawnSync("node", ["build.mjs"], { cwd: path.join(root, "packages/cli"), stdio: "inherit" });
+    if (b.status !== 0) throw new Error(`CLI build failed (exit ${b.status}) — not settling with a stale bundle`);
+    // pre-flight: the bundle must reproduce the three golden rounds, or a regression would be posted as a final night
+    const g = spawnSync("node", [dist, "replay", "--fixture", "golden"], { encoding: "utf8", env: { PATH: process.env.PATH ?? "", NO_COLOR: "1" }, timeout: 120_000 });
+    const matches = (g.stdout.match(/✓ MATCH/g) ?? []).length;
+    if (g.status !== 0 || matches !== 3) throw new Error(`golden pre-flight failed (exit ${g.status}, ${matches}/3 MATCH) — not posting anything`);
+    rebuilt = true;
+  }
   const tmp = path.join(tmpdir(), `semalam-cli-${process.pid}-${round}.json`);
   // the CLI child never sees the POSTER key: it only reads public data
   const { POSTER_PRIVATE_KEY: _drop, ...env } = process.env;
@@ -155,7 +163,11 @@ async function main() {
       settled: run.st, opponents,
       policies: run.agents.map((a) => ({ id: a.id, policy: a.policy })),
     };
-    if (!dry) writeFileSync(path.join(outDir, `${round}.json`), JSON.stringify(art, (_, v) => (typeof v === "bigint" ? v.toString() : v)) + "\n");
+    const file = path.join(outDir, `${round}.json`);
+    const prev = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
+    // a retried round whose outcome did not change is not rewritten (no commit + redeploy every loop)
+    const same = prev && prev.status === art.status && prev.settled?.resultHash === art.settled.resultHash && prev.onchain?.resultHash === art.onchain?.resultHash;
+    if (!dry && !same) writeFileSync(file, JSON.stringify(art, (_, v) => (typeof v === "bigint" ? v.toString() : v)) + "\n");
     log(`round ${round}: ${status} · hash ${runHash.slice(0, 10)}… · ${run.st.players} players of ${run.st.agents} agents${dry ? " (dry)" : ""}`);
   }
 }

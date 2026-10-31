@@ -18,6 +18,7 @@ export async function memoized<T>(key: string, ttlMs: number, f: () => Promise<T
   if (hit && Date.now() - hit.at < ttlMs) return hit.v as T;
   const v = await f();
   memo.set(key, { at: Date.now(), v });
+  if (memo.size > 5000) for (const [k, e] of memo) if (Date.now() - e.at > 60_000) memo.delete(k); // bounded under a flood of fresh keys
   return v;
 }
 /** Serialises async work per key (one relayer key = one nonce stream per instance). */
