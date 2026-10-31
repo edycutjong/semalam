@@ -91,8 +91,15 @@ export function offlineClient(beacons: Beacon[]): ChainClient {
 /** Reads the target round + chain out of the binary age header ("-> tlock <round> <chainhash>"). */
 export function stanzaOf(sealed: Uint8Array): { round: number; chain: string } | null {
   let head = "";
-  for (const c of sealed.slice(0, 200)) head += String.fromCharCode(c);
-  const m = head.match(/-> tlock (\d+) ([0-9a-f]{64})/);
+  for (const c of sealed.slice(0, 1536)) head += String.fromCharCode(c);
+  // An age header with EXACTLY ONE recipient stanza, and that stanza is tlock. Anything else (an extra or a costly
+  // scrypt stanza, no header) is void before decryption — a structural rule, so every machine classifies it the same
+  // way; a decrypt timeout would not be (a slow machine would void what a fast one opens).
+  const end = head.indexOf("\n---");
+  if (!head.startsWith("age-encryption.org/v1\n") || end < 0) return null;
+  const stanzas = head.slice(0, end).split("\n").filter((l) => l.startsWith("->"));
+  if (stanzas.length !== 1) return null;
+  const m = stanzas[0].match(/^-> tlock (\d+) ([0-9a-f]{64})$/);
   return m ? { round: Number(m[1]), chain: m[2] } : null;
 }
 

@@ -29,6 +29,18 @@ test("seal to a round → stanza names that round + quicknet; opens only with th
   await assert.rejects(open(wrong, B));
 });
 
+test("stanzaOf: exactly one tlock stanza or void — extra/scrypt stanzas never reach the decryptor", async () => {
+  const sealed = await seal(new TextEncoder().encode('{"v":1}'), B.round);
+  const text = Buffer.from(sealed).toString("latin1");
+  const at = text.indexOf("\n", text.indexOf("-> tlock"));
+  const withScrypt = Buffer.from(text.slice(0, at) + "\nAAAA\n-> scrypt c2FsdA 22" + text.slice(at), "latin1");
+  assert.equal(stanzaOf(new Uint8Array(withScrypt)), null);
+  const twoTlock = Buffer.from(text.slice(0, at) + "\nAAAA\n" + text.slice(text.indexOf("-> tlock"), at) + text.slice(at), "latin1");
+  assert.equal(stanzaOf(new Uint8Array(twoTlock)), null);
+  assert.equal(stanzaOf(new TextEncoder().encode("-> tlock 1 " + QUICKNET.hash)), null); // no age header
+  assert.deepEqual(stanzaOf(sealed), { round: B.round, chain: QUICKNET.hash });
+});
+
 test("seedRoundAt = drand's own roundAt/roundTime: first quicknet round at or after close + 300 s (A7)", () => {
   const info = { ...QUICKNET, metadata: { ...QUICKNET.metadata } };
   for (let i = 0; i < 2000; i++) {
