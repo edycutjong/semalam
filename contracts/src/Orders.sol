@@ -24,7 +24,6 @@ contract Orders is RoundClock {
     event Committed(uint256 indexed round, address indexed account, bytes32 policyHash, bytes sealedBlob);
 
     error WrongRound();
-    error RoundClosed();
     error SealedTooLarge();
     error Expired();
     error BadSignature();
@@ -60,8 +59,8 @@ contract Orders is RoundClock {
     }
 
     function _commit(address account, uint256 round, bytes32 policyHash, bytes calldata sealedBlob) private {
+        // round == currentRound() also means block.timestamp < closeTime(round): a closed round is never current
         if (round == 0 || round != currentRound()) revert WrongRound();
-        if (block.timestamp >= closeTime(round)) revert RoundClosed();
         if (sealedBlob.length > MAX_SEALED) revert SealedTooLarge();
         emit Committed(round, account, policyHash, sealedBlob);
     }
