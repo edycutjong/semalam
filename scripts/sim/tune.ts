@@ -55,7 +55,7 @@ function evaluate(payoff: readonly (readonly number[])[], gen = 200) {
   return { pureWins, pureTop10, pureTop10By, distinctWinners, winners, styles, labels };
 }
 
-const CANDIDATES: Record<string, readonly (readonly number[])[]> = JSON.parse(process.env.CANDIDATES ?? "null") ?? { "p0a-draft": [[3, 3, 5, -1], [1, 1, 3, 3], [2, 2, 4, -2], [5, -3, 7, -1]], frozen: PAYOFF };
+const CANDIDATES: Record<string, readonly (readonly number[])[]> = JSON.parse(process.env.CANDIDATES ?? "null") ?? { "first-draft": [[3, 3, 5, -1], [1, 1, 3, 3], [2, 2, 4, -2], [5, -3, 7, -1]], frozen: PAYOFF };
 const out: Record<string, unknown> = {};
 for (const [name, m] of Object.entries(CANDIDATES)) {
   const e = evaluate(m);

@@ -13,7 +13,7 @@ const dec = (b: Uint8Array, bc: G["beacon"]) => open(b, bc);
 const acct = (i: number) => getAddress(`0x${keccak256(toHex(`t-${i}`)).slice(-40)}`);
 const log = (i: number, block: number, idx = 0, ph: Hex = keccak256(toHex(i))): CommitLog => ({ account: acct(i), policyHash: ph, sealedBlob: "0x", blockNumber: BigInt(block), logIndex: idx });
 
-test("A7: every golden round reproduces its resultHash, policy-set hash, players, voids and over-capacity count", async () => {
+test("every golden round reproduces its resultHash, policy-set hash, players, voids and over-capacity count (A7)", async () => {
   for (const n of ["round-a", "round-b", "round-c"]) {
     const g = golden(n);
     const s = await settle({ round: g.round, genesis: g.genesis, logs: logsOf(g), beacon: g.beacon }, dec);
@@ -26,11 +26,11 @@ test("A7: every golden round reproduces its resultHash, policy-set hash, players
   }
 });
 
-test("A6: round-a carries one fixture per void reason, listed with the account", () => {
+test("round-a carries one fixture per void reason, listed with the account (A6)", () => {
   assert.deepEqual(golden("round-a").expect.voids.map((v) => v.reason).sort(), ["HASH_MISMATCH", "SCHEMA_INVALID", "UNDECRYPTABLE", "WRONG_ROUND"]);
 });
 
-test("A5: only the latest commit per account counts (max blockNumber, logIndex), whatever the log order", () => {
+test("only the latest commit per account counts (max blockNumber, logIndex), whatever the log order (A5)", () => {
   const logs = [log(1, 10), log(2, 11), log(1, 12, 0, keccak256(toHex("v2"))), log(1, 12, 3, keccak256(toHex("v3"))), log(3, 9)];
   for (const order of [logs, [...logs].reverse(), [logs[3], logs[0], logs[4], logs[2], logs[1]]]) {
     const { latest } = selectCommits(order);
@@ -39,7 +39,7 @@ test("A5: only the latest commit per account counts (max blockNumber, logIndex),
   }
 });
 
-test("A7: a 2,000-account spammed round admits the first 1,000 by FIRST commit; a re-commit keeps an early seat", () => {
+test("a 2,000-account spammed round admits the first 1,000 by FIRST commit; a re-commit keeps an early seat (A7)", () => {
   const logs = Array.from({ length: 2000 }, (_, i) => log(i, 100 + i));
   logs.push(log(5, 99_999, 0, keccak256(toHex("late re-commit"))));
   const { latest, overCapacity } = selectCommits(logs);
@@ -49,14 +49,14 @@ test("A7: a 2,000-account spammed round admits the first 1,000 by FIRST commit; 
   assert.equal(latest[5].policyHash, keccak256(toHex("late re-commit")));
 });
 
-test("A7: one policy byte changes the policy-set hash; order of rows does not", () => {
+test("one policy byte changes the policy-set hash; order of rows does not (A7)", () => {
   const rows = [log(1, 1), log(2, 2)];
   const h = policySetHash(rows);
   assert.equal(policySetHash([...rows].reverse()), h);
   assert.notEqual(policySetHash([rows[0], { ...rows[1], policyHash: (rows[1].policyHash.slice(0, -1) + (rows[1].policyHash.endsWith("0") ? "1" : "0")) as Hex }]), h);
 });
 
-test("A7: one changed policy byte in a sealed order changes the resultHash", async () => {
+test("one changed policy byte in a sealed order changes the resultHash (A7)", async () => {
   const g = golden("round-b");
   const s0 = await settle({ round: g.round, genesis: g.genesis, logs: logsOf(g), beacon: g.beacon }, dec);
   const plain = await open(Buffer.from(g.blobs[g.logs[0].blob].slice(2), "hex"), g.beacon);
@@ -70,14 +70,14 @@ test("A7: one changed policy byte in a sealed order changes the resultHash", asy
   assert.equal(s1.voids.length, s0.voids.length);
 });
 
-test("A8/A7: settle refuses any drand round but seedRound(round); clock helpers match the beacon package", async () => {
+test("settle refuses any drand round but seedRound(round); clock helpers match the beacon package (A8/A7)", async () => {
   const g = golden("round-b");
   await assert.rejects(settle({ round: g.round, genesis: g.genesis, logs: [], beacon: { ...g.beacon, round: g.beacon.round + 1 } }, dec), /seedRound/);
   for (let r = 1; r < 40; r++) assert.equal(seedRound(g.genesis + (r % 7), r), seedRoundAt(closeTime(g.genesis + (r % 7), r)));
   assert.deepEqual([1, 2, 4, 5, 7, 8].map(season), [0, 1, 1, 2, 2, 3]);
 });
 
-test("A11: excluded operator addresses drop out of the player count and points, never out of the hash", async () => {
+test("excluded operator addresses drop out of the player count and points, never out of the hash (A11)", async () => {
   const g = golden("round-b");
   const base = await settle({ round: g.round, genesis: g.genesis, logs: logsOf(g), beacon: g.beacon }, dec);
   const someone = base.ranking.find((r) => !r.house)!.id as Address;

@@ -18,15 +18,15 @@ const IDX: Record<Act, number> = { GATHER: 0, GUARD: 1, SHARE: 2, STEAL: 3 };
 const ACTS: Act[] = ["GATHER", "GUARD", "SHARE", "STEAL"];
 // PAYOFF[me][partner] — coins to the row agent
 // Frozen 2026-10-31 after tuning over 48 seeds (scripts/sim/tune.ts → evidence/sim-tuning.json): a pure action wins
-// 1 of 48 house+preset nights (P0a draft: 5) and 5 of 48 random 238-agent fields (draft: 6); 15 distinct winners on
-// the thin nights. Changing it changes every resultHash.
+// 1 of 48 house+preset nights (first draft table: 5) and 5 of 48 random 238-agent fields (draft: 6); 15 distinct
+// winners on the thin nights. Its digest is pinned in test/pins.test.ts: any change must also bump SIM_VERSION.
 export const PAYOFF: readonly (readonly number[])[] = Object.freeze([
   Object.freeze([2, 2, 4, -2]),
   Object.freeze([1, 1, 2, 3]),
   Object.freeze([2, 2, 5, -3]),
   Object.freeze([4, -3, 6, -1]),
 ]);
-export const ALONE = 3; // unpaired stall gathers alone
+export const ALONE = 3; // odd N: the unpaired stall gathers alone for +3, whatever its policy says
 
 export type Agent = { id: Hex; policy: Policy; house?: boolean };
 export type Standing = { id: Hex; coins: number; steals: number; house: boolean };
@@ -53,6 +53,21 @@ export function sfc32(randomness: Hex) {
   return next;
 }
 
+/**
+ * Fisher–Yates over the CURRENT seat order (the permutation carries from block to block), with unbiased draws.
+ * Called at turns 1, 51, 101, … — 6 market blocks of 50 turns.
+ */
+export function reseat(seat: number[], next: () => number) {
+  for (let i = seat.length - 1; i > 0; i--) {
+    const j = below(next, i + 1);
+    [seat[i], seat[j]] = [seat[j], seat[i]];
+  }
+  return seat;
+}
+
+/** Tie-break key: keccak256(abi.encodePacked(bytes32 randomness, address id)) — 52 bytes, ascending wins. */
+export const tieKey = (randomness: Hex, id: Hex) => keccak256(concat([randomness, id]));
+
 /** Unbiased integer in [0, n). */
 function below(next: () => number, n: number) {
   const limit = Math.floor(0x100000000 / n) * n;
@@ -72,7 +87,7 @@ export function run(
   const field = [...agents].sort((x, y) => (x.id.toLowerCase() < y.id.toLowerCase() ? -1 : 1));
   const N = field.length;
   const rand = sfc32(randomness);
-  const tie = field.map((a) => keccak256(concat([randomness, a.id])));
+  const tie = field.map((a) => tieKey(randomness, a.id));
   const coins = new Array<number>(N).fill(START_COINS);
   const steals = new Array<number>(N).fill(0);
   const lastAct = new Array<Act>(N).fill("GATHER");
@@ -87,10 +102,7 @@ export function run(
 
   for (let t = 1; t <= TURNS; t++) {
     if ((t - 1) % BLOCK === 0) {
-      for (let i = N - 1; i > 0; i--) {
-        const j = below(rand, i + 1);
-        [seat[i], seat[j]] = [seat[j], seat[i]];
-      }
+      reseat(seat, rand);
     }
     const partner = pairing(seat, t);
     // decide on the snapshot of the previous turn
@@ -192,7 +204,7 @@ export function pairing(seat: number[], t: number): number[] {
 }
 
 /** coins desc, fewer steals, keccak(randomness, id) asc → 1-based rank per agent. */
-function rankOf(coins: number[], steals: number[], tie: Hex[]): number[] {
+export function rankOf(coins: number[], steals: number[], tie: Hex[]): number[] {
   const idx = coins.map((_, i) => i);
   idx.sort((a, b) => coins[b] - coins[a] || steals[a] - steals[b] || (tie[a] < tie[b] ? -1 : tie[a] > tie[b] ? 1 : 0));
   const r = new Array<number>(coins.length);

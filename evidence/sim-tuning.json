@@ -1,10 +1,10 @@
 {
- "at": "2026-10-31T13:04:48.542Z",
+ "at": "2026-10-31T13:26:05.504Z",
  "seeds": 48,
  "field": "30 house + 8 presets + 200 generated",
  "houseSetHash": "0x85305c0278d44fb4d5d20df919cc4acd594e75612564eee4c4fbaa574f800fbc",
  "candidates": {
-  "p0a-draft": {
+  "first-draft": {
    "payoff": [
     [
      3,

@@ -1,0 +1,115 @@
+{
+ "note": "Byte-level vectors for semalam-sim/1. tieKey = keccak256(abi.encodePacked(bytes32 randomness, address id)); policySetHash = keccak256(abi.encode((address,bytes32)[] sorted by address)); resultHash = keccak256(abi.encode(string SIM_VERSION, uint256 round, uint64 drandRound, bytes32 randomness, bytes32 policySetHash, bytes32 houseSetHash, (address,uint256)[] ranking)).",
+ "simVersion": "semalam-sim/1",
+ "payoff": [
+  [
+   2,
+   2,
+   4,
+   -2
+  ],
+  [
+   1,
+   1,
+   2,
+   3
+  ],
+  [
+   2,
+   2,
+   5,
+   -3
+  ],
+  [
+   4,
+   -3,
+   6,
+   -1
+  ]
+ ],
+ "randomness": "0x3c11de15056c2178129fd057942ef8d0a826dc210e339a785390d50097e42f3e",
+ "sfc32First8": [
+  2235528663,
+  3311294849,
+  1840625790,
+  2144718438,
+  1303165236,
+  3409910783,
+  3596618306,
+  4253891727
+ ],
+ "reseat10": [
+  4,
+  1,
+  5,
+  7,
+  9,
+  0,
+  2,
+  6,
+  8,
+  3
+ ],
+ "tieKeys": [
+  {
+   "id": "0x0000000000000000000000000000000000000001",
+   "key": "0xfe08d7994715a9bd3a6ea783728de134024dd7c3ce7b9098efa05fc392a86977"
+  },
+  {
+   "id": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+   "key": "0x9ad1a92b702db6f0cc49f8dcb1f79a0016b8975c53a6f2ee4187846794cecb3f"
+  }
+ ],
+ "policySet": {
+  "rows": [
+   {
+    "account": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+    "policyHash": "0x68d7a6be1457e76cc6bff1a86a5c3bf00b21d0b66995b0c9b9d5e4933ef5104f"
+   },
+   {
+    "account": "0x0000000000000000000000000000000000000001",
+    "policyHash": "0x6cc5434a183ce6c19acdff21def9bc9cf010a1239e6338a9cc86bacd21748cd1"
+   }
+  ],
+  "hash": "0x355f3ca732b99f71eed587a182b324bf765528a0242ea035c049c94ce5102364"
+ },
+ "resultHash": {
+  "round": 7,
+  "drandRound": 33548730,
+  "randomness": "0x3c11de15056c2178129fd057942ef8d0a826dc210e339a785390d50097e42f3e",
+  "policySetHash": "0x355f3ca732b99f71eed587a182b324bf765528a0242ea035c049c94ce5102364",
+  "houseSetHash": "0x85305c0278d44fb4d5d20df919cc4acd594e75612564eee4c4fbaa574f800fbc",
+  "ranking": [
+   {
+    "id": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+    "coins": 412
+   },
+   {
+    "id": "0x0000000000000000000000000000000000000001",
+    "coins": 377
+   }
+  ],
+  "hash": "0xe558149a8d6e842ec123dc331e0b8415949fee1f1517eb3330702fb4033583b0"
+ },
+ "twoAgentNight": {
+  "ids": [
+   "0x0000000000000000000000000000000000000001",
+   "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e"
+  ],
+  "policies": [
+   "steady-gatherer",
+   "tit-for-tat"
+  ],
+  "ranking": [
+   {
+    "id": "0x0000000000000000000000000000000000000001",
+    "coins": 1220
+   },
+   {
+    "id": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+    "coins": 620
+   }
+  ],
+  "resultHash": "0xccc9d2eeced3c4d3abda89457fec2d977da4b15547cb2bf74c5a77b62f9daccd"
+ }
+}

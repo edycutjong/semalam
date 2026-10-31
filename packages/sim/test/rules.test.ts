@@ -15,9 +15,7 @@ const nurse = PRESETS.find((p) => p.name === "night-nurse")!;
 const copy = PRESETS.find((p) => p.name === "copy-the-winner")!;
 const golden = (n: string) => JSON.parse(readFileSync(new URL(`../../../fixtures/golden/${n}.json`, import.meta.url), "utf8"));
 
-test("A18: COPY_LEADER = GATHER on turn 1, the leader's previous resolved action after, default when I lead", () => {
-  const agents: Agent[] = [...field(60), { id: "0x00000000000000000000000000000000c0c0c0c0", policy: { ...copy, opening: "COPY_LEADER" } }];
-  const res = run(agents, RANDOMNESS, { ...OPTS, trace: true });
+function copyLeaderCheck(res: ReturnType<typeof run>) {
   const tr = res.trace!;
   let copied = 0, led = 0;
   res.field.forEach((a, i) => {
@@ -38,10 +36,21 @@ test("A18: COPY_LEADER = GATHER on turn 1, the leader's previous resolved action
       }
     }
   });
-  assert.ok(copied > 300, `copied ${copied}`);
+  return { copied, led };
+}
+
+test("COPY_LEADER = GATHER on turn 1, the leader's previous resolved action after, default when I lead (A18)", () => {
+  const big = run([...field(60), { id: "0x00000000000000000000000000000000c0c0c0c0", policy: { ...copy, opening: "COPY_LEADER" } }], RANDOMNESS, { ...OPTS, trace: true });
+  assert.ok(copyLeaderCheck(big).copied > 300);
+  // a copier that takes the lead on turn 1 (GATHER +2 vs a guard's +1) must play its default, not copy itself
+  const lead = run([
+    { id: "0x00000000000000000000000000000000000000c1", policy: { ...copy, opening: "COPY_LEADER", default: "COPY_LEADER" } },
+    { id: "0x00000000000000000000000000000000000000c2", policy: { ...copy, name: "guard", opening: "GUARD", default: "GUARD" } },
+  ], RANDOMNESS, { ...OPTS, trace: true });
+  assert.ok(copyLeaderCheck(lead).led > 250);
 });
 
-test("A17: night-nurse fires 'partner stole from me → STEAL' on every golden night and never steals from a top-10 neighbour", async () => {
+test("night-nurse fires 'partner stole from me → STEAL' on every golden night and never steals from a top-10 neighbour (A17)", async () => {
   assert.equal(nurse.rules[0].if, "partner_is_leader");
   assert.notEqual(nurse.rules[0].then, "STEAL");
   assert.deepEqual([nurse.rules[1].if, nurse.rules[1].then], ["partner_stole_from_me", "STEAL"]);
@@ -63,7 +72,8 @@ test("A17: night-nurse fires 'partner stole from me → STEAL' on every golden n
     assert.ok(fires >= 1, `${name}: rule 2 fired ${fires}×`);
     const rep = replayOf(res, res.field[i].id);
     assert.equal(rep.keyframes.length, 30);
-    assert.match(rep.decisive.why, /^turn \d+: /);
+    assert.ok(rep.decisive.rule >= 0, `${name}: the decisive turn is one of its own rules`);
+    assert.match(rep.decisive.why, new RegExp(`^turn ${rep.decisive.t}: rule ${rep.decisive.rule + 1} \\(${nurse.rules[rep.decisive.rule].if}\\) → ${nurse.rules[rep.decisive.rule].then}`));
   }
 });
 

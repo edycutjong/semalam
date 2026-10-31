@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "test": "tsx --test test/*.test.ts",
+    "test": "tsx --test test/pins.test.ts test/round.test.ts test/rules.test.ts test/sim.test.ts test/vectors.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
