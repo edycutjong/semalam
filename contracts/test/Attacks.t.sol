@@ -238,7 +238,7 @@ contract AttacksTest is Test {
     function test_post_roundZeroAndFuture() public {
         vm.warp(GENESIS + 10 days);
         vm.startPrank(POSTER);
-        vm.expectRevert(Results.TooEarly.selector);
+        vm.expectRevert(Results.BadRound.selector);
         results.post(0, keccak256("r"), 0);
         uint64 sr = results.seedRound(10);
         vm.expectRevert(Results.TooEarly.selector); // round 10 closes at GENESIS + 10 days; seed delay not over

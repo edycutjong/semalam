@@ -58,9 +58,11 @@ async function pagedLogs<T>(f: (lo: bigint, hi: bigint) => Promise<T[]>, from: b
   return out;
 }
 
+let rebuilt = false;
 function cliRun(round: number) {
   const dist = path.join(root, "packages/cli/dist/semalam.mjs");
-  if (!existsSync(dist)) spawnSync("node", ["build.mjs"], { cwd: path.join(root, "packages/cli"), stdio: "inherit" });
+  // always rebuild: a stale bundle would disagree with the runner's fresh libraries and cost the night (fail-safe, but lost)
+  if (!rebuilt) { spawnSync("node", ["build.mjs"], { cwd: path.join(root, "packages/cli"), stdio: "inherit" }); rebuilt = true; }
   const tmp = path.join(tmpdir(), `semalam-cli-${process.pid}-${round}.json`);
   // the CLI child never sees the POSTER key: it only reads public data
   const { POSTER_PRIVATE_KEY: _drop, ...env } = process.env;
@@ -99,10 +101,14 @@ async function main() {
   const need = 70_000n * gp * 2n * BigInt(todo.length + 3);
   if (bal < need) log(`POSTER LOW: ${wallet.account.address} holds ${bal} wei, needs ≥ ${need} for ${todo.length} post(s) + 3 nights — top it up from the deployer (HUMAN-TODO)`);
   for (const round of todo) {
+    // one bad round (RPC error, drand outage) must not stop the later ones in the same run
+    try { await settleOne(round); } catch (e) { log(`round ${round}: FAILED — ${(e as Error).message.split("\n")[0]} (retried next run)`); }
+  }
+  async function settleOne(round: number) {
     log(`round ${round}: settling (finalized block ${fin.number})`);
     const cli = cliRun(round);
-    if (cli.code === 2 || cli.code === 3 || !cli.json) { log(`round ${round}: CLI exit ${cli.code} — not posting\n${cli.out.trim().split("\n").slice(-4).join("\n")}`); continue; }
-    if (cli.code === 4 && /waiting/.test(cli.out)) { log(`round ${round}: CLI says waiting — ${cli.out.trim().split("\n").pop()}`); continue; }
+    if (cli.code === 2 || cli.code === 3 || !cli.json) { log(`round ${round}: CLI exit ${cli.code} — not posting\n${cli.out.trim().split("\n").slice(-4).join("\n")}`); return; }
+    if (cli.code === 4 && /waiting/.test(cli.out)) { log(`round ${round}: CLI says waiting — ${cli.out.trim().split("\n").pop()}`); return; }
     const run = await runnerReplay(round, genesis, fin.number!);
     const cliHash = cli.json.resultHash as Hex, runHash = run.st.resultHash;
     const match = cliHash.toLowerCase() === runHash.toLowerCase();

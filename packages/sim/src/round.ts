@@ -46,7 +46,8 @@ export function selectCommits(logs: CommitLog[], cap = ADMISSION_CAP) {
  * ascending (lowercase hex). Over-capacity accounts are not in it.
  */
 export function policySetHash(latest: { account: Address; policyHash: Hex }[]): Hex {
-  const rows = [...latest].sort((a, b) => (a.account.toLowerCase() < b.account.toLowerCase() ? -1 : 1));
+  const key = (r: { account: Address }) => r.account.toLowerCase();
+  const rows = [...latest].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
   return keccak256(
     encodeAbiParameters([{ type: "tuple[]", components: [{ type: "address" }, { type: "bytes32" }] }], [rows.map((r) => [getAddress(r.account), r.policyHash] as const)]),
   );

@@ -56,7 +56,7 @@ function parse(raw: string[]): Args {
     if (k === "--chain") a.chain = v();
     else if (k === "--rpc") a.rpc.push(v());
     else if (k === "--drand") a.drand.push(v());
-    else if (k === "--agent") a.agent = v();
+    else if (k === "--agent") { a.agent = v(); if (!/^0x[0-9a-fA-F]{40}$/.test(a.agent)) throw new Exit(64, `--agent needs a 0x address, got ${a.agent}`); }
     else if (k === "--json") a.json = v();
     else if (k === "--fixture") a.fixture = v();
     else if (k === "--version" || k === "-v") a._.unshift("version");

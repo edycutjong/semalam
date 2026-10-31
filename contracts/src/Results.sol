@@ -37,6 +37,7 @@ contract Results is RoundClock {
     error NotEligible();
     error GenesisMismatch();
     error ZeroAddress();
+    error BadRound();
 
     constructor(
         address poster,
@@ -60,7 +61,8 @@ contract Results is RoundClock {
 
     function post(uint256 round, bytes32 resultHash, uint64 drandRound) external {
         if (msg.sender != POSTER) revert NotPoster();
-        if (round == 0 || block.timestamp < closeTime(round) + SEED_DELAY) revert TooEarly();
+        if (round == 0) revert BadRound();
+        if (block.timestamp < closeTime(round) + SEED_DELAY) revert TooEarly();
         if (resultOf[round] != bytes32(0)) revert AlreadyPosted();
         if (resultHash == bytes32(0)) revert EmptyResult();
         if (drandRound != seedRound(round)) revert WrongDrandRound();

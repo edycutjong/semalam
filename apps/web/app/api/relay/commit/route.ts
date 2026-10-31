@@ -35,10 +35,10 @@ export async function POST(req: Request) {
   forget(`commitsOf:${account}:${round}`); // never trust a cached count for the quota
   const have = { length: Math.max((await commitsOf(account, round)).length, reserve(rkey)) }; // chain count or in-flight sends, whichever is higher
   if (have.length >= MAX_PER_ROUND) return fail(`at most ${MAX_PER_ROUND} sponsored commits per account per round — use your own wallet`, 429, { relay: false });
-  if (have.length === 0 && (await commitCountOf(round)) >= ROUND_SPONSOR_CAP) return fail("relay full for this round — use your own wallet", 429, { relay: false });
+  bump(rkey, 1); // reserved now, before the next await, so concurrent requests for this account see it (failures release it)
+  if (have.length === 0 && (await commitCountOf(round)) >= ROUND_SPONSOR_CAP) { bump(rkey, -1); return fail("relay full for this round — use your own wallet", 429, { relay: false }); }
   const rs = await relayState(round);
-  if (rs !== "ok") return fail(RELAY_SAYS[rs], 503, { relay: false });
-  bump(rkey, 1); // reserved until the chain shows it (failures release it below)
+  if (rs !== "ok") { bump(rkey, -1); return fail(RELAY_SAYS[rs], 503, { relay: false }); }
   try {
     const args = [account, BigInt(round), ph as Hex, sealed as Hex, deadline, sig as Hex] as const;
     // one relayer key = one nonce stream: sends are serialised per instance; a cross-instance nonce clash retries once

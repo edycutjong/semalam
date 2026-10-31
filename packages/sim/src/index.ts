@@ -84,7 +84,7 @@ export function run(
   const PAY = opts?.payoff ?? PAYOFF; // payoff override = tuning script only; the runner and the CLI never pass it
   if (!opts?.policySetHash || !opts?.houseSetHash || opts.round === undefined || opts.drandRound === undefined)
     throw new Error("run(): round, drandRound, policySetHash and houseSetHash are required");
-  const field = [...agents].sort((x, y) => (x.id.toLowerCase() < y.id.toLowerCase() ? -1 : 1));
+  const field = [...agents].sort((x, y) => { const a = x.id.toLowerCase(), b = y.id.toLowerCase(); return a < b ? -1 : a > b ? 1 : 0; });
   const N = field.length;
   const rand = sfc32(randomness);
   const tie = field.map((a) => tieKey(randomness, a.id));

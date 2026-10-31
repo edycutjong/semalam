@@ -34,6 +34,8 @@ export async function walletSigner(): Promise<Signer> {
   } catch {
     await eth.request({ method: "wallet_addEthereumChain", params: [{ chainId: idHex, chainName: CHAIN.name, nativeCurrency: CHAIN.nativeCurrency, rpcUrls: DEP.rpcs }] });
   }
+  const now = String(await eth.request({ method: "eth_chainId" })).toLowerCase();
+  if (now !== idHex) throw new Error(`your wallet is on chain ${parseInt(now, 16)}, not ${CHAIN.id} — switch it and try again`);
   return { mode: "wallet", address, client: createWalletClient({ account: address, chain: CHAIN, transport: custom(eth) }) };
 }
 

@@ -18,6 +18,11 @@ contract Deploy is Script {
         bytes32 houseSetHash = 0x85305c0278d44fb4d5d20df919cc4acd594e75612564eee4c4fbaa574f800fbc;
         bytes32 simVersion = keccak256(bytes("semalam-sim/1")); // must equal SIM_VERSION in packages/sim
         require(genesis % 1 days == 17 hours, "GENESIS must be a 17:00 UTC instant");
+        if (block.chainid == 4663) {
+            // decision 19: round 1 closes at the first 17:00 UTC that is >= 8 h after the deploy
+            require(genesis + 1 days >= block.timestamp + 8 hours, "round 1 would close < 8 h after deploy");
+            require(genesis < block.timestamp + 8 hours, "GENESIS is a day later than the schedule");
+        }
 
         vm.startBroadcast();
         if (wif == address(0)) {
