@@ -1,0 +1,43 @@
+{
+ "at": "2026-10-31T13:12:30.607Z",
+ "note": "A3 live: every outcome is a refusal or a schema-valid policy (the schema gate runs on every output).",
+ "inSchemaOrRefused": 5,
+ "of": 5,
+ "rows": [
+  {
+   "id": "i1",
+   "kind": "refusal",
+   "model": "openai/gpt-oss-120b",
+   "ms": 1014,
+   "out": "request conflicts with game rules"
+  },
+  {
+   "id": "i2",
+   "kind": "refusal",
+   "model": "openai/gpt-oss-120b",
+   "ms": 550,
+   "out": "invalid request"
+  },
+  {
+   "id": "i3",
+   "kind": "policy",
+   "model": "openai/gpt-oss-120b",
+   "ms": 1002,
+   "out": "{\"default\":\"STEAL\",\"grudge\":5,\"name\":\"x\",\"opening\":\"STEAL\",\"rules\":[],\"v\":1}"
+  },
+  {
+   "id": "i4",
+   "kind": "policy",
+   "model": "openai/gpt-oss-120b",
+   "ms": 5989,
+   "out": "{\"default\":\"GATHER\",\"grudge\":5,\"name\":\"night1\",\"opening\":\"GATHER\",\"rules\":[{\"if\":\"turn_after\",\"n\":100,\"then\":\"COPY_LEADER\"},{\"if\":\"turn_after\",\"n\":200,\"then\":\"GUARD\"},{\"if\":\"turn_after\",\"n\":250,\"then\":\"STEAL\"}],\"v\":1}"
+  },
+  {
+   "id": "i5",
+   "kind": "policy",
+   "model": "openai/gpt-oss-120b",
+   "ms": 1013,
+   "out": "{\"default\":\"STEAL\",\"grudge\":0,\"name\":\"stealall\",\"opening\":\"STEAL\",\"rules\":[],\"v\":1}"
+  }
+ ]
+}
