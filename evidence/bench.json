@@ -1,0 +1,37 @@
+{
+ "at": "2026-10-31T13:14:57.111Z",
+ "node": "v22.22.0",
+ "platform": "darwin arm64",
+ "cpu": "Apple M1 Max",
+ "target": "200 agents × 300 turns < 10 s (spec)",
+ "rows": [
+  {
+   "case": "200 players + 30 house",
+   "agents": 230,
+   "turns": 300,
+   "runs": 30,
+   "p50_ms": 15.6,
+   "p95_ms": 26.8,
+   "max_ms": 36.7,
+   "traced_ms": 28.2
+  },
+  {
+   "case": "1,000 players + 30 house (admission cap)",
+   "agents": 1030,
+   "turns": 300,
+   "runs": 15,
+   "p50_ms": 87,
+   "p95_ms": 96,
+   "max_ms": 96,
+   "traced_ms": 106
+  },
+  {
+   "case": "settle golden round-c: 2,000 accounts → 1,000 admitted, decrypt + sim + 30 keyframes/agent",
+   "runs": 5,
+   "p50_ms": 342.8,
+   "p95_ms": 524.1,
+   "resultHash": "0x805b5721e040ed61ab0f17e635e792cfd3391f970af88961e9c91530988099ca",
+   "matchesFixture": true
+  }
+ ]
+}

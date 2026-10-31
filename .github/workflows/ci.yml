@@ -35,8 +35,12 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: simulator determinism (golden hash pinned in packages/sim/test)
-        run: pnpm --filter @semalam/sim test
+      - name: typecheck (policy, beacon, sim, cli)
+        run: pnpm --filter "./packages/*" typecheck
+      - name: tests incl. simulator determinism (golden hashes pinned in packages/sim/test + fixtures/golden)
+        run: pnpm --filter "./packages/*" test
+      - name: bundled CLI replays the golden rounds offline
+        run: pnpm --filter semalam build && node packages/cli/dist/semalam.mjs replay --fixture golden
 
   web:
     runs-on: ubuntu-latest
