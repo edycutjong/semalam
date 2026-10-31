@@ -36,7 +36,11 @@ export const Policy = z
     grudge: z.number().int().min(0).max(20),
     rules: z.array(Rule).max(3),
   })
-  .strict();
+  .strict()
+  // a theft is first seen one turn later, so grudge 0 would make partner_stole_from_me a rule that never fires
+  .refine((p) => p.grudge >= 1 || !p.rules.some((r) => r.if === "partner_stole_from_me"), {
+    message: "grudge must be ≥ 1 when a rule uses partner_stole_from_me",
+  });
 export type Policy = z.infer<typeof Policy>;
 
 export const Refusal = z.object({ refuse: z.string().min(1).max(200) }).strict();
@@ -65,7 +69,7 @@ const ACTION_WORDS: Record<(typeof ACTIONS)[number], string> = {
 };
 function conditionWords(r: z.infer<typeof Rule>, grudge: number): string {
   const w: Record<(typeof CONDITIONS)[number], [string, string]> = {
-    partner_stole_from_me: [`my neighbour stole from me in the last ${grudge} turns`, `my neighbour has not stolen from me in the last ${grudge} turns`],
+    partner_stole_from_me: [`my neighbour stole from me in the last ${grudge} turn${grudge === 1 ? "" : "s"}`, `my neighbour has not stolen from me in the last ${grudge} turn${grudge === 1 ? "" : "s"}`],
     partner_is_thief: ["my neighbour stole from anyone in the last 10 turns", "my neighbour has not stolen from anyone in the last 10 turns"],
     partner_shared_with_me: ["my neighbour shared with me in the last 10 turns", "my neighbour has not shared with me in the last 10 turns"],
     partner_richer: ["my neighbour has more coins than me", "my neighbour does not have more coins than me"],
@@ -83,11 +87,11 @@ export function readback(p: Policy): string[] {
   if (p.rules.length) lines.push("- From turn 11, first matching rule wins:");
   p.rules.forEach((r, i) => lines.push(`  ${i + 1}. If ${conditionWords(r, p.grudge)} → ${ACTION_WORDS[r.then]}.`));
   lines.push(`- ${p.rules.length ? "Otherwise" : "From turn 11"}: ${ACTION_WORDS[p.default]}.`);
-  if (!p.rules.some((r) => r.if === "partner_stole_from_me")) lines.push(`- Remembers a theft against it for ${p.grudge} turns.`);
+  if (!p.rules.some((r) => r.if === "partner_stole_from_me") && p.grudge > 0) lines.push(`- Remembers a theft against it for ${p.grudge} turns.`);
   return lines;
 }
 
-// ---------- no-LLM builder presets (P0b T10) ----------
+// ---------- no-LLM builder presets ----------
 const preset = (name: string, opening: Policy["opening"], dflt: Policy["default"], grudge: number, rules: Policy["rules"]): Policy =>
   Policy.parse({ v: 1, name, opening, default: dflt, grudge, rules });
 /** 8 client-side presets — the fallback when the compiler is down and the private path. */
@@ -100,7 +104,7 @@ export const PRESETS: Policy[] = [
     { if: "i_am_leading", then: "GUARD" },
   ]),
   preset("copy-the-winner", "GATHER", "COPY_LEADER", 0, []),
-  preset("thief-hunter", "GATHER", "SHARE", 0, [{ if: "partner_is_thief", then: "GUARD" }, { if: "partner_stole_from_me", then: "STEAL" }]),
+  preset("thief-hunter", "GATHER", "SHARE", 3, [{ if: "partner_is_thief", then: "GUARD" }, { if: "partner_stole_from_me", then: "STEAL" }]),
   preset("generous-neighbour", "SHARE", "GATHER", 3, [{ if: "partner_shared_with_me", then: "SHARE" }, { if: "partner_is_thief", then: "GUARD" }]),
   preset("late-bloomer", "GUARD", "GATHER", 0, [{ if: "turn_after", n: 240, then: "STEAL" }, { if: "partner_poorer", then: "SHARE" }]),
   preset("rob-the-rich", "GATHER", "GATHER", 4, [{ if: "partner_richer", then: "STEAL" }, { if: "partner_stole_from_me", then: "GUARD" }]),

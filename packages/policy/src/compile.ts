@@ -24,19 +24,28 @@ export type CompileResult =
   | { kind: "invalid"; reason: string } // the request itself (A2)
   | { kind: "paused"; reason: string }; // provider down / capped → the UI offers the no-LLM builder (A20)
 
+/** Characters as a person counts them (code points) — the textarea counter and the API both use this. */
+export const orderLength = (s: string) => [...s].length;
+
 export function checkOrders(orders: unknown): string | null {
   if (typeof orders !== "string" || !orders.trim()) return "orders are empty";
-  if ([...orders].length > MAX_ORDERS) return `orders are longer than ${MAX_ORDERS} characters`;
+  if (orders.length > 2 * MAX_ORDERS || orderLength(orders) > MAX_ORDERS) return `orders are longer than ${MAX_ORDERS} characters`;
   return null;
 }
 
+/** Model-written refusal reasons are shown to players: no links, no addresses, printable, short. */
+export function cleanReason(r: string): string {
+  const s = r.replace(/https?:\/\/\S+|www\.\S+|0x[0-9a-fA-F]{6,}/g, "[removed]").replace(/[^\p{L}\p{N}\p{P}\p{Zs}]/gu, "").trim().slice(0, 120);
+  return s || "these orders are not about how the stall should play";
+}
+
 /** Turns raw model text into a policy or a refusal. Pure; the unit tests feed it adversarial outputs. */
-export function judgeOutput(content: string): { policy: Policy } | { refusal: string } {
+export function judgeOutput(content: string): { policy: Policy } | { refusal: string } | { garbled: true } {
   const s = content.trim().replace(/^```(?:json)?/, "").replace(/```$/, "").trim();
   let j: unknown;
-  try { j = JSON.parse(s); } catch { return { refusal: "the compiler did not return JSON" }; }
+  try { j = JSON.parse(s); } catch { return { garbled: true }; }
   const r = Refusal.safeParse(j);
-  if (r.success) return { refusal: r.data.refuse };
+  if (r.success) return { refusal: cleanReason(r.data.refuse) };
   const p = Policy.safeParse(j);
   if (p.success) return { policy: p.data };
   return { refusal: "the compiled policy fell outside the schema (≤ 6 fields, ≤ 3 rules)" };
@@ -75,6 +84,7 @@ export async function compileOrders(
       catch { last = "unreadable provider body"; continue; }
       const ms = Date.now() - t0;
       const out = judgeOutput(content);
+      if ("garbled" in out) { last = "the compiler did not return JSON"; break; } // try the next model
       return "policy" in out ? { kind: "policy", policy: out.policy, readback: readback(out.policy), model, ms } : { kind: "refusal", reason: out.refusal, model, ms };
     }
   }
