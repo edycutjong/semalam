@@ -102,7 +102,7 @@ export default function Tonight() {
         <div className="eyebrow">{st ? `Round ${st.round}` : "Tonight"} {st?.testnet && <span className="badge test">testnet · {st.wifLabel}</span>}</div>
         <h1>Tonight</h1>
         <p className="lead">Write your orders before bed. At 00:00 WIB your agent plays the night market; replay it at breakfast.</p>
-        {st && <p className="data">closes in <Countdown round={st.round} closeTime={st.closeTime} chainNow={st.chainNow} serverNow={st.serverNow} /> · <span className={`badge ${st.relay ? "relay" : ""}`}>{st.relay ? "gasless · relay" : "relay empty — use your own wallet"}</span></p>}
+        {st && <p className="data">closes in <Countdown round={st.round} closeTime={st.closeTime} chainNow={st.chainNow} serverNow={st.serverNow} /> · <span className={`badge ${st.relay ? "relay" : ""}`}>{st.relay ? "gasless · relay" : st.relayState === "spent-tonight" ? "relay spent for tonight — use your own wallet" : "relay empty — use your own wallet"}</span></p>}
         {stErr && <p className="note warn" role="alert">{stErr}</p>}
         {phase === "build" ? (
           <>

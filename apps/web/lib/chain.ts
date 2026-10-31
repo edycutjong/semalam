@@ -67,7 +67,27 @@ export function relayer() {
   return { account, wallet: createWalletClient({ account, chain: CHAIN, transport: http(DEP.rpcs[0], { timeout: 20_000 }) }) };
 }
 /** Relayer stops below this balance (named state "relay empty — use your own wallet"). */
-export const RELAY_FLOOR_WEI = 300_000_000_000_000n; // 0.0003 ETH
+export const RELAY_FLOOR_WEI = BigInt(process.env.RELAY_FLOOR_WEI ?? "300000000000000"); // 0.0003 ETH
+/**
+ * Per-night ETH stop (spec: "daily ETH stop"). It reads only the chain, so it holds across serverless instances: the relay
+ * keeps FLOOR + RELAY_NIGHT_WEI × (nights left after this one) back, so one night — or one script making fresh keys —
+ * can spend at most the slice above that line. RELAY_NIGHT_WEI / RELAY_LAST_ROUND unset (testnet) = floor only.
+ */
+const NIGHT_WEI = BigInt(process.env.RELAY_NIGHT_WEI ?? "0");
+const LAST_ROUND = Number(process.env.RELAY_LAST_ROUND ?? "0");
+export const relayReserveWei = (round: number) => RELAY_FLOOR_WEI + NIGHT_WEI * BigInt(Math.max(0, LAST_ROUND - round));
+export type RelayState = "ok" | "empty" | "spent-tonight";
+export async function relayState(round: number): Promise<RelayState> {
+  const r = relayer();
+  if (!r) return "empty";
+  const bal = await publicClient.getBalance({ address: r.account.address });
+  if (bal < RELAY_FLOOR_WEI) return "empty";
+  return bal < relayReserveWei(round) ? "spent-tonight" : "ok";
+}
+export const RELAY_SAYS: Record<Exclude<RelayState, "ok">, string> = {
+  empty: "relay empty — use your own wallet",
+  "spent-tonight": "relay spent for tonight — use your own wallet, or come back tomorrow",
+};
 
 /** Everyone who paid for a scrimmage, with the round they paid in (for season crown-eligibility). Memoised 30 s. */
 export async function paidLogs() {
