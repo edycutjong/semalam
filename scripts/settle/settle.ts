@@ -62,7 +62,9 @@ function cliRun(round: number) {
   const dist = path.join(root, "packages/cli/dist/semalam.mjs");
   if (!existsSync(dist)) spawnSync("node", ["build.mjs"], { cwd: path.join(root, "packages/cli"), stdio: "inherit" });
   const tmp = path.join(tmpdir(), `semalam-cli-${process.pid}-${round}.json`);
-  const r = spawnSync("node", [dist, "replay", String(round), "--chain", chainId, "--rpc", rpc, "--json", tmp], { encoding: "utf8", env: { ...process.env, NO_COLOR: "1" } });
+  // the CLI child never sees the POSTER key: it only reads public data
+  const { POSTER_PRIVATE_KEY: _drop, ...env } = process.env;
+  const r = spawnSync("node", [dist, "replay", String(round), "--chain", chainId, "--rpc", rpc, "--json", tmp], { encoding: "utf8", env: { ...env, NO_COLOR: "1" } });
   const version = spawnSync("node", [dist, "--version"], { encoding: "utf8" }).stdout.trim();
   return { code: r.status ?? 70, out: `${r.stdout}${r.stderr}`, version, json: existsSync(tmp) ? JSON.parse(readFileSync(tmp, "utf8")) : null };
 }
@@ -85,7 +87,9 @@ async function main() {
     if (only && r !== only) continue;
     const h = await pub.readContract({ address: d.results, abi: RES, functionName: "resultOf", args: [BigInt(r)] });
     const haveArt = existsSync(path.join(outDir, `${r}.json`));
-    if (/^0x0+$/.test(h) || (only && r === only) || !haveArt) todo.push(r); // unposted, or posted without its artifact
+    const artPosted = haveArt && JSON.parse(readFileSync(path.join(outDir, `${r}.json`), "utf8")).status === "posted";
+    // unposted, posted without its artifact, or an artifact that still says anything but "posted" (e.g. a lost race)
+    if (/^0x0+$/.test(h) || (only && r === only) || !artPosted) todo.push(r);
   }
   if (!todo.length) return log("nothing to settle");
   mkdirSync(outDir, { recursive: true });
@@ -120,6 +124,16 @@ async function main() {
         status = rc.status === "success" ? "posted" : "poster-reverted";
         log(`round ${round}: Results.post ${rc.status} ${hash}`);
       } catch (e) { status = "poster-reverted"; log(`round ${round}: post failed — ${(e as Error).message.split("\n")[0]}`); }
+      if (status === "poster-reverted") {
+        // a second settler (Actions + the local runner) may have posted first: AlreadyPosted with the same hash is a success
+        const now = await pub.readContract({ address: d.results, abi: RES, functionName: "resultOf", args: [BigInt(round)] });
+        if (now.toLowerCase() === runHash.toLowerCase()) {
+          const p = (await pagedLogs((lo, hi) => pub.getLogs({ address: d.results, event: EV[1], args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }), BigInt(d.fromBlock), await pub.getBlockNumber()))[0];
+          onchain = { resultHash: now, drandRound: run.st.drandRound, tx: p?.transactionHash ?? null };
+          status = "posted";
+          log(`round ${round}: already posted by another settler with the same hash — recorded as posted`);
+        }
+      }
     }
     const pol = new Map(run.agents.map((a) => [a.id.toLowerCase(), a.policy]));
     const houseP = new Map(HOUSE.agents.map((h) => [h.id.toLowerCase(), h.policy]));
