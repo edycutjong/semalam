@@ -56,7 +56,7 @@ label { display: block; font-size: 16px; color: var(--muted); margin-bottom: 6px
 .counter.over { color: var(--act-steal); }
 .note { border-left: 3px solid var(--before); padding: 6px 14px; color: var(--muted); font-size: 16px; margin: 12px 0; }
 .note.warn { border-color: var(--act-steal); color: var(--ink); }
-.badge { font: 400 12px var(--font-data); text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border: 1px solid var(--rule); border-radius: 99px; color: var(--muted); }
+.badge { white-space: nowrap; font: 400 12px var(--font-data); text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border: 1px solid var(--rule); border-radius: 99px; color: var(--muted); }
 .badge.relay { color: var(--before); border-color: var(--before); }
 .badge.test { color: var(--act-share); border-color: var(--act-share); }
 
@@ -88,7 +88,7 @@ tr.me td { color: var(--after); }
 .scroll { overflow-x: auto; max-width: 100%; }
 
 /* lamps + replay */
-canvas.lamps { width: 100%; height: clamp(140px, 30vw, 240px); display: block; background: #150F27; border-radius: 10px; border: 1px solid var(--rule); }
+canvas.lamps { width: 100%; height: clamp(190px, 50vw, 260px); display: block; background: #150F27; border-radius: 10px; border: 1px solid var(--rule); }
 .caption { min-height: 3.2em; margin-top: 10px; }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 15px; color: var(--muted); }
 .glyph { font-family: var(--font-data); }
@@ -108,3 +108,56 @@ footer { margin-top: 60px; padding-top: 18px; border-top: 1px dashed var(--rule)
 button.chip { min-height: 44px; padding: 0 14px; font: 400 13px/1 var(--font-data); letter-spacing: .5px; border: 1px dashed var(--rule); border-radius: 99px; color: var(--muted); }
 button.chip:hover:not(:disabled) { border-color: var(--ink); background: var(--rule); color: var(--ink); }
 button.chip.on { border-style: solid; border-color: var(--ink); color: var(--ink); }
+
+/* ---- game feel (P4c): sound toggles, the seal press, the morning reveal, the ritual lamps ---- */
+.sound { display: flex; gap: 6px; }
+button.snd { min-height: 44px; min-width: 44px; padding: 0 12px; gap: 6px; border: 1px solid var(--rule); border-radius: 99px; color: var(--muted); font: 400 12px/1 var(--font-data); letter-spacing: 1px; }
+button.snd[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
+button.snd:hover:not(:disabled) { background: var(--rule); color: var(--ink); border-color: var(--ink); }
+@media (max-width: 640px) { button.snd { padding: 0 10px; } button.snd span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } }
+
+/* tickets slide into place (transform only: never hidden, never a layout shift) */
+.ticket { animation: paper-in .4s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes paper-in { from { transform: translateY(8px) rotate(-.5deg); } to { transform: none; } }
+/* the seal: the stamp drops, squashes on impact, the ink spreads, the paper gives under it and settles */
+.ticket.pressed { animation: paper-in .4s cubic-bezier(.2,.8,.2,1) both, paper-settle .55s .2s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes paper-settle { 0% { transform: none; } 28% { transform: translateY(3px) scale(.994) rotate(.15deg); } 100% { transform: none; } }
+.stamp.fresh { position: relative; animation: stamp-press .62s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes stamp-press {
+  0% { transform: rotate(-10deg) translateY(-30px) scale(1.9); opacity: 0; }
+  34% { transform: rotate(-4deg) translateY(0) scale(1.08, .8); opacity: 1; }
+  56% { transform: rotate(-4deg) scale(.96, 1.05); }
+  100% { transform: rotate(-4deg) scale(1); opacity: .93; }
+}
+.stamp.fresh::after { content: ""; position: absolute; inset: -12px -16px; border-radius: 45%; background: radial-gradient(closest-side, currentColor, transparent); opacity: 0; transform: scale(.4); animation: ink .95s .2s ease-out both; pointer-events: none; mix-blend-mode: multiply; }
+@keyframes ink { 0% { opacity: 0; transform: scale(.4); } 22% { opacity: .24; } 100% { opacity: .08; transform: scale(1.06); } }
+
+/* the morning reveal */
+.reveal.lit { animation: rank-lit .8s ease-out both; transform-origin: left center; }
+@keyframes rank-lit { 0% { transform: scale(1.035); opacity: .7; } 100% { transform: none; opacity: 1; } }
+.card.decisive { border-color: var(--before); margin: 22px 0 0; }
+.card.rewrite { border-style: dashed; border-color: var(--before); margin: 0 0 16px; }
+.tonight-line { margin: 16px 0 0; color: var(--muted); }
+.morning { margin-top: 18px; }
+.card-preview { display: block; width: 100%; max-width: 600px; height: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--rule); animation: paper-in .4s cubic-bezier(.2,.8,.2,1) both; }
+
+/* the ritual: the nights you played, as a short lamp string */
+.ritual { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 18px; }
+.ritual p { margin: 0; color: var(--muted); }
+.nights { list-style: none; display: flex; gap: 8px; margin: 0; padding: 6px 4px; position: relative; }
+.nights::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--rule); }
+.nights li { position: relative; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--rule); background: var(--bg); }
+.nights li.lit { background: var(--act-share); border-color: var(--act-share); box-shadow: 0 0 10px rgba(242,209,107,.45); animation: lamp-on .5s cubic-bezier(.2,1.4,.4,1) both; animation-delay: calc(var(--k, 0) * 70ms); }
+.nights li.sealed { border-color: var(--before); background: rgba(124,140,196,.4); }
+.nights li.open { border-style: dashed; border-color: var(--muted); }
+@keyframes lamp-on { from { transform: scale(.55); opacity: .35; } to { transform: none; opacity: 1; } }
+
+/* board rows rise in; the verify verdict lands like a stamp */
+tbody.rise tr { animation: row-in .45s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(min(var(--i, 0), 20) * 16ms); }
+@keyframes row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.verdict { display: inline-block; animation: verdict-in .5s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes verdict-in { from { transform: scale(1.6) rotate(-3deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket, .ticket.pressed, .stamp.fresh, .stamp.fresh::after, .reveal.lit, .card-preview, .nights li.lit, tbody.rise tr, .verdict { animation: none !important; }
+}

@@ -1,53 +1,102 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { readback, type Policy } from "@semalam/policy";
 import { run, type Agent } from "@semalam/sim";
 import { HOUSE } from "@semalam/sim/house";
-import type { Hex } from "viem";
-import ReplayPlayer, { type AgentRep } from "./ReplayPlayer";
+import type { Address, Hex } from "viem";
+import ReplayPlayer, { type AgentRep, type Trace } from "./ReplayPlayer";
 import Ticket from "./Ticket";
-import { rankLine, type Row } from "@/lib/rank";
+import Ritual from "./Ritual";
+import MorningCard from "./MorningCard";
+import Countdown from "./Countdown";
+import { ordinal, rankLine, type Row } from "@/lib/rank";
 import { restoreSigner } from "@/lib/wallet";
-import { lsGet } from "@/lib/ls";
+import { lsGet, lsSet } from "@/lib/ls";
 import { MAX_VARIANTS, editedPolicy } from "@/lib/whatif";
+import { status, type StatusJson } from "@/lib/commit";
+import { REWRITE_KEY, hintOf, ordersText, type Rewrite } from "@/lib/rewrite";
+import { sfx } from "@/lib/sound";
 
 export type BreakfastData = {
   round: number; resultHash: string; drandRound: number; randomness: string; policySetHash: string; houseSetHash: string;
   players: number; agents: number; ranking: Row[]; replays: AgentRep[]; policies: { id: string; policy: Policy }[]; tx: string | null; txUrl: string | null;
 };
 
+/** The morning reveal: the player rank counts up from the back of the field, then the lamp chime. */
+function RankReveal({ line, from }: { line: string; from: number }) {
+  const m = /^(\d+)(st|nd|rd|th)/.exec(line), to = m ? Number(m[1]) : 0;
+  const [v, setV] = useState(to);
+  const [lit, setLit] = useState(true);
+  useEffect(() => {
+    if (!to || from <= to || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setV(to); setLit(true); return; }
+    let raf = 0; const t0 = performance.now(); setLit(false);
+    const step = (n: number) => {
+      const k = Math.min(1, (n - t0) / 1100);
+      setV(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) raf = requestAnimationFrame(step); else { setLit(true); sfx.chime(1 - (to - 1) / Math.max(1, from - 1)); }
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [line, from, to]);
+  return (
+    <p className={`lead data reveal ${lit ? "lit" : ""}`} style={{ color: "var(--after)" }}>
+      <span aria-hidden>{m ? line.replace(m[0], ordinal(v)) : line}</span><span className="sr">{line}</span>
+    </p>
+  );
+}
+
 export default function Breakfast({ d }: { d: BreakfastData }) {
+  const router = useRouter();
   const [addr, setAddr] = useState("");
   const [typed, setTyped] = useState("");
   const [off, setOff] = useState<Set<number>>(new Set());
   const [variants, setVariants] = useState<{ off: number[]; rank: number; coins: number }[]>([]);
+  const [st, setSt] = useState<StatusJson | null>(null);
+  const [streak, setStreak] = useState(0);
   useEffect(() => {
     const saved = lsGet<{ account?: string } | null>(`semalam.committed.${d.round}`, null);
     setAddr(saved?.account ?? restoreSigner()?.address ?? "");
   }, [d.round]);
+  const valid = /^0x[0-9a-fA-F]{40}$/.test(addr);
+  useEffect(() => { // tonight's round and close, for the countdown and the "sealed tonight" lamp
+    let live = true;
+    status(valid ? (addr as Address) : undefined).then((s) => { if (live) setSt(s); }).catch(() => { /* the replay still works without it */ });
+    return () => { live = false; };
+  }, [addr, valid]);
 
   const mine = d.ranking.find((r) => r.id.toLowerCase() === addr.toLowerCase());
+  const myRep = useMemo(() => d.replays.find((r) => r.id.toLowerCase() === addr.toLowerCase()), [d.replays, addr]);
   const houseIds = useMemo(() => new Set(d.ranking.filter((r) => r.house).map((r) => r.id.toLowerCase())), [d.ranking]);
   const myPolicy = d.policies.find((p) => p.id.toLowerCase() === addr.toLowerCase())?.policy;
   const line = addr ? rankLine(d.ranking, addr, d.players, d.agents) : null;
 
-  const fieldWith = (mineP: Policy): Agent[] => [
+  const fieldWith = (mineP?: Policy): Agent[] => [
     ...HOUSE.agents.map((h) => ({ id: h.id, policy: h.policy, house: true })),
-    ...d.policies.map((p) => ({ id: p.id as Hex, policy: p.id.toLowerCase() === addr.toLowerCase() ? mineP : p.policy })),
+    ...d.policies.map((p) => ({ id: p.id as Hex, policy: mineP && p.id.toLowerCase() === addr.toLowerCase() ? mineP : p.policy })),
   ];
   const opts = { round: BigInt(d.round), drandRound: BigInt(d.drandRound), policySetHash: d.policySetHash as Hex, houseSetHash: d.houseSetHash as Hex };
-  // an unmodified re-run must reproduce the posted hash, or the what-if numbers cannot be trusted
+  // one re-run of the posted night in this browser, traced: if it reproduces the posted hash, the replay draws every real
+  // steal and share, and the what-if numbers can be trusted; if not, both stay off
   const [baseline, setBaseline] = useState<"checking" | "ok" | "differs">("checking");
+  const [trace, setTrace] = useState<Trace | null>(null);
   useEffect(() => {
-    if (!myPolicy) return;
-    setBaseline("checking");
-    const t = setTimeout(() => { // off the first paint: a 1,000-agent run should not freeze a phone
-      try { setBaseline(run(fieldWith(myPolicy), d.randomness as Hex, opts).resultHash.toLowerCase() === d.resultHash.toLowerCase() ? "ok" : "differs"); } catch { setBaseline("differs"); }
-    }, 60);
-    return () => clearTimeout(t);
+    let gone = false;
+    const go = () => {
+      try {
+        const res = run(fieldWith(), d.randomness as Hex, { ...opts, trace: true });
+        if (gone) return;
+        const ok = res.resultHash.toLowerCase() === d.resultHash.toLowerCase();
+        setBaseline(ok ? "ok" : "differs");
+        if (ok && res.trace) setTrace({ ids: res.field.map((a) => a.id), turns: res.trace });
+      } catch { if (!gone) setBaseline("differs"); }
+    };
+    const idle = typeof window.requestIdleCallback === "function"; // Safari has no idle callback
+    const h = idle ? window.requestIdleCallback(go, { timeout: 1200 }) : window.setTimeout(go, 60);
+    return () => { gone = true; if (idle) window.cancelIdleCallback(h); else clearTimeout(h); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myPolicy, d.resultHash]);
+  }, [d.resultHash]);
 
   function whatIf() {
     if (!myPolicy || variants.length >= MAX_VARIANTS || baseline !== "ok") return;
@@ -56,13 +105,23 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
     const idx = res.ranking.findIndex((r) => r.id.toLowerCase() === addr.toLowerCase());
     setVariants((v) => [...v, { off: [...off], rank: idx + 1, coins: res.ranking[idx].coins }]);
   }
+  const dd = myRep?.decisive;
+  function rewriteFromHere() {
+    if (!myPolicy || !dd) return;
+    const rw: Rewrite = { round: d.round, t: dd.t, why: dd.why, hint: hintOf(dd.action, dd.partnerAction), policy: myPolicy, text: ordersText(myPolicy), at: Date.now() };
+    lsSet(REWRITE_KEY, rw);
+    router.push("/play");
+  }
+  const tonight = st && st.round > 0 && st.round > d.round ? st : null;
+  const sealedTonight = Boolean(tonight && valid && tonight.commits.length > 0);
 
   return (
     <div className="grid2">
       <section aria-label="Your night">
         <div className="eyebrow">Breakfast · round {d.round}</div>
         <h1>{mine ? "Your night" : "The night"}</h1>
-        {line ? <p className="lead data" style={{ color: "var(--after)" }}>{line}</p> : <p className="lead">{d.players} player{d.players === 1 ? "" : "s"} and {d.agents - d.players} house/operator agents played. {d.players === 0 ? "A house-only night — no player commits were admitted." : ""}</p>}
+        {line ? <RankReveal line={line} from={mine && !mine.house && !mine.operator ? d.players : 0} /> : <p className="lead">{d.players} player{d.players === 1 ? "" : "s"} and {d.agents - d.players} house/operator agents played. {d.players === 0 ? "A house-only night — no player commits were admitted." : ""}</p>}
+        {valid && st && <Ritual account={addr} round={Math.max(st.round, d.round + 1)} sealedTonight={sealedTonight} onRitual={(r) => setStreak(r.streak)} />}
         {!mine && (
           <div>
             <label htmlFor="who">Find your agent by address</label>
@@ -72,7 +131,7 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
           </div>
         )}
         {mine && myPolicy && (
-          <Ticket state="settled" title={myPolicy.name} lines={readback(myPolicy)} stamp={`SETTLED · ${(/^(\S+ of \d+)/.exec(line ?? "")?.[1] ?? "").toUpperCase()}`} hash={d.resultHash} hashLabel="result hash" tx={d.tx ?? undefined} txUrl={d.txUrl ?? undefined} />
+          <Ticket state="settled" fresh title={myPolicy.name} lines={readback(myPolicy)} stamp={`SETTLED · ${(/^(\S+ of \d+)/.exec(line ?? "")?.[1] ?? "").toUpperCase()}`} hash={d.resultHash} hashLabel="result hash" tx={d.tx ?? undefined} txUrl={d.txUrl ?? undefined} />
         )}
         {mine && myPolicy && myPolicy.rules.length > 0 && (
           <div className="card" aria-label="What if">
@@ -90,10 +149,27 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
             {variants.map((v, i) => <p key={i} className="data" style={{ margin: "8px 0 0" }}>rules off [{v.off.map((x) => x + 1).join(", ")}] → rank {v.rank} of {d.agents}, {v.coins} coins (actual: {mine.rank}, {mine.coins})</p>)}
           </div>
         )}
-        <div className="row" style={{ marginTop: 18 }}><Link className="btn" href="/play">Rewrite for tonight</Link><Link className="btn quiet" href={`/verify/${d.round}`}>Verify this night</Link></div>
+        {tonight && (
+          <p className="data tonight-line">round {tonight.round} closes in <Countdown round={tonight.round} closeTime={tonight.closeTime} chainNow={tonight.chainNow} serverNow={tonight.serverNow} />{sealedTonight ? " · sealed — you can re-commit until the close" : ""}</p>
+        )}
+        <div className="row" style={{ marginTop: 12 }}>
+          {!(mine && myPolicy && dd) && <Link className="btn" href="/play">{sealedTonight ? "Tonight" : "Write tonight's orders"}</Link>}
+          <Link className="btn quiet" href={`/verify/${d.round}`}>Verify this night</Link>
+        </div>
       </section>
       <section aria-label="The market">
-        <ReplayPlayer replays={d.replays} mineId={mine?.id} houseIds={houseIds} agents={d.agents} />
+        <ReplayPlayer replays={d.replays} mineId={mine?.id} houseIds={houseIds} agents={d.agents} trace={trace} autoPlay />
+        {mine && myPolicy && dd && (
+          <div className="card decisive" aria-label="Your decisive turn">
+            <div className="eyebrow">Your decisive turn · {dd.t}</div>
+            <p style={{ margin: "0 0 6px" }}>{dd.why}</p>
+            <p className="muted" style={{ margin: "0 0 12px", fontSize: 16 }}>{hintOf(dd.action, dd.partnerAction)}</p>
+            <button type="button" className="primary" onClick={rewriteFromHere}>Rewrite from turn {dd.t}</button>
+          </div>
+        )}
+        {mine && line && !mine.house && !mine.operator && (
+          <MorningCard round={d.round} line={line} coins={mine.coins} agents={d.agents} replays={d.replays} mineId={mine.id} houseIds={houseIds} why={dd?.why ?? ""} resultHash={d.resultHash} streak={streak} />
+        )}
       </section>
     </div>
   );

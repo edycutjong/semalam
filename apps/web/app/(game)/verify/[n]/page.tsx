@@ -29,7 +29,7 @@ export default async function Verify({ params }: { params: Promise<{ n: string }
         <div className="data" style={{ marginBottom: 8 }}>$ npx semalam replay {n} {chainFlag}</div>
         <p style={{ margin: 0 }} className="muted">Exit 0 prints the hash below and says MATCH. {CHAIN_ID === 46630 ? `Testnet uses ${WIF_LABEL}, a labelled stand-in.` : ""}</p>
       </div>
-      {verdict && <p className={verdict === "MATCH" ? "ok" : "bad"} role="status" style={{ fontSize: 22, fontFamily: "var(--font-display)" }}>{verdict === "MATCH" ? "✓ MATCH" : `✗ ${verdict.replace(/-/g, " ").toLowerCase()}`}</p>}
+      {verdict && <p className={`verdict ${verdict === "MATCH" ? "ok" : "bad"}`} role="status" style={{ fontSize: 22, fontFamily: "var(--font-display)" }}>{verdict === "MATCH" ? "✓ MATCH" : `✗ ${verdict.replace(/-/g, " ").toLowerCase()}`}</p>}
       {!art && state && <p className="note" role="status">{state.label}{state.detail ? ` — ${state.detail}` : ""}</p>}
       <dl className="kv">
         <dt>Result hash (runner artifact)</dt><dd>{s ? <HashLine value={s.resultHash} /> : <span className="muted">not computed yet</span>}</dd>

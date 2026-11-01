@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // Every public page renders with no secrets configured and no uncaught page errors.
-for (const path of ["/", "/pitch", "/play", "/board", "/scrimmage", "/fidelity", "/playtest"]) {
+for (const path of ["/", "/pitch", "/play", "/board", "/scrimmage", "/fidelity", "/playtest", "/round/2"]) {
   test(`${path} renders without secrets`, async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));

@@ -189,7 +189,7 @@ export default function Scrimmage() {
             <h2 style={{ fontSize: 28 }}>{res.kind === "free" ? "Your first commit" : "Your draft"}: {res.r.rank} of {res.r.of}</h2>
             <p className="data">{res.r.coins} coins · {res.r.steals} steals · {res.kind === "paid" && res.tx ? <a href={txUrl(res.tx)}>payment {res.tx.slice(0, 10)}…</a> : "free run"} · not counted toward the score</p>
             <p className="data">scrimmage hash <HashLine value={res.r.resultHash} short /></p>
-            <ReplayPlayer replays={res.r.replays} mineId={res.account} houseIds={new Set(res.r.houseIds)} agents={res.r.of} />
+            <ReplayPlayer key={res.r.resultHash} replays={res.r.replays} mineId={res.account} houseIds={new Set(res.r.houseIds)} agents={res.r.of} trace={res.r.trace} autoPlay />
           </>
         ) : <p className="muted">The replay of your scrimmage appears here.</p>}
       </section>

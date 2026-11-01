@@ -11,7 +11,12 @@ import { localSigner, walletSigner, restoreSigner, injected, type Signer } from 
 import { txUrl } from "@/lib/config";
 import HashLine from "./HashLine";
 import { exportLocalKey } from "@/lib/wallet";
-import { copyText, lsSet } from "@/lib/ls";
+import { copyText, lsGet, lsSet } from "@/lib/ls";
+import { sfx } from "@/lib/sound";
+import type { Rewrite } from "@/lib/rewrite";
+import Ritual from "./Ritual";
+
+const REWRITE = "semalam.rewrite"; // = REWRITE_KEY in lib/rewrite.ts (not imported: that module carries the sim)
 
 type Compiled = { kind: "policy"; policy: Policy; readback: string[]; model: string } | { kind: "refusal"; reason: string } | { kind: "paused"; reason: string } | { kind: "invalid"; reason: string };
 type Phase = "write" | "build" | "readback" | "identity" | "sealing" | "sealed";
@@ -40,6 +45,14 @@ export default function Tonight() {
   const [entered, setEntered] = useState<(Entered & { policyHash: string; round: number }) | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [step, setStep] = useState("");
+  const [hint, setHint] = useState<Rewrite | null>(null);
+  useEffect(() => { // "rewrite from here" on a breakfast page: last night's orders + what the decisive turn paid
+    const r = lsGet<Rewrite | null>(REWRITE, null);
+    if (!r?.policy || Date.now() - r.at > 36 * 3600_000) return;
+    setHint(r);
+    if (r.text && orderLength(r.text) <= MAX_ORDERS) setOrders(r.text);
+  }, []);
+  const dropHint = () => { setHint(null); try { localStorage.removeItem(REWRITE); } catch { /* blocked */ } };
 
   const refresh = useCallback(async (a?: string) => { try { setSt(await status(a as `0x${string}` | undefined)); setStErr(null); } catch (e) { setStErr((e as Error).message); } }, []);
   useEffect(() => { const s = restoreSigner(); setSigner(s); refresh(s?.address); }, [refresh]);
@@ -69,7 +82,7 @@ export default function Tonight() {
       const r = await fetch("/api/compile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orders }) });
       const j = (await r.json()) as Compiled;
       setRes(j);
-      if (j.kind === "policy") { setPolicy(j.policy); setViaLLM(true); setPhase("readback"); }
+      if (j.kind === "policy") { setPolicy(j.policy); setViaLLM(true); setPhase("readback"); sfx.rustle(); }
       else if (j.kind === "refusal") setPhase("readback");
     } catch { setRes({ kind: "paused", reason: "compiler paused — use the builder" }); }
     setBusy(false);
@@ -96,7 +109,7 @@ export default function Tonight() {
       lsSet(`semalam.committed.${st.round}`, { policy, policyHash: sealed.policyHash, tx: hit.tx, account: s.address, at: Date.now() });
       if (!localStorage.getItem(`semalam.first.${st.round}`)) lsSet(`semalam.first.${st.round}`, { policy, policyHash: sealed.policyHash, account: s.address });
       lsSet("semalam.draft", policy);
-      setPhase("sealed"); refresh(s.address);
+      setPhase("sealed"); sfx.stamp(0.16); dropHint(); refresh(s.address);
     } catch (e) {
       setErr((e as Error).message); setPhase("identity");
       if (/not open|409|closed/.test((e as Error).message)) refresh(s.address);
@@ -115,9 +128,21 @@ export default function Tonight() {
         <p className="lead">Write your orders before bed. At 00:00 WIB your agent plays the night market; replay it at breakfast.</p>
         {st && <p className="data">closes in <Countdown round={st.round} closeTime={st.closeTime} chainNow={st.chainNow} serverNow={st.serverNow} /> · <span className={`badge ${st.relay ? "relay" : ""}`}>{st.relay ? "gasless · relay" : st.relayState === "spent-tonight" ? "relay spent for tonight — use your own wallet" : "relay empty — use your own wallet"}</span></p>}
         {stErr && <p className="note warn" role="alert">{stErr}</p>}
+        {signer && st && st.round > 0 && <Ritual account={signer.address} round={st.round} sealedTonight={st.commits.length > 0} />}
+        {hint && phase !== "sealed" && (
+          <div className="card rewrite" role="note" aria-label="Rewriting from last night">
+            <div className="eyebrow">Rewriting from round {hint.round} · turn {hint.t}</div>
+            <p style={{ margin: "0 0 6px" }}>{hint.why}</p>
+            <p className="muted" style={{ margin: "0 0 12px", fontSize: 16 }}>{hint.hint} {orders === hint.text ? "Last night's orders are in the box below, ready to edit." : ""}</p>
+            <div className="row">
+              <button type="button" onClick={() => { setPolicy(hint.policy); setViaLLM(false); setRes(null); setPhase("build"); }} disabled={phase === "sealing"}>Open last night's orders in the builder</button>
+              <button type="button" className="quiet" onClick={dropHint}>Dismiss</button>
+            </div>
+          </div>
+        )}
         {phase === "build" ? (
           <>
-            <Builder onPolicy={(p) => { setPolicy(p); setViaLLM(false); setRes(null); setPhase("readback"); }} initial={policy ?? undefined} />
+            <Builder onPolicy={(p) => { setPolicy(p); setViaLLM(false); setRes(null); setPhase("readback"); sfx.rustle(); }} initial={policy ?? undefined} />
             <p><button type="button" className="quiet" onClick={() => setPhase("write")}>← back to writing</button></p>
           </>
         ) : (
@@ -127,7 +152,7 @@ export default function Tonight() {
               <span className="muted" style={{ fontSize: 14 }}>Try one:</span>
               {EXAMPLES.map((x) => (
                 <button key={x.label} type="button" className={`chip ${orders === x.text ? "on" : ""}`} aria-pressed={orders === x.text}
-                  onClick={() => { setOrders(x.text); setRes(null); }} disabled={phase === "sealing" || phase === "sealed"}>{x.label}</button>
+                  onClick={() => { setOrders(x.text); setRes(null); sfx.tick(); }} disabled={phase === "sealing" || phase === "sealed"}>{x.label}</button>
               ))}
             </div>
             <textarea id="orders" value={orders} onChange={(e) => setOrders(e.target.value)} disabled={phase === "sealing" || phase === "sealed"}
@@ -185,7 +210,7 @@ export default function Tonight() {
         )}
         {phase === "sealed" && entered && policy && st && (
           <>
-            <Ticket state="sealed" title={policy.name} lines={rb} stamp={`SEALED · ROUND ${entered.round}`} hash={entered.policyHash} tx={entered.tx} txUrl={entered.url} />
+            <Ticket state="sealed" fresh title={policy.name} lines={rb} stamp={`SEALED · ROUND ${entered.round}`} hash={entered.policyHash} tx={entered.tx} txUrl={entered.url} />
             {signer?.mode === "local" && (
               <details className="note" style={{ marginBottom: 12 }}>
                 <summary style={{ minHeight: 44, cursor: "pointer", display: "flex", alignItems: "center" }}>Keep your agent — your play address and key</summary>

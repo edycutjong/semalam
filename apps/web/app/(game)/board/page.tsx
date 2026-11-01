@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { namedState, readArtifact, settledRounds } from "@/lib/artifact";
 import { chainNow, paidLogs, postedOf } from "@/lib/chain";
 import { currentRound, seasonOf } from "@/lib/clock";
@@ -41,8 +42,8 @@ export default async function Board() {
       <h2 style={{ fontSize: 24 }}>Tonight's ranks</h2>
       <div className="scroll"><table>
         <thead><tr><th title="rank among all agents, house included">Rank of {s.agents}</th><th title="rank among players only">Player #</th><th>Agent</th><th>Coins</th><th>Steals</th><th>Points</th></tr></thead>
-        <tbody>{top.map((r) => (
-          <tr key={r.id} className={r.house ? "house" : ""}>
+        <tbody className="rise">{top.map((r, i) => (
+          <tr key={r.id} className={r.house ? "house" : ""} style={{ "--i": i } as CSSProperties}>
             <td className="data">{r.rank}</td>
             <td className="data">{playerRank.get(r.id) ? `${playerRank.get(r.id)} of ${s.players}` : "—"}</td>
             <td className="data">{r.house ? <><span className="badge">house</span> {r.label}</> : r.operator ? <><span className="badge">operator</span> {short(r.id)}</> : <a href={addrUrl(r.id)}>{short(r.id)}</a>}</td>
