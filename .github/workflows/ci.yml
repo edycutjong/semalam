@@ -1,14 +1,27 @@
-name: ci
+name: CI/CD Pipeline
+
+# Quality ─┐
+#          ├─→ Build ─→ E2E ─────────┐
+# Security ┘        └─→ Performance ─┴─→ Deploy gate (main only: live site answers after Vercel's git deploy)
+
 on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # ── STAGE 1 · Quality (parallel with Stage 2) ─────────────────────────────
   contracts:
+    name: "Stage 1 · Contracts (forge)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -22,7 +35,9 @@ jobs:
         run: forge test -vv
 
   typescript:
+    name: "Stage 1 · Packages (${{ matrix.os }}, node ${{ matrix.node }})"
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node: [20, 22]
@@ -42,7 +57,8 @@ jobs:
       - name: bundled CLI replays the golden rounds offline
         run: pnpm --filter semalam build && node packages/cli/dist/semalam.mjs replay --fixture golden
 
-  web:
+  web-quality:
+    name: "Stage 1 · Web (typecheck + unit)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -54,10 +70,40 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @semalam/web typecheck
       - run: pnpm --filter @semalam/web test
-      - run: pnpm --filter @semalam/web build
 
-  determinism:
-    needs: typescript
+  # ── STAGE 2 · Security (parallel with Stage 1) ────────────────────────────
+  gitleaks:
+    name: "Stage 2 · Secret scan (gitleaks, full history)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: gitleaks (public keccak hashes are allow-listed in .gitleaksignore)
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --no-banner
+
+  audit:
+    name: "Stage 2 · Dependency audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: pnpm audit (high and critical fail the build)
+        run: pnpm audit --audit-level=high --prod
+      - name: license check (no GPL-3.0 / AGPL-3.0 in production deps)
+        run: pnpm licenses list --prod --json | node -e "const l=Object.keys(JSON.parse(require('fs').readFileSync(0,'utf8')));const bad=l.filter(x=>/^A?GPL-3/.test(x));console.log('licenses:',l.join(', '));if(bad.length){console.error('blocked:',bad);process.exit(1)}"
+
+  # ── STAGE 3 · Build ───────────────────────────────────────────────────────
+  build:
+    name: "Stage 3 · Build + determinism"
+    needs: [contracts, typescript, web-quality, gitleaks, audit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -78,3 +124,100 @@ jobs:
         run: |
           pnpm --filter @semalam/sim test
           pnpm --filter @semalam/sim test
+      - name: Next.js production build
+        run: pnpm --filter @semalam/web build
+      - name: bundle budget (static JS + CSS)
+        working-directory: apps/web
+        run: |
+          KB=$(du -sk .next/static | cut -f1)
+          echo "static assets: ${KB} KB"
+          if [ "$KB" -gt 2000 ]; then echo "::error::static ${KB} KB > 2000 KB budget"; exit 1; fi
+          if [ "$KB" -gt 1500 ]; then echo "::warning::static ${KB} KB > 1500 KB"; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: |
+            apps/web/.next
+            !apps/web/.next/cache
+            packages/cli/dist
+          include-hidden-files: true
+          retention-days: 3
+
+  # ── STAGE 4 · E2E ─────────────────────────────────────────────────────────
+  e2e:
+    name: "Stage 4 · E2E (Playwright)"
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-build
+      - run: pnpm --filter @semalam/web exec playwright install --with-deps chromium
+      - name: smoke, orders journey, responsive (no secrets set)
+        run: pnpm --filter @semalam/web e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7
+
+  # ── STAGE 5 · Performance ─────────────────────────────────────────────────
+  performance:
+    name: "Stage 5 · Performance (Lighthouse CI)"
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-build
+      - name: Lighthouse (accessibility < 0.9 fails; performance, best practices, SEO warn)
+        working-directory: apps/web
+        run: pnpm lighthouse
+
+  # ── STAGE 6 · Deploy gate (main only) ─────────────────────────────────────
+  deploy-gate:
+    name: "Stage 6 · Deploy gate"
+    needs: [e2e, performance]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: production answers (Vercel deploys main from git)
+        run: |
+          for i in $(seq 1 20); do
+            h=$(curl -s https://semalam.edycu.dev/api/health || true)
+            echo "$h" | grep -q '"ok":true' && break
+            sleep 15
+          done
+          echo "health: $h"; echo "$h" | grep -q '"ok":true'
+          for p in / /board /scrimmage; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' "https://semalam.edycu.dev$p"); echo "$p $c"; test "$c" = 200
+          done
+      - name: summary
+        run: |
+          {
+            echo "### 🚀 All gates passed"
+            echo "| Stage | Gate |"; echo "|---|---|"
+            echo "| 1 · Quality | forge tests · packages on 3 OS × 2 Node · web typecheck + unit |"
+            echo "| 2 · Security | gitleaks (full history) · pnpm audit · licenses |"
+            echo "| 3 · Build | CLI + golden replay ×2 · Next.js build · bundle budget |"
+            echo "| 4 · E2E | Playwright smoke · orders journey · responsive |"
+            echo "| 5 · Performance | Lighthouse CI |"
+            echo "| 6 · Deploy | https://semalam.edycu.dev answers |"
+          } >> "$GITHUB_STEP_SUMMARY"

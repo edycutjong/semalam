@@ -1,9 +1,8 @@
 name: security
 
+# Weekly re-scan of the full history and the lockfile; every push and PR runs the same checks as Stage 2 of ci.yml.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
   schedule:
     - cron: "41 3 * * 1"
 
