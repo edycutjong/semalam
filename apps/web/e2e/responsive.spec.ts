@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 for (const width of [375, 768, 1440]) {
   test(`no horizontal overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    for (const path of ["/", "/board", "/scrimmage"]) {
+    for (const path of ["/play", "/board", "/scrimmage"]) {
       await page.goto(path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, `${path} at ${width}px`).toBeLessThanOrEqual(1);

@@ -210,7 +210,7 @@ jobs:
             sleep 15
           done
           echo "health: $h"; echo "$h" | grep -q '"ok":true'
-          for p in / /board /scrimmage; do
+          for p in /play /board /scrimmage; do
             c=$(curl -s -o /dev/null -w '%{http_code}' "https://semalam.edycu.dev$p"); echo "$p $c"; test "$c" = 200
           done
       - name: summary

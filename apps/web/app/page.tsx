@@ -1,5 +1,6 @@
-import Tonight from "@/components/Tonight";
+import { redirect } from "next/navigation";
 
+// The game lives at /play; the landing page replaces this redirect.
 export default function Home() {
-  return <Tonight />;
+  redirect("/play");
 }
