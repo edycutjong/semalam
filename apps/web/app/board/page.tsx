@@ -21,7 +21,7 @@ export default async function Board() {
     const now = await chainNow(), cur = currentRound(now);
     for (let r = (last ?? 0) + 1; r < cur; r++) { const st = namedState(r, now, cur, Boolean(await postedOf(r))); pending = { round: r, ...st }; break; }
   } catch { /* the board still renders from artifacts */ }
-  if (!art || !last) return <><h1>Board</h1><p className="lead">No night has settled yet. The first board appears the morning after the first close.</p><Link className="btn" href="/">Tonight</Link></>;
+  if (!art || !last) return <><h1>Board</h1><p className="lead">No night has settled yet. The first board appears the morning after the first close.</p><Link className="btn" href="/play">Tonight</Link></>;
   const s = art.settled;
   const playerRank = new Map<string, number>();
   s.ranking.filter((r) => !r.house && !r.operator).forEach((r, i) => playerRank.set(r.id, i + 1));

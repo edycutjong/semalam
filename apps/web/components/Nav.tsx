@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/", label: "Tonight" },
+  { href: "/play", label: "Tonight" },
   { href: "/board", label: "Board" },
   { href: "/scrimmage", label: "Scrimmage" },
   { href: "/fidelity", label: "Check my orders" },
@@ -11,7 +11,7 @@ const LINKS = [
 ];
 export default function Nav() {
   const path = usePathname();
-  const cur = (h: string) => (h === "/" ? path === "/" : path.startsWith(h)) ? "page" : undefined;
+  const cur = (h: string) => path.startsWith(h) ? "page" : undefined;
   return (
     <header className="top">
       <Link href="/" className="brand"><i aria-hidden /> Semalam</Link>

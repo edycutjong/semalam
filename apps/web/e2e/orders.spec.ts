@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // The core journey up to the compiler: pick a starter order, read it in the box, edit it, watch the counter.
 test("an example order fills the orders box and can be edited", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/play");
   const box = page.locator("textarea#orders");
   await expect(box).toBeVisible();
   const chip = page.getByRole("button", { name: "Grudge keeper" });
@@ -16,7 +16,7 @@ test("an example order fills the orders box and can be edited", async ({ page })
 });
 
 test("every example chip loads a different order", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/play");
   const seen = new Set<string>();
   for (const name of ["Good neighbour", "Quiet hoarder", "Night raider", "Copycat", "Grudge keeper"]) {
     await page.getByRole("button", { name }).click();

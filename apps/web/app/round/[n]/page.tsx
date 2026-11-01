@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RoundPage({ params }: { params: Promise<{ n: string }> }) {
   const n = Number((await params).n);
-  if (!Number.isInteger(n) || n < 1) return <><h1>No such round</h1><p className="lead">Rounds are numbered from 1.</p><Link className="btn" href="/">Tonight</Link></>;
+  if (!Number.isInteger(n) || n < 1) return <><h1>No such round</h1><p className="lead">Rounds are numbered from 1.</p><Link className="btn" href="/play">Tonight</Link></>;
   const art = await readArtifact(n);
   if (art && art.status !== "posted")
     return (
@@ -29,7 +29,7 @@ export default async function RoundPage({ params }: { params: Promise<{ n: strin
         <h1>{label}</h1>
         {detail && <p className="lead">{detail}</p>}
         <p className="note">Every failure has a name here; nothing says “settling” forever.</p>
-        <Link className="btn" href="/">Tonight</Link> <Link className="btn quiet" href={`/verify/${n}`}>Verify</Link>
+        <Link className="btn" href="/play">Tonight</Link> <Link className="btn quiet" href={`/verify/${n}`}>Verify</Link>
       </>
     );
   }
