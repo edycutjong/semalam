@@ -273,7 +273,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
       const prev = s.shown; s.shown = K; setTurn(K);
       if (!crossed || prev < 0 || fi < 0) return;
       for (let k = prev + 1; k <= K; k++) {
-        if (k === dT && d) { setSay(d.why); if (d.action === "STEAL" || d.partnerAction === "STEAL") sfx.whoosh(); else sfx.chime(0.25); continue; }
+        if (k === dT && d) { setSay(`${mine ? "Your key turn" : "The winner's key turn"} — ${d.why}`); if (d.action === "STEAL" || d.partnerAction === "STEAL") sfx.whoosh(); else sfx.chime(0.25); continue; }
         if (M.act && M.partner) {
           const q = M.partner[(k - 1) * M.n + fi], pa = q >= 0 ? M.act[(k - 1) * M.n + q] : -1, now = performance.now();
           if (pa === 3 && now - s.heard > 380) { s.heard = now; sfx.whoosh(-1); } // a neighbour steals from the followed lamp

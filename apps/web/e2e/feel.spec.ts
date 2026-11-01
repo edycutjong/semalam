@@ -47,6 +47,13 @@ test("the replay plays by itself and moves continuously", async ({ page }) => {
   expect(a.equals(await canvas.screenshot())).toBe(false);
 });
 
+test("the breakfast says why the winner won, from the settled artifact (found by the bot playtest)", async ({ page }) => {
+  await page.goto("/round/2");
+  const card = page.getByLabel("Why the winner won");
+  await expect(card).toBeVisible();
+  await expect(card).toContainText(/coins \(\d+\.\d a turn\)/);
+});
+
 test("reduced motion: no autoplay; the night steps in fifths with a cross-fade", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/round/2");

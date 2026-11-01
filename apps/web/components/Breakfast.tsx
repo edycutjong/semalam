@@ -116,6 +116,22 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
     router.push("/play");
   }
   const isOwn = Boolean(own) && addr.toLowerCase() === own.toLowerCase();
+  const winnerWhy = useMemo(() => {
+    const w = d.ranking[0];
+    if (!w || d.agents < 2) return null;
+    const hp = HOUSE.agents.find((h) => h.id.toLowerCase() === w.id.toLowerCase())?.policy;
+    const wp = d.policies.find((p) => p.id.toLowerCase() === w.id.toLowerCase())?.policy ?? hp;
+    const per = (c: number) => (c / 300).toFixed(1);
+    const name = w.house ? (w.label ?? "the house agent") : "the winner";
+    const style = wp ? `Opened with ${wp.opening}, then ${wp.default} by default${wp.rules.length ? ` — ${wp.rules.length} rule${wp.rules.length === 1 ? "" : "s"}` : ""}.` : "";
+    const rules = wp ? readback(wp).filter((l) => /^\s+\d\./.test(l)).map((l) => l.trim()) : [];
+    const line = `${name === "the winner" ? "Rank 1" : name} finished with ${w.coins} coins (${per(w.coins)} a turn) and ${w.steals} steal${w.steals === 1 ? "" : "s"}. ${style}`.trim();
+    const m = d.ranking.find((r) => r.id.toLowerCase() === addr.toLowerCase());
+    const you = m && m.id !== w.id && !m.house && !m.operator
+      ? `${isOwn ? "You" : "They"} finished rank ${m.rank} of ${d.agents} with ${m.coins} coins (${per(m.coins)} a turn) and ${m.steals} steal${m.steals === 1 ? "" : "s"}: ${w.coins - m.coins} coins behind the winner over 300 turns.`
+      : null;
+    return { name, line, rules, you };
+  }, [d, addr, isOwn]);
   const qa = d.ranking.filter((r) => !r.house && !r.operator && isQA(r.id)).length;
   const tonight = st && st.round > 0 && st.round > d.round ? st : null;
   const sealedTonight = Boolean(tonight && valid && tonight.commits.length > 0);
@@ -141,6 +157,14 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
       </section>
       <section className="b-market" aria-label="The market">
         <ReplayPlayer replays={d.replays} mineId={mine?.id} houseIds={houseIds} agents={d.agents} trace={trace} ready={baseline !== "checking"} autoPlay={baseline !== "checking"} mineLabel={isOwn ? "you" : "that agent"} />
+        {winnerWhy && (
+          <div className="card why-winner" aria-label="Why the winner won">
+            <div className="eyebrow">Why {winnerWhy.name} won</div>
+            <p style={{ margin: "0 0 6px" }}>{winnerWhy.line}</p>
+            {winnerWhy.rules.length > 0 && <p className="muted data" style={{ margin: "0 0 6px", fontSize: 16 }}>{winnerWhy.rules.join(" · ")}</p>}
+            {winnerWhy.you && <p style={{ margin: 0 }}>{winnerWhy.you}</p>}
+          </div>
+        )}
         {mine && myPolicy && dd && (
           <div className="card decisive" aria-label={isOwn ? "Your decisive turn" : "Their decisive turn"}>
             <div className="eyebrow">{isOwn ? "Your" : "Their"} decisive turn · {dd.t}</div>

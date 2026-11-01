@@ -1,0 +1,149 @@
+{
+ "what": "re-runs of the settled night's field under other seeds (internal QA)",
+ "round": 3,
+ "seeds": 100,
+ "table": [
+  {
+   "bot": "p14",
+   "median": 3,
+   "best": 1,
+   "worst": 16,
+   "top10": 95
+  },
+  {
+   "bot": "p01",
+   "median": 7,
+   "best": 1,
+   "worst": 23,
+   "top10": 69
+  },
+  {
+   "bot": "other",
+   "median": 12,
+   "best": 3,
+   "worst": 26,
+   "top10": 39
+  },
+  {
+   "bot": "p19",
+   "median": 14,
+   "best": 1,
+   "worst": 36,
+   "top10": 31
+  },
+  {
+   "bot": "p04",
+   "median": 16,
+   "best": 1,
+   "worst": 47,
+   "top10": 39
+  },
+  {
+   "bot": "p10",
+   "median": 17,
+   "best": 1,
+   "worst": 48,
+   "top10": 27
+  },
+  {
+   "bot": "p20",
+   "median": 21,
+   "best": 2,
+   "worst": 48,
+   "top10": 23
+  },
+  {
+   "bot": "p15",
+   "median": 21,
+   "best": 4,
+   "worst": 45,
+   "top10": 8
+  },
+  {
+   "bot": "p06",
+   "median": 22,
+   "best": 3,
+   "worst": 49,
+   "top10": 13
+  },
+  {
+   "bot": "p12",
+   "median": 24,
+   "best": 2,
+   "worst": 44,
+   "top10": 17
+  },
+  {
+   "bot": "p05",
+   "median": 24,
+   "best": 4,
+   "worst": 47,
+   "top10": 15
+  },
+  {
+   "bot": "p11",
+   "median": 28,
+   "best": 6,
+   "worst": 48,
+   "top10": 4
+  },
+  {
+   "bot": "p07",
+   "median": 32,
+   "best": 2,
+   "worst": 49,
+   "top10": 5
+  },
+  {
+   "bot": "p03",
+   "median": 33,
+   "best": 17,
+   "worst": 45,
+   "top10": 0
+  },
+  {
+   "bot": "p08",
+   "median": 36,
+   "best": 9,
+   "worst": 49,
+   "top10": 2
+  },
+  {
+   "bot": "p18",
+   "median": 37,
+   "best": 5,
+   "worst": 49,
+   "top10": 9
+  },
+  {
+   "bot": "p09",
+   "median": 39,
+   "best": 1,
+   "worst": 49,
+   "top10": 15
+  },
+  {
+   "bot": "p02",
+   "median": 42,
+   "best": 11,
+   "worst": 49,
+   "top10": 0
+  },
+  {
+   "bot": "p13",
+   "median": 43,
+   "best": 12,
+   "worst": 49,
+   "top10": 0
+  }
+ ],
+ "winners": {
+  "house": 63,
+  "p14": 23,
+  "p01": 5,
+  "p04": 5,
+  "p09": 2,
+  "p10": 1,
+  "p19": 1
+ }
+}
