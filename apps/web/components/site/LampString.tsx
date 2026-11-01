@@ -5,7 +5,7 @@ import type { Lamp } from "@/lib/landing";
 // and screenshots show the settled night; CSS only lights the lamps in, left to right.
 type G = { w: number; h: number; rows: Lamp[][]; sag: number; top: number; gap: number; scale: number };
 
-function strand(row: Lamp[], g: G, r: number, agents: number, offset: number, uid: string) {
+function strand(row: Lamp[], g: G, r: number, agents: number, offset: number, uid: string, tag?: string) {
   const x0 = 34 * g.scale, x1 = g.w - 34 * g.scale, y0 = g.top + r * g.gap;
   const wire = (x: number) => { const t = (x - g.w / 2) / (g.w / 2); return y0 + g.sag * (1 - t * t); };
   const path = `M ${-10} ${y0 - 6} Q ${g.w / 2} ${y0 + 2 * g.sag} ${g.w + 10} ${y0 - 6}`;
@@ -23,13 +23,14 @@ function strand(row: Lamp[], g: G, r: number, agents: number, offset: number, ui
         <path d={`M ${x - 5 * g.scale} ${cy - ry + 1} L ${x + 5 * g.scale} ${cy - ry + 1} L ${x + 3 * g.scale} ${cy - ry - 4 * g.scale} L ${x - 3 * g.scale} ${cy - ry - 4 * g.scale} Z`} className="cap" />
         <ellipse cx={x} cy={cy} rx={rx} ry={ry} className="globe" opacity={l.featured ? 1 : 0.3 + 0.7 * b} />
         <ellipse cx={x} cy={cy + 1} rx={rx * 0.42} ry={ry * 0.5} className="mantle" opacity={l.featured ? 1 : 0.15 + 0.85 * b} />
+        {l.featured && tag && <g className="tag"><line x1={x} y1={cy + ry} x2={x} y2={cy + ry + 22} className="cord" /><rect x={x - 34} y={cy + ry + 22} width="68" height="26" rx="3" /><text x={x} y={cy + ry + 40} textAnchor="middle">{tag}</text></g>}
       </g>
     );
   });
   return <g key={r}><path d={path} className="wire" />{lamps}</g>;
 }
 
-function Svg({ g, agents, label, cls, uid }: { g: G; agents: number; label?: string; cls: string; uid: string }) {
+function Svg({ g, agents, label, cls, uid, tag }: { g: G; agents: number; label?: string; cls: string; uid: string; tag?: string }) {
   let offset = 0;
   return (
     <svg viewBox={`0 0 ${g.w} ${g.h}`} className={`lamps-svg ${cls}`} role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true} preserveAspectRatio="xMidYMin meet">
@@ -38,21 +39,21 @@ function Svg({ g, agents, label, cls, uid }: { g: G; agents: number; label?: str
         <radialGradient id={`${uid}-p`}><stop offset="0" stopColor="#F2D16B" stopOpacity=".55" /><stop offset=".5" stopColor="#F2D16B" stopOpacity=".12" /><stop offset="1" stopColor="#F2D16B" stopOpacity="0" /></radialGradient>
         <radialGradient id={`${uid}-h`}><stop offset="0" stopColor="#A89C8A" stopOpacity=".38" /><stop offset=".5" stopColor="#A89C8A" stopOpacity=".08" /><stop offset="1" stopColor="#A89C8A" stopOpacity="0" /></radialGradient>
       </defs>
-      {g.rows.map((row, r) => { const s = strand(row, g, r, agents, offset, uid); offset += row.length; return s; })}
+      {g.rows.map((row, r) => { const s = strand(row, g, r, agents, offset, uid, tag); offset += row.length; return s; })}
     </svg>
   );
 }
 
-export default function LampString({ lamps, agents, round, uid = "ls" }: { lamps: Lamp[]; agents: number; round: number | null; uid?: string }) {
+export default function LampString({ lamps, agents, round, uid = "ls", tag }: { lamps: Lamp[]; agents: number; round: number | null; uid?: string; tag?: string }) {
   const half = Math.ceil(lamps.length / 2);
   const wide: G = { w: 1440, h: 212, rows: [lamps], sag: 84, top: 12, gap: 0, scale: 1.18 };
-  const narrow: G = { w: 600, h: 300, rows: [lamps.slice(0, half), lamps.slice(half)], sag: 46, top: 10, gap: 118, scale: 1.25 };
+  const narrow: G = { w: 600, h: 236, rows: [lamps.slice(0, half), lamps.slice(half)], sag: 30, top: 8, gap: 96, scale: 1.2 };
   const label = round
     ? `Night ${round}: ${lamps.length} agents as lamps on a string. Brighter means a higher final rank; grey lamps are house agents; the amber lamp is the ticket below.`
     : `${lamps.length} house agents as unlit lamps: no night has settled yet.`;
   return (
     <div className="lampstring">
-      <Svg g={wide} agents={agents} label={label} cls="wide" uid={`${uid}w`} />
+      <Svg g={wide} agents={agents} label={label} cls="wide" uid={`${uid}w`} tag={tag} />
       <Svg g={narrow} agents={agents} cls="narrow" uid={`${uid}n`} />
     </div>
   );

@@ -7,6 +7,7 @@
   <br/>
 
   [![Live Demo](https://img.shields.io/badge/🚀_Live-Demo-06b6d4?style=for-the-badge)](https://semalam.edycu.dev)
+  [![Pitch Deck](https://img.shields.io/badge/📊_Pitch-Deck-1B1530?style=for-the-badge)](https://semalam.edycu.dev/pitch)
   [![Built for World Is Flat](https://img.shields.io/badge/World_Is_Flat-Build-8b5cf6?style=for-the-badge)](https://worldisflat.fun/build)
 
   <br/>
@@ -40,7 +41,7 @@ Most agent products ask a holder to stake on someone else's bot or to write code
 ### The Solution
 SEMALAM ("overnight") gives every holder their own agent from three sentences of plain language.
 
-- **Tonight.** Write up to 280 characters of orders. An LLM compiles them once into a tiny typed policy (at most 6 fields and 3 rules) and reads it back: "Your agent will…". You confirm; the policy is sealed with a drand timelock and committed on chain.
+- **Tonight.** Write up to 280 characters of orders. An LLM compiles them once into a tiny typed policy (at most 6 fields and 3 rules); plain code reads it back: "Your agent will…". You confirm; the policy is sealed with a drand timelock and committed on chain.
 - **00:00 WIB.** Commits close. The seed is the public drand beacon round fixed by the contract, not a block hash and not our choice. Plain deterministic code (no LLM) plays every agent for 300 turns; each turn an agent gathers, guards, shares or steals. Thirty labelled house agents with frozen, published policies fill the field. The result hash goes on chain; the contracts hold no prize pool.
 - **Breakfast.** A replay of your agent's night, the turn that decided it, and your rank. Rewrite your orders and go again.
 
@@ -79,7 +80,7 @@ Testnet (chain 46630), deployed with the frozen pins; `MockWIF` is a labelled te
 | Results | `0x38BBc173698e54f2D7280bA124008B34650c9587` |
 | MockWIF | `0x4059105C779d46C1905c0437483b60c1DEbF1B47` |
 
-Round 1 (house agents only) posted in tx `0x7066a651…b87f`; `semalam replay 1 --chain 46630` recomputes `0xbe22a8eb…8026` and matches. Full addresses and deploy txs: [`evidence/deployments-46630.json`](evidence/deployments-46630.json). The chain 4663 deployment is not live yet; this section is updated when it is.
+Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and persona QA runs ([`evidence/qa-accounts-46630.json`](evidence/qa-accounts-46630.json)). Round 1 (house agents only) posted in tx `0x7066a651…b87f`; `semalam replay 1 --chain 46630` recomputes `0xbe22a8eb…8026` and matches. Full addresses and deploy txs: [`evidence/deployments-46630.json`](evidence/deployments-46630.json). The chain 4663 deployment is not live yet; this section is updated when it is.
 
 ## 📊 Engineering Rigor
 

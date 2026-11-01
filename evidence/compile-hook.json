@@ -1,0 +1,36 @@
+{
+  "what": "one real call to the live order compiler (POST https://semalam.edycu.dev/api/compile), response verbatim",
+  "at": "2026-11-01T05:21:02Z",
+  "orders": "gather early, never steal from the biggest, punish whoever steals from me",
+  "httpStatus": 200,
+  "response": {
+    "kind": "policy",
+    "policy": {
+      "v": 1,
+      "name": "order1",
+      "opening": "GATHER",
+      "default": "GATHER",
+      "grudge": 5,
+      "rules": [
+        {
+          "if": "partner_stole_from_me",
+          "then": "STEAL"
+        },
+        {
+          "if": "partner_richer",
+          "then": "GATHER"
+        }
+      ]
+    },
+    "readback": [
+      "Your agent \"order1\" will:",
+      "- Turns 1–10: GATHER (work your own stall).",
+      "- From turn 11, first matching rule wins:",
+      "  1. If my neighbour stole from me in the last 5 turns → STEAL (rob your neighbour).",
+      "  2. If my neighbour has more coins than me → GATHER (work your own stall).",
+      "- Otherwise: GATHER (work your own stall)."
+    ],
+    "model": "openai/gpt-oss-120b",
+    "ms": 1558
+  }
+}
