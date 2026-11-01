@@ -572,7 +572,7 @@ test("golden fixtures: the package-local folder is tried first, the repo-root fo
     assert.equal(ok.ret, 0, ok.out);
     assert.equal(ok.out.match(/✓ MATCH/g)?.length, 3);
     assert.equal(dirs.length, 2);
-    assert.match(dirs[0], /fixtures\/golden$/);
+    assert.match(dirs[0], /fixtures[\\/]golden$/); // either separator: Windows paths use backslashes
     fs.readdirSync = (() => { throw new Error("nothing readable"); }) as unknown as typeof real;
     syncBuiltinESMExports();
     const none = await cap(() => main(["replay", "--fixture", "golden"]));
