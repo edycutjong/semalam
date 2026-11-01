@@ -21,21 +21,43 @@ test("landing: every link on the page resolves", async ({ page, request }) => {
   for (const h of hrefs) expect((await request.get(h)).status(), h).toBe(200);
 });
 
-test("deck: keys move, overview and notes toggle, ten slides with notes and a QR", async ({ page }) => {
+test("deck: keys move, overview and notes toggle, nine slides with notes and a QR", async ({ page }) => {
   await page.goto("/pitch");
-  await expect(page.locator(".deck .slide")).toHaveCount(10);
-  await expect(page.locator(".deck .speaker-notes")).toHaveCount(10);
-  await expect(page.locator(".deck-ui .count")).toHaveText("01 / 10");
+  await expect(page.locator(".deck .slide")).toHaveCount(9);
+  await expect(page.locator(".deck .speaker-notes")).toHaveCount(9);
+  await expect(page.locator(".deck-ui .count")).toHaveText("01 / 09");
   await page.keyboard.press("ArrowRight");
-  await expect(page.locator(".deck-ui .count")).toHaveText("02 / 10");
+  await expect(page.locator(".deck-ui .count")).toHaveText("02 / 09");
   await page.keyboard.press("End");
-  await expect(page.locator(".deck-ui .count")).toHaveText("10 / 10");
+  await expect(page.locator(".deck-ui .count")).toHaveText("09 / 09");
   await expect(page.locator(".deck .qr svg path")).toHaveCount(1);
   await page.keyboard.press("Escape");
   await expect(page.locator(".deck")).toHaveClass(/overview/);
   await page.keyboard.press("Escape");
   await page.keyboard.press("p");
   await expect(page.locator(".notes-panel")).toBeVisible();
+});
+
+test("deck: the night slide steps through the re-run night before the next slide", async ({ page }) => {
+  await page.goto("/pitch#5");
+  await expect(page.locator(".deck-ui .count")).toHaveText("05 / 09");
+  const ns = page.locator(".frame.on .ns");
+  await expect(ns).toHaveCount(1); // only shown when the re-run gives the posted hash
+  await expect(ns.locator(".ns-proof")).toContainText("= the posted hash");
+  const chips = ns.locator(".ns-chips button");
+  const k = await chips.count();
+  expect(k).toBeGreaterThanOrEqual(2);
+  await expect(chips.first()).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator(".deck-ui .count")).toHaveText("05 / 09");
+  await expect(chips.nth(1)).toHaveAttribute("aria-pressed", "true", { timeout: 5000 });
+  await page.keyboard.press("ArrowLeft");
+  await expect(chips.first()).toHaveAttribute("aria-pressed", "true");
+  for (let s = 0; s < k; s++) await page.keyboard.press("ArrowRight");
+  await expect(page.locator(".deck-ui .count")).toHaveText("06 / 09");
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator(".deck-ui .count")).toHaveText("05 / 09");
+  await expect(chips.last()).toHaveAttribute("aria-pressed", "true");
 });
 
 test("deck: the stage fits the window", async ({ page }) => {
