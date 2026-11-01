@@ -47,13 +47,7 @@ Anyone can recompute any night's hash from public data with the replay CLI (belo
 
 ## 🏗️ Architecture & Tech Stack
 
-```
- orders (280 chars) ──LLM compile once──▶ typed policy ──tlock (drand quicknet)──▶ Orders.commit
-                                                                                       │
- drand beacon (≥ close + 300 s) ─────────────▶ decrypt all ──▶ sim (pure, no LLM) ──▶ Results.post(hash)
-                                                                                       │
-                          replay CLI / web /verify  ◀── recomputes the hash from public data ──┘
-```
+<img src="docs/assets/architecture.png" alt="SEMALAM architecture across one night: before 00:00 WIB the browser compiles orders into a policy, seals it with a drand timelock and commits it to the Orders contract (relay or own wallet); after the drand beacon the settler decrypts every commit, simulates the night with 30 house agents and posts the result hash to Results; at breakfast anyone replays the night and gets a match against the on-chain hash" width="100%">
 
 | Layer | What | Where |
 |---|---|---|
