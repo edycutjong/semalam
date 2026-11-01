@@ -45,7 +45,7 @@ html:has(.site) { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top:
 /* the highlight is lamp-lit paper, not amber ink: amber stays the SETTLED state (stamps, lit lamps, a rank) */
 .site h1 em, .site h2 em { font-style: normal; color: #FFF4DA; text-shadow: 0 0 18px rgba(255, 181, 71, .7), 0 0 48px rgba(255, 181, 71, .38); }
 .site .s-lede { font-size: clamp(18px, 1.45vw, 20px); color: var(--warm); max-width: 58ch; margin: 0 0 26px; }
-.site .s-lede b { color: var(--ink); }
+.site .s-lede b { color: var(--ink); white-space: nowrap; }
 .site .s-lede i { color: var(--ink); }
 .site .s-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
 .site .s-ctas.center { justify-content: center; }
@@ -84,7 +84,7 @@ html:has(.site) { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top:
 :is(.site, .deck) .stamps .st1 { transform: rotate(-9deg); } :is(.site, .deck) .stamps .st2 { transform: rotate(-3deg); }
 
 /* the morning board — a painted plank */
-.site .board { padding: 0 var(--pad); }
+.site .board { padding: clamp(56px, 7vw, 96px) var(--pad) 0; }
 .site .plank { max-width: var(--max); margin: 0 auto; border-radius: 12px; padding: 24px clamp(18px, 3vw, 40px) 18px; position: relative;
   background: repeating-linear-gradient(180deg, rgba(255, 255, 255, .028) 0 2px, transparent 2px 48px), linear-gradient(180deg, #2c2349, #211a39);
   box-shadow: inset 0 0 0 2px #463a69, inset 0 0 0 7px #1B1530, inset 0 0 0 9px #3A2F55, 0 28px 54px rgba(0, 0, 0, .45); }
@@ -97,7 +97,7 @@ html:has(.site) { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top:
 .site .plank-grid dt { font: 400 clamp(46px, 5.6vw, 84px)/1 var(--font-display); color: var(--ink); text-shadow: 3px 3px 0 #120d22; font-variant-numeric: tabular-nums; }
 .site .plank-grid > div:first-child dt { color: var(--after); text-shadow: 3px 3px 0 #120d22, 0 0 26px rgba(255, 181, 71, .35); }
 .site .plank-grid dd { margin: 10px 0 0; font: 400 15px/1.25 var(--font-display); text-transform: uppercase; letter-spacing: .4px; }
-.site .plank-grid small { display: block; margin-top: 6px; font: 400 14px/1.4 var(--font-body); text-transform: none; letter-spacing: 0; color: var(--muted); }
+.site .plank-grid small { display: block; margin-top: 8px; font: 400 15px/1.4 var(--font-body); text-transform: none; letter-spacing: 0; color: var(--warm); }
 .site .plank-foot { margin: 18px 0 0; padding-top: 12px; border-top: 1px dashed #463a69; font-size: 14px; color: var(--muted); text-align: center; }
 
 /* shared section scaffolding */
@@ -110,6 +110,9 @@ html:has(.site) { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top:
 .site .demo-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
 .site .stall canvas.lamps { height: clamp(220px, 26vw, 360px); }
 .site .term-body { font-size: 13.5px; }
+/* the replay's play button is an action, not a result: cream paper like every CTA (amber stays SETTLED-only) */
+.site .stall button.primary { background: var(--paper); border-color: var(--paper); color: var(--paper-ink); }
+.site .stall button.primary:hover:not(:disabled) { background: #fffaf0; border-color: #fffaf0; color: var(--paper-ink); box-shadow: 0 0 0 4px rgba(247, 233, 204, .18); }
 .site .stall { min-width: 0; background: #1F1838; border: 1px solid var(--rule); border-radius: 14px; padding: 14px 16px 16px; box-shadow: 0 22px 44px rgba(0, 0, 0, .38); position: relative; }
 .site .stall::before { content: ""; position: absolute; left: 14px; right: 14px; top: -7px; height: 14px; border-radius: 10px 10px 0 0;
   background: repeating-linear-gradient(90deg, #7C8CC4 0 26px, #F7E9CC 26px 52px); opacity: .5; }
@@ -272,6 +275,13 @@ html:has(.site) { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top:
   .site .plank-grid dd { font-size: 13px; }
   .site .s-proof { font-size: 11px; }
   .site .s-ctas .btn { flex: 1 1 100%; }
+  /* phones: the ticket comes straight after the pitch, so the signature is in the first view (the nav keeps the CTA) */
+  .site .hero-grid { row-gap: 0; }
+  .site .hero-copy { display: contents; }
+  .site .hero-copy > .s-eye { order: 1; } .site .hero-copy > h1 { order: 2; } .site .hero-copy > .s-lede { order: 3; }
+  .site .hero-grid > .s-ticket { order: 4; margin: 0 0 30px; }
+  .site .hero-copy > .s-ctas { order: 5; } .site .hero-copy > .s-links { order: 6; } .site .hero-copy > .s-proof { order: 7; }
+  .site h1 em { text-shadow: 0 0 12px rgba(255, 181, 71, .55), 0 0 28px rgba(255, 181, 71, .22); }
 }
 @media (max-width: 420px) {
   .site .plank-grid { grid-template-columns: minmax(0, 1fr); }

@@ -40,7 +40,7 @@ export default async function Landing() {
       <header className="s-top">
         <Link href="/" className="brand"><i aria-hidden /> Semalam</Link>
         <nav aria-label="On this page">
-          <a href="#last-night">Last night</a><a href="#how">How it plays</a><a href="#wif">$WIF</a><a href="#trust">Verify</a><a href="#faq">FAQ</a><Link href="/pitch">Deck</Link><a href={REPO}>GitHub</a>
+          <a href="#how">How it plays</a><a href="#last-night">Last night</a><a href="#wif">$WIF</a><a href="#trust">Verify</a><a href="#faq">FAQ</a><Link href="/pitch">Deck</Link><a href={REPO}>GitHub</a>
         </nav>
         <Link href="/play" className="btn s-cta">Play tonight</Link>
       </header>
@@ -52,9 +52,9 @@ export default async function Landing() {
             <p className="eyebrow s-eye"><span className={`chip-net${d.testnet ? " test" : ""}`}>{chain}</span><LiveClock round={d.tonight?.round ?? null} /></p>
             <h1 id="h1">You sleep. Your agent works the <em>night market.</em></h1>
             <p className="s-lede">
-              Picture a night-shift nurse in Surabaya typing three short orders before bed: <i>gather early, never steal from the biggest,
-              punish whoever steals from me.</i> The orders stay sealed through the <b>00:00 WIB</b> close, then their agent plays
-              <b> 300 turns</b> against everyone else&apos;s. At breakfast: a <b>15-second</b> replay, a rank, a hash anyone can check.
+              A nightly strategy game for $WIF holders. Write three short orders before bed; they stay sealed through the
+              <b> 00:00 WIB</b> close. Then your agent gathers, guards, shares or steals for <b>300 turns</b>. At breakfast:
+              a <b>15-second</b> replay, your rank, a hash anyone can check.
             </p>
             <div className="s-ctas">
               <Link href="/play" className="btn s-primary">Write tonight&apos;s orders</Link>
@@ -79,32 +79,35 @@ export default async function Landing() {
         </div>
       </section>
 
-      <section className="board" aria-label="The morning board">
-        <div className="plank">
-          <p className="plank-head">Papan pagi · the morning board · {chain}</p>
-          <dl className="plank-grid">
-            <div>
-              <dt><CountUp value={d.nights} /></dt>
-              <dd>nights settled on chain<small>{d.matched} of {d.nights} re-checked: ✓ MATCH{d.houseOnly.length ? ` · ${d.houseOnly.length > 1 ? "nights" : "night"} ${d.houseOnly.join(", ")}: house agents only` : ""}</small></dd>
+      <section id="how" className="s-sec how" aria-labelledby="h-how">
+        <h2 id="h-how">Bedtime. Midnight. Breakfast.</h2>
+        <ol className="rail">
+          <li className="act sealed">
+            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
+            <p className="t">bedtime · e.g. 23:40</p>
+            <h3>Write it like you&apos;d tell a friend.</h3>
+            <p>Up to 280 characters. A model compiles them once into a policy of at most 6 fields and 3 rules; plain code reads it back. You seal only what you read.</p>
+            <div className="mini-ticket" aria-label="A real readback from the live compiler">
+              <p className="who">compiled by {d.compiled.model} in {(d.compiled.ms / 1000).toFixed(1)} s · {utc(d.compiled.at)}</p>
+              <p className="said">“{d.compiled.orders}”</p>
+              <ul>{d.compiled.lines.slice(1).map((l, i) => <li key={i} className={l.startsWith("  ") ? "in" : ""}>{l.replace(/^\s*-\s*/, "").trim()}</li>)}</ul>
             </div>
-            <div>
-              <dt>{n ? <CountUp value={n.agents} /> : "0"}</dt>
-              <dd>agents played night {n?.round ?? "—"}<small>{n ? `${n.players} ${d.testnet ? "testnet" : "player"} accounts${n.qaPlayers ? (n.qaPlayers === n.players ? " (our QA runs)" : ` (${n.qaPlayers} our QA runs)`) : ""} + ${n.house} house agents` : "the first night has not settled"}</small></dd>
-            </div>
-            <div>
-              <dt>{d.burned === null ? "—" : <CountUp value={d.burned} decimals={d.burned % 1 ? 1 : 0} />}</dt>
-              <dd>{d.wif} burned<small>{d.paidRuns === null ? "chain read failed just now" : `${d.paidRuns} paid run${d.paidRuns === 1 ? "" : "s"}${d.paidQa ? (d.paidQa === d.paidRuns ? ", all our QA" : `, ${d.paidQa} our QA`) : ""}`}{d.testnet ? " · testnet stand-in for $WIF" : ""}</small></dd>
-            </div>
-            <div>
-              <dt><CountUp value={d.evidence.runtimes} /></dt>
-              <dd>runtimes, one hash<small>golden nights: macOS Node 20/22/24, Linux Node 20/22</small></dd>
-            </div>
-          </dl>
-          <p className="plank-foot">
-            {d.testnet ? "Testnet; the chain 4663 deployment is not live yet. Nights come from artifacts equal to their on-chain hash; the burn counter is at most about a minute old." : "Nights come from artifacts equal to their hash on chain 4663; the burn counter is at most about a minute old."}{" "}
-            <Link href="/board">Full board</Link>{n && <> · <Link href={`/verify/${n.round}`}>verify night {n.round}</Link></>} · <a href={d.links.scrimmage}>paid runs on the explorer</a>
-          </p>
-        </div>
+          </li>
+          <li className="act mid dark">
+            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
+            <p className="t">00:00 WIB close · plays at 00:05</p>
+            <h3>Every agent, 300 turns.</h3>
+            <p>Each turn every agent gathers, guards, shares or steals with a neighbour; the ring reseats every 50 turns. Thirty labelled house agents fill the field.</p>
+            <ul className="acts" aria-label="The four actions">{ACTS.map((a) => <li key={a.k}><span className="glyph" style={{ color: a.c }} aria-hidden>{a.g}</span>{a.k}</li>)}</ul>
+          </li>
+          <li className="act settled">
+            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
+            <p className="t">06:10 · breakfast</p>
+            <h3>Your lamp, your rank, your rewrite.</h3>
+            <p>A 15-second replay, the turn where your own rules moved the most coins, and your rank on the ticket. Change a rule and go again tonight.</p>
+            {f?.decisive && <p className="decisive"><span className="data">{f.decisive}</span><small>night {n!.round}, {ordinal(f.rank)}-place ticket: {f.ruleFired ? "the biggest swing from one of its rules" : "its biggest single-turn swing (none of its rules fired)"}</small></p>}
+          </li>
+        </ol>
       </section>
 
       {n && (
@@ -126,42 +129,39 @@ export default async function Landing() {
         </section>
       )}
 
-      <section id="how" className="s-sec how" aria-labelledby="h-how">
-        <h2 id="h-how">Bedtime. Midnight. Breakfast.</h2>
-        <ol className="rail">
-          <li className="act sealed">
-            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
-            <p className="t">23:40 · tonight</p>
-            <h3>Write it like you&apos;d tell a friend.</h3>
-            <p>Up to 280 characters. A model compiles them once into a policy of at most 6 fields and 3 rules; plain code reads it back. You seal only what you read.</p>
-            <div className="mini-ticket" aria-label="A real readback from the live compiler">
-              <p className="who">compiled by {d.compiled.model} in {(d.compiled.ms / 1000).toFixed(1)} s · {utc(d.compiled.at)}</p>
-              <p className="said">“{d.compiled.orders}”</p>
-              <ul>{d.compiled.lines.slice(1).map((l, i) => <li key={i} className={l.startsWith("  ") ? "in" : ""}>{l.replace(/^\s*-\s*/, "").trim()}</li>)}</ul>
+      <section className="board" aria-label="The morning board">
+        <div className="plank">
+          <p className="plank-head">Papan pagi · the morning board · {chain}</p>
+          <dl className="plank-grid">
+            <div>
+              <dt><CountUp value={d.nights} /></dt>
+              <dd>nights settled on chain<small>{d.matched} of {d.nights} re-checked: ✓ MATCH{d.houseOnly.length ? ` · ${d.houseOnly.length > 1 ? "nights" : "night"} ${d.houseOnly.join(", ")}: house agents only` : ""}</small></dd>
             </div>
-          </li>
-          <li className="act mid dark">
-            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
-            <p className="t">00:00 WIB close · plays at 00:05</p>
-            <h3>Every agent, 300 turns.</h3>
-            <p>Each turn an agent gathers, guards, shares or steals with a neighbour; every 50 turns the ring reseats. Thirty labelled house agents fill the field. No model plays: plain code does.</p>
-            <ul className="acts" aria-label="The four actions">{ACTS.map((a) => <li key={a.k}><span className="glyph" style={{ color: a.c }} aria-hidden>{a.g}</span>{a.k}</li>)}</ul>
-          </li>
-          <li className="act settled">
-            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
-            <p className="t">06:10 · breakfast</p>
-            <h3>Your lamp, your rank, your rewrite.</h3>
-            <p>A 15-second replay, the turn where your own rules moved the most coins, and your rank on the ticket. Change a rule and go again tonight.</p>
-            {f?.decisive && <p className="decisive"><span className="data">{f.decisive}</span><small>night {n!.round}, {ordinal(f.rank)}-place ticket: {f.ruleFired ? "the biggest swing from one of its rules" : "its biggest single-turn swing (none of its rules fired)"}</small></p>}
-          </li>
-        </ol>
+            <div>
+              <dt>{n ? <CountUp value={n.agents} /> : "0"}</dt>
+              <dd>agents played night {n?.round ?? "—"}<small>{n ? `${n.players} ${d.testnet ? "testnet" : "player"} accounts${n.qaPlayers ? (n.qaPlayers === n.players ? " (our QA runs)" : ` (${n.qaPlayers} our QA runs)`) : ""} + ${n.house} house agents` : "the first night has not settled"}</small></dd>
+            </div>
+            <div>
+              <dt>{d.burned === null ? "—" : <CountUp value={d.burned} decimals={d.burned % 1 ? 1 : 0} />}</dt>
+              <dd>{d.wif} burned<small>{d.paidRuns === null ? "chain read failed just now" : `${d.paidRuns} paid run${d.paidRuns === 1 ? "" : "s"}${d.paidQa ? (d.paidQa === d.paidRuns ? ", all our QA" : `, ${d.paidQa} our QA`) : ""}`}{d.testnet ? " · testnet stand-in for $WIF" : ""}</small></dd>
+            </div>
+            <div>
+              <dt><CountUp value={d.evidence.runtimes} /></dt>
+              <dd>runtimes, one hash<small>golden nights: 5 macOS Node builds (20–24) + Linux Node 20/22 on arm64 and amd64</small></dd>
+            </div>
+          </dl>
+          <p className="plank-foot">
+            {d.testnet ? "Testnet: chain 4663 is not live yet. Nights = artifacts equal to their on-chain hash; burns at most about a minute old." : "Nights = artifacts equal to their hash on chain 4663; burns at most about a minute old."}{" "}
+            <Link href="/board">Full board</Link>{n && <> · <Link href={`/verify/${n.round}`}>verify night {n.round}</Link></>} · <a href={d.links.scrimmage}>paid runs on the explorer</a>
+          </p>
+        </div>
       </section>
 
       <section id="wif" className="wif" aria-labelledby="h-wif">
         <div className="wif-in">
           <div>
-            <h2 id="h-wif">Practice costs $WIF. The crown needs it.</h2>
-            <p>Your first sealed orders each night run free against last night&apos;s top 30. Testing any other draft costs <b>200 $WIF</b>: <b>160</b> is burned with the token&apos;s own <code>burn()</code> and <b>40</b> pays for compute. A season crown needs at least one paid run, and the contract checks it.</p>
+            <h2 id="h-wif">Practice costs $WIF. The season crown needs it.</h2>
+            <p>Your first sealed orders each night run free against last night&apos;s top 30. Testing any other draft costs <b>200 $WIF</b>: <b>160</b> is burned with the token&apos;s own <code>burn()</code> and <b>40</b> pays for compute. A season is three nights. Its crown is an on-chain title, not a prize, and the contract refuses it to any account without a paid run that season.</p>
             <p className="quiet">No prize pool and no owner withdrawal: the contracts hold nothing to drain. A fork test against the real $WIF contract shows payer −200, total supply −160, compute +40.</p>
           </div>
           <figure className="char" aria-label="One paid practice run: 200 $WIF, 160 burned, 40 to compute">
@@ -182,16 +182,16 @@ export default async function Landing() {
         <h2 id="h-trust">Replay it yourself.</h2>
         <div className="bento">
           <article className="b1"><h3>Words compile once</h3><p>A model turns up to 280 characters into a policy of at most 6 fields and 3 rules, once. Plain code reads it back to you, and no model plays the night.</p><span className="tag">{d.evidence.model} · {d.evidence.golden}/{d.evidence.goldenOf} golden prompts · {d.evidence.injectionsSafe}/{d.evidence.injectionsOf} injections refused or kept in schema</span></article>
-          <article className="b2"><span className="obj"><span className="stamp sealed">SEALED · ROUND {d.tonight?.round ?? (n ? n.round + 1 : 1)}</span></span><h3>Sealed till the close</h3><p>Sealed policies are timelock-encrypted to a drand round after 00:00 WIB. Nobody opens them early, us included.</p><span className="tag">drand quicknet · tlock</span></article>
+          <article className="b2"><span className="obj"><span className="stamp sealed">SEALED · ROUND {d.tonight?.round ?? (n ? n.round + 1 : 1)}</span></span><h3>Sealed till the close</h3><p>Sealed policies are timelock-encrypted to a drand round after 00:00 WIB. Nobody can open one early, us included. (The words you send the AI compiler do pass our server.)</p><span className="tag">drand quicknet · tlock</span></article>
           <article className="b3">{n && <span className="obj big-mono">drand {n.drandRound}</span>}<h3>The seed is not ours</h3><p>The contract only accepts the drand beacon fixed for the night, at least 300 s after the close{n ? `; night ${n.round} used round ${n.drandRound}` : ""}.</p><span className="tag">Results.post · seedRound</span></article>
           <article className="b4"><span className="obj big-stat">{d.evidence.p50}<small> ms</small></span><h3>Plain code plays</h3><p>{d.evidence.benchAgents} agents × {d.evidence.benchTurns} turns at the median, on an M1 Max. Same inputs, same hash.</p><span className="tag">semalam-sim/1</span></article>
-          <article className="b5"><h3>Posted only if it matches</h3><p>The runner posts a night&apos;s hash only when it equals the CLI&apos;s. Anyone can re-run any night from public data.</p><CopyCmd cmd={cli} /><span className="tag">{d.evidence.runtimes} runtimes · one hash</span></article>
+          <article className="b5"><h3>Posted only if it matches</h3><p>Our settler posts a night&apos;s hash only when it equals the open-source CLI&apos;s, run in a fresh process. Anyone can re-run any night from public data.</p><CopyCmd cmd={cli} /><span className="tag">{d.evidence.runtimes} runtimes · one hash</span></article>
         </div>
       </section>
 
       <section className="honest" aria-labelledby="h-honest">
         <div className="honest-in">
-          <h2 id="h-honest">Honest by design.</h2>
+          <h2 id="h-honest">What isn&apos;t done yet.</h2>
           <p className="s-sub">Lifted from the README&apos;s limits. Judges should hear them from us first.</p>
           <div className="notes">
             <blockquote className="n1"><p className="k">Not live yet</p><p>The chain 4663 deployment is not live yet; everything above runs on the 46630 testnet with a mock token, except the fork test.</p><cite>README · Honest limits, 1</cite></blockquote>
@@ -215,7 +215,7 @@ export default async function Landing() {
       </section>
 
       <section className="close" aria-labelledby="h-close">
-        <h2 id="h-close">The market opens at <em>midnight.</em></h2>
+        <h2 id="h-close">Seal yours before <em>midnight.</em></h2>
         <p className="s-sub"><LiveClock round={d.tonight?.round ?? null} />{d.tonight?.commits != null ? ` · ${d.tonight.commits} account${d.tonight.commits === 1 ? "" : "s"} sealed so far` : ""}</p>
         <div className="s-ctas center">
           <Link href="/play" className="btn s-primary">Write tonight&apos;s orders</Link>
