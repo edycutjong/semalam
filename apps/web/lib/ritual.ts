@@ -2,7 +2,7 @@
 // this browser remembers sealing. A streak counts nights played; it never threatens a loss and never asks for $WIF.
 import type { Row } from "./rank";
 
-export type Night = { round: number; committed: boolean; rank: number | null; playerRank: number | null; players: number; agents: number; coins: number | null };
+export type Night = { round: number; committed: boolean; rank: number | null; playerRank: number | null; players: number; agents: number; coins: number | null; qaPlayers?: number };
 export type Ritual = { played: number[]; streak: number; best: Night | null; last: Night | null; prev: Night | null; delta: number | null };
 
 /** One posted night seen from one account: committed = a commit log from it was read; ranks only if it scored as a player. */

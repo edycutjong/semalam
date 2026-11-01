@@ -48,7 +48,7 @@ async function drawCard(p: Props): Promise<Blob | null> {
   g.fillStyle = "#A89C8A"; g.font = `400 17px ${mono}`;
   g.fillText(`result hash ${short(p.resultHash)}`, 64, 584);
   g.textAlign = "right"; g.fillText(`${location.host}/round/${p.round}`, W - 64, 584); g.textAlign = "left";
-  g.fillText(`replay it from the repo: node packages/cli/dist/semalam.mjs replay ${p.round}${IS_TESTNET ? " --chain 46630" : ""}`, 64, 610);
+  g.fillText(`from the repo, after pnpm i && pnpm --filter semalam build: node packages/cli/dist/semalam.mjs replay ${p.round}${IS_TESTNET ? " --chain 46630" : ""}`, 64, 610);
   return new Promise((res) => c.toBlob(res, "image/png"));
 }
 

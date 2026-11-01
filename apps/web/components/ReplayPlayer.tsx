@@ -345,7 +345,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
       <canvas ref={canvas} className="lamps" role="img" aria-label={`Lamp row: ${replays.length} agents at turn ${shownT} of ${T}`} />
       <div className="row" style={{ margin: "12px 0" }}>
         <button type="button" className="primary" onClick={play} disabled={!ready} aria-label={reduced ? "Step through the night" : undefined}>
-          {reduced ? (turn >= T ? "from the start" : "step through →") : playing ? "pause" : turn >= T ? "replay" : "play 15 s"}
+          {!ready ? "checking the night…" : reduced ? (turn >= T ? "from the start" : "step through →") : playing ? "pause" : turn >= T ? "replay" : "play 15 s"}
         </button>
         <input type="range" min={0} max={T} value={Math.min(T, turn)} step={reduced ? T / 5 : 1} aria-label="Scrub the replay" aria-valuetext={`turn ${shownT} of ${T}`}
           onChange={(e) => stepTo(Number(e.target.value))} style={{ flex: 1, minWidth: 140 }} />

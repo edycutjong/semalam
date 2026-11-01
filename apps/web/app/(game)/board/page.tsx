@@ -61,7 +61,7 @@ export default async function Board() {
             <div className="scroll"><table>
               <thead><tr><th>#</th><th>Player</th><th>Points</th><th>Coins</th><th>Crown</th></tr></thead>
               <tbody>{sb.board.slice(0, 20).map((b, i) => (
-                <tr key={b.id}><td className="data">{i + 1}</td><td className="data"><a href={addrUrl(b.id)}>{short(b.id)}</a></td><td className="data">{b.points}</td><td className="data">{b.coins}</td>
+                <tr key={b.id}><td className="data">{i + 1}</td><td className="data">{isQA(b.id) && <span className="badge" title="our own QA run, not a user">qa</span>} <a href={addrUrl(b.id)}>{short(b.id)}</a></td><td className="data">{b.points}</td><td className="data">{b.coins}</td>
                   <td>{b.eligible ? <span className="badge relay">crown-eligible</span> : <span className="muted">—</span>}</td></tr>))}</tbody>
             </table></div>
           )}

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ordinal } from "@/lib/rank";
 import { ritualOf, type Night, type Ritual as R } from "@/lib/ritual";
 
+const qaNote = (n: Night) => (n.qaPlayers ? ` (${n.qaPlayers === n.players ? "all" : n.qaPlayers} our own QA runs)` : "");
+
 /** rounds this browser sealed for this account (Tonight writes semalam.committed.<round> after the chain shows it) */
 function localRounds(account: string): number[] {
   const out: number[] = [];
@@ -45,8 +47,8 @@ export default function Ritual({ account, round, sealedTonight, onRitual }: { ac
       </ol>
       <p className="data">
         {r.streak >= 2 ? `${r.streak} nights in a row` : `${r.played.length} night${r.played.length === 1 ? "" : "s"} sealed`}
-        {r.best && <> · best <Link href={`/round/${r.best.round}`}>{ordinal(r.best.playerRank!)} of {r.best.players} player{r.best.players === 1 ? "" : "s"}</Link> (round {r.best.round})</>}
-        {r.last && r.prev && <> · round {r.last.round}: {ordinal(r.last.playerRank!)} of {r.last.players} (round {r.prev.round}: {ordinal(r.prev.playerRank!)} of {r.prev.players})</>}
+        {r.best && <> · best <Link href={`/round/${r.best.round}`}>{ordinal(r.best.playerRank!)} of {r.best.players} player{r.best.players === 1 ? "" : "s"}</Link>{qaNote(r.best)} (round {r.best.round})</>}
+        {r.last && r.prev && <> · round {r.last.round}: {ordinal(r.last.playerRank!)} of {r.last.players}{qaNote(r.last)} (round {r.prev.round}: {ordinal(r.prev.playerRank!)} of {r.prev.players}{qaNote(r.prev)})</>}
       </p>
     </div>
   );
