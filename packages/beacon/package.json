@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "test": "tsx --test test/beacon.test.ts",
+    "test": "tsx --test test/beacon.test.ts test/cov-beacon.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

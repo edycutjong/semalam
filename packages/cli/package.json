@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "test": "tsx --test test/cli.test.ts test/live.test.ts",
+    "test": "tsx --test test/cli.test.ts test/live.test.ts test/cov-cli.test.ts",
     "typecheck": "tsc --noEmit",
     "prepack": "node build.mjs"
   },
