@@ -59,12 +59,12 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .split { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 90px; align-items: center; margin: auto 0; }
 .deck .s3 h2 { font-size: 112px; }
 .deck .s3 .lede { font-size: 38px; }
-.deck .draft { position: relative; background: var(--paper); color: var(--paper-ink); border-radius: 14px; padding: 44px 50px 40px 70px; transform: rotate(-1.6deg); box-shadow: 0 30px 60px rgba(0, 0, 0, .45); }
-.deck .draft::before, .deck .rb-ticket::before { content: ""; position: absolute; left: 30px; top: 22px; bottom: 22px; border-left: 3px dashed rgba(42, 33, 64, .35); }
-.deck .draft { padding: 60px 64px 130px 84px; }
-.deck .draft .orders { font: italic 400 58px/1.28 var(--font-body); margin: 0 0 30px; }
-.deck .draft .count { font-size: 19px; color: #4a3d6b; margin: 0; }
-.deck .draft .stamp { position: absolute; right: 48px; bottom: 40px; font-size: 26px; animation: none; }
+.deck .draft-card { position: relative; background: var(--paper); color: var(--paper-ink); border-radius: 14px; padding: 44px 50px 40px 70px; transform: rotate(-1.6deg); box-shadow: 0 30px 60px rgba(0, 0, 0, .45); }
+.deck .draft-card::before, .deck .rb-ticket::before { content: ""; position: absolute; left: 30px; top: 22px; bottom: 22px; border-left: 3px dashed rgba(42, 33, 64, .35); }
+.deck .draft-card { padding: 60px 64px 130px 84px; }
+.deck .draft-card .orders { font: italic 400 58px/1.28 var(--font-body); margin: 0 0 30px; }
+.deck .draft-card .count { font-size: 19px; color: #4a3d6b; margin: 0; }
+.deck .draft-card .stamp { position: absolute; right: 48px; bottom: 40px; font-size: 26px; animation: none; }
 
 /* 4 solution */
 .deck .flow { display: grid; grid-template-columns: minmax(0, .58fr) 170px minmax(0, 1.42fr); gap: 24px; align-items: center; margin-top: auto; }
@@ -102,21 +102,30 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 
 /* 6 the latest night */
 .deck .s6 .lampstring { margin: -10px -120px 0; }
-.deck .nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 50px; margin: 30px 0 auto; }
-.deck .nums dt { font: 400 112px/1 var(--font-display); }
+.deck .nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 50px; margin: 18px 0 0; }
+.deck .nums dt { font: 400 92px/1 var(--font-display); }
 .deck .nums dt.amber { color: var(--after); text-shadow: 0 0 34px rgba(255, 181, 71, .45); }
-.deck .nums dd { margin: 14px 0 0; font-size: 26px; color: #d8ccb4; }
+.deck .nums dd { margin: 12px 0 0; font-size: 26px; color: #d8ccb4; }
+/* the tagged lamp's night: one amber line (amber = the settled ticket), labelled points only where the data turns */
+.deck .nightline { margin: auto 0 0; }
+.deck .nightline svg { display: block; width: 100%; height: auto; overflow: visible; }
+.deck .nightline .guide { stroke: #4c4170; stroke-width: 2; stroke-dasharray: 6 10; }
+.deck .nightline .line { fill: none; stroke: var(--after); stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 0 10px rgba(255, 181, 71, .45)); }
+.deck .nightline .dot { fill: #FFF6DE; stroke: var(--after); stroke-width: 4; }
+.deck .nightline text { font: 400 30px var(--font-data); fill: var(--ink); }
+.deck .nightline text.axis { font-size: 20px; fill: var(--muted); }
+.deck .nightline figcaption { margin: 6px 0 0; font: 400 20px var(--font-data); color: var(--muted); }
 
 /* 7 $WIF: one charred ticket */
 .deck .char-ticket.big { display: grid; grid-template-columns: 4fr 1fr; width: 1240px; height: 300px; margin: auto auto 0; border-radius: 18px; overflow: hidden; transform: rotate(-2deg); box-shadow: 0 34px 70px rgba(0, 0, 0, .55); }
 .deck .char-ticket span { display: flex; align-items: center; justify-content: center; gap: 18px; font: 400 34px/1.1 var(--font-display); text-transform: uppercase; }
 .deck .char-ticket b { font-weight: 400; font-size: 120px; }
 .deck .char-ticket .kept b { font-size: 70px; }
-.deck .burnt { color: var(--ink); background: radial-gradient(120% 140% at 30% 50%, #3b2b26 0, #20161a 55%, #140e14 100%); }
+.deck .burnt { color: var(--ink); background: radial-gradient(120% 140% at 30% 50%, #463029 0, #22171b 55%, #140e14 100%); box-shadow: inset -34px 0 46px -24px rgba(255, 110, 50, .55); }
 .deck .kept { flex-direction: column; color: var(--paper-ink); background: var(--paper); box-shadow: inset 22px 0 22px -10px rgba(70, 36, 12, .6); }
 .deck .wif-line { font-size: 34px; line-height: 1.4; color: #d8ccb4; text-align: center; margin: 70px auto 0; max-width: 36em; }
-.deck .counter { margin: 26px 0 auto; text-align: center; font: 400 22px var(--font-data); color: var(--muted); }
-.deck .counter b { font-weight: 400; color: var(--ink); margin-right: 6px; }
+.deck .counter { margin: 30px 0 auto; text-align: center; font: 400 26px var(--font-data); color: #cfc3ab; }
+.deck .counter b { font: 400 64px/1 var(--font-display); color: var(--ink); margin-right: 14px; vertical-align: -6px; }
 
 /* 8 one number */
 .deck .hero-num { margin: auto 0 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 70px; align-items: center; }
@@ -128,6 +137,10 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .cmd { margin: 8px 0 0; font-size: 24px; background: #120D22; border: 1px solid var(--rule); border-radius: 12px; padding: 22px 28px; color: var(--ink); }
 .deck .cmd .pr { color: var(--after); }
 .deck .foot-stats { margin: 60px 0 auto; font: 400 22px/1.5 var(--font-data); color: var(--muted); }
+.deck .proof-run { margin: 56px 0 auto; }
+.deck .proof-run .cmd { font-size: 32px; line-height: 1.55; padding: 28px 36px; }
+.deck .proof-run .cmd .ok { color: var(--act-gather); }
+.deck .proof-run .foot-stats { margin: 18px 0 0; font-size: 24px; }
 
 /* 9 three pinned notes */
 .deck .status { margin: 0; font-size: 22px; color: var(--muted); }

@@ -25,6 +25,35 @@ const SHA = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
 function Foot({ k, chain }: { k: number; chain: string }) {
   return <footer className="slide-foot"><span>SEMALAM · {chain}{SHA ? ` · build ${SHA}` : ""}</span><span>{REPO.replace("https://", "")}</span><span className="pg">{String(k).padStart(2, "0")} / 10</span></footer>;
 }
+type KF = { t: number; rank: number; coins: number };
+const th = (r: number) => ordinal(r);
+/** The tagged lamp's whole night as one line: its rank every 10 turns, read from the settled artifact (no invented points). */
+function NightLine({ kf, turns }: { kf: KF[]; turns: number }) {
+  if (kf.length < 2) return null;
+  const W = 1680, H = 230, top = 40, bot = 44;
+  const best = Math.min(...kf.map((k) => k.rank));
+  const iBest = kf.findIndex((k) => k.rank === best);
+  const tail = kf.slice(iBest);
+  const worst = Math.max(...tail.map((k) => k.rank));
+  const iWorst = iBest + tail.findIndex((k) => k.rank === worst);
+  const end = kf[kf.length - 1];
+  const lo = Math.max(...kf.map((k) => k.rank), best + 1);
+  const x = (t: number) => (t / turns) * W;
+  const y = (r: number) => top + ((r - best) / (lo - best)) * (H - top - bot);
+  type Mark = { k: KF; a: "start" | "middle" | "end"; dy: number };
+  const marks: Mark[] = [{ k: kf[iBest], a: "start", dy: 46 }, ...(iWorst < kf.length - 1 && worst > end.rank ? [{ k: kf[iWorst], a: "middle", dy: 40 } as Mark] : []), { k: end, a: "end", dy: -16 }];
+  return (
+    <figure className="nightline">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`The tagged lamp's rank through the night: ${marks.map((m) => `${th(m.k.rank)} at turn ${m.k.t}`).join(", ")}.`}>
+        <path d={`M0 ${y(best)}H${W}`} className="guide" />
+        <polyline points={kf.map((k) => `${x(k.t).toFixed(1)},${y(k.rank).toFixed(1)}`).join(" ")} className="line" />
+        {marks.map((m) => <g key={m.k.t}><circle cx={x(m.k.t)} cy={y(m.k.rank)} r="9" className="dot" /><text x={x(m.k.t) + (m.a === "start" ? 14 : 0)} y={y(m.k.rank) + m.dy} textAnchor={m.a}>{th(m.k.rank)} · turn {m.k.t}</text></g>)}
+        <text x="0" y={H - 6} className="axis">turn 0</text><text x={W} y={H - 6} textAnchor="end" className="axis">turn {turns}</text>
+      </svg>
+      <figcaption>the tagged lamp&apos;s rank every 10 turns, from the night&apos;s settled replay</figcaption>
+    </figure>
+  );
+}
 const STOPS = [
   { t: "bedtime", k: "sealed", h: "Sealed", p: "orders timelocked to a drand round (23:40 in our example)" },
   { t: "00:00 WIB", k: "dark", h: "Closed", p: "commits stop; nobody can read them yet" },
@@ -40,17 +69,18 @@ export default async function Pitch() {
   const last = d.recorded.stdout.at(-1) ?? "";
   const cli = `node packages/cli/dist/semalam.mjs replay ${d.recorded.round} --chain ${d.recorded.chainId}`;
   const lamps = n?.lamps ?? [];
+  const lastShort = last.replace(/\s+/g, " ").replace(/(0x[0-9a-f]{6})[0-9a-f]{54}([0-9a-f]{4})/g, "$1…$2");
   const qa = Boolean(n && n.qaPlayers === n.players && n.players > 0);
   const paidQa = d.paidRuns !== null && d.paidRuns > 0 && d.paidQa === d.paidRuns;
   const notes = [
     "SEMALAM is a night market your agent plays while you sleep. Orders at bedtime; after the midnight close (Jakarta time) every agent plays one tournament; at breakfast you watch it back. The ticket is real: the 4th place of the latest testnet night, one of our own QA accounts, not a user.",
-    "A holder with a token and no code has nothing to do with an agent tonight. That is the gap: no reason to open the app, and no reason to come back tomorrow.",
+    "The brief asks for a real reason to use $wif. Holding is not one. A reason has to bring a holder back tonight, and again tomorrow night: that is the gap SEMALAM fills.",
     "Picture our player, a night-shift nurse — an illustrative persona, not a user. In bed at 23:40, lights off, one thumb, three short orders. The counter is the real count against our 280-character limit.",
     "This is a real call to the live compiler with exactly that sentence. The model runs once; plain code turns the policy back into these lines, and only what you read gets sealed. No model plays the night.",
     "One night in four stops. Sealed with a drand timelock at bedtime; closed at midnight; opened and played after the beacon five minutes later; posted on chain only when the CLI agrees (night 2 posted at 00:25 WIB), then replayed at breakfast.",
-    "The latest settled night. Its artifact's hash equals the one posted on chain. One lamp per agent, brighter means a higher final rank, house agents are grey and never score. The accounts are our own QA runs so far.",
+    "The latest settled night. Its artifact's hash equals the one posted on chain. One lamp per agent, brighter means a higher final rank, house agents are grey and never score. The line is the tagged lamp's whole night, its rank every ten turns from the same artifact. The accounts are our own QA runs so far.",
     "This is the $WIF reason. Practice beyond your free run costs $WIF, and 80 percent is burned by the token's own burn function. The season crown needs a paid run. There is no prize pool to drain. On testnet the burns so far are our QA runs, with a mock token.",
-    "We don't ask anyone to trust our server: the CLI recomputes every night from chain data. Every posted night is re-checked by the CLI before it goes on chain, and the golden nights hash the same on nine runtimes.",
+    `We don't ask anyone to trust our server: the CLI recomputes every night from chain data. Every posted night is re-checked by the CLI before it goes on chain, and the golden nights hash the same on ${d.evidence.runtimes} runtimes. The night itself is plain code: ${d.evidence.p50} ms at the median for ${d.evidence.benchAgents} agents × ${d.evidence.benchTurns} turns on an M1 Max. The compiler passed ${d.evidence.golden}/${d.evidence.goldenOf} golden prompts and refused or kept in schema ${d.evidence.injectionsSafe}/${d.evidence.injectionsOf} injections.`,
     "Honest status: testnet only, numbers from our own QA runs, house agents labelled. The three notes are shortened from our README's Honest limits 1, 3 and 5.",
     "The ask: play one night and check the hash at breakfast. The QR opens tonight's page.",
   ];
@@ -67,7 +97,7 @@ export default async function Pitch() {
               <p className="kick"><img src="/icon.svg" alt="" width={46} height={46} className="cover-icon" /><span className="pill">World Is Flat · games</span><span className={`pill${d.testnet ? " test" : ""}`}>{chain}</span></p>
               <h1>You sleep. Your agent works the <em>night market.</em></h1>
               <p className="lede">Orders at bedtime. The market closes at 00:00 WIB and plays when the drand beacon lands. A replay, a rank and a hash at breakfast.</p>
-              <div className="mini-term"><span className="pr">$</span> {cli}<br /><span className="ok">{last.replace(/\s+/g, " ").replace(/(0x[0-9a-f]{6})[0-9a-f]{54}([0-9a-f]{4})/g, "$1…$2")}</span></div>
+              <div className="mini-term"><span className="pr">$</span> {cli}<br /><span className="ok">{lastShort}</span></div>
             </div>
             {n && <FrozenTicket n={n} className="deck-ticket" />}
           </div>
@@ -77,18 +107,18 @@ export default async function Pitch() {
 
         <section className="slide s2" aria-label="Hook">
           <div className="hook">
-            <h2>A token. Nothing to do <em>tonight.</em></h2>
-            <p className="lede">A holder with a token and no code has nothing to do with an agent, and no reason to come back tomorrow.</p>
+            <h2>Holding is not a reason to <em>come back.</em></h2>
+            <p className="lede">The brief asks for “a real reason to use $wif”. We read that as a reason to open the app tonight, and again tomorrow night.</p>
           </div>
           <svg className="big-lamp" viewBox="0 0 240 380" overflow="visible" aria-hidden>
             <path d="M120 0v70" stroke="#5c5182" strokeWidth="3" />
             <path d="M86 70h68l-12 26H98z" fill="#2A2140" stroke="#7a6ea0" strokeWidth="2.5" />
-            <ellipse cx="120" cy="176" rx="66" ry="78" fill="#241c40" stroke="#7a6ea0" strokeWidth="3" />
-            <path d="M84 132c-10 22-10 66 4 92" stroke="#F7E9CC" strokeOpacity=".22" strokeWidth="6" strokeLinecap="round" fill="none" />
-            <ellipse cx="120" cy="184" rx="24" ry="34" fill="#3A2F55" stroke="#5c5182" strokeWidth="2" />
+            <ellipse cx="120" cy="176" rx="66" ry="78" fill="#2d2454" stroke="#978dc0" strokeWidth="3.5" />
+            <path d="M84 132c-10 22-10 66 4 92" stroke="#F7E9CC" strokeOpacity=".34" strokeWidth="6" strokeLinecap="round" fill="none" />
+            <ellipse cx="120" cy="184" rx="24" ry="34" fill="#453a66" stroke="#7a6ea0" strokeWidth="2" />
             <path d="M88 256h64l10 30H78z" fill="#2A2140" stroke="#7a6ea0" strokeWidth="2.5" />
             <path d="M120 286v22" stroke="#5c5182" strokeWidth="2" />
-            <g transform="rotate(-6 120 334)"><rect x="46" y="306" width="148" height="54" rx="4" fill="#F7E9CC" /><text x="120" y="331" textAnchor="middle" className="tag-k">UNLIT</text><text x="120" y="349" textAnchor="middle" className="tag-s">0 orders tonight</text></g>
+            <g transform="rotate(-6 120 334)"><rect x="46" y="306" width="148" height="54" rx="4" fill="#F7E9CC" /><text x="120" y="331" textAnchor="middle" className="tag-k">UNLIT</text><text x="120" y="349" textAnchor="middle" className="tag-s">0 orders, yet</text></g>
           </svg>
           <Foot k={2} chain={chain} />
           <aside className="speaker-notes">{notes[1]}</aside>
@@ -101,7 +131,7 @@ export default async function Pitch() {
               <h2>Three orders before bed.</h2>
               <p className="lede">Picture a night-shift nurse in Surabaya: a token, no code. At 06:10, with coffee, they want to know how their agent did.</p>
             </div>
-            <div className="draft">
+            <div className="draft-card">
               <p className="who">tonight&apos;s orders · draft</p>
               <p className="orders">“{d.compiled.orders}”</p>
               <p className="count data">{d.compiled.orders.length} / 280 characters</p>
@@ -154,6 +184,7 @@ export default async function Pitch() {
                 <div><dt className="amber">{ordinal(f.rank)}</dt><dd>{f.name} · {f.coins} coins · the tagged lamp</dd></div>
                 <div><dt className={n.cliMatch ? "ok" : "bad"}>{n.cliMatch ? "✓" : "✗"}</dt><dd>CLI hash {short(n.resultHash)} {n.cliMatch ? "equals" : "does not equal"} the posted hash</dd></div>
               </dl>
+              {(() => { const kf = (n.replays.find((r) => r.id.toLowerCase() === f.id.toLowerCase())?.keyframes ?? []) as KF[]; return <NightLine kf={kf} turns={kf.at(-1)?.t ?? 300} />; })()}
             </>
           ) : <h2>The first night has not settled yet.</h2>}
           <Foot k={6} chain={chain} />
@@ -163,7 +194,7 @@ export default async function Pitch() {
         <section className="slide s7" aria-label="$WIF">
           <h2>Practice costs $WIF. <em>80%</em> burns.</h2>
           <div className="char-ticket big"><span className="burnt"><b>160</b> burned</span><span className="kept"><b>40</b> compute</span></div>
-          <p className="wif-line">200 $WIF a practice run, burned by the token&apos;s own burn(). The crown needs a paid run. No prize pool.</p>
+          <p className="wif-line">200 $WIF a practice run: 160 burned by the token&apos;s own burn(), 40 to compute. The season crown needs a paid run. No prize pool.</p>
           <p className="counter"><b>{d.burned === null ? "—" : d.burned.toLocaleString("en-US")}</b> {d.wif} burned on {chain}{d.paidRuns !== null ? ` · ${d.paidRuns} paid runs${paidQa ? ", all our QA" : ""}` : ""}</p>
           <Foot k={7} chain={chain} />
           <aside className="speaker-notes">{notes[6]}</aside>
@@ -171,8 +202,11 @@ export default async function Pitch() {
 
         <section className="slide s8" aria-label="Built well">
           <h2>Don&apos;t trust us. Re-run it.</h2>
-          <div className="hero-num"><span className="big">{d.matched}/{d.nights}</span><div className="rhs"><b className="ok">✓ MATCH</b><span className="lbl">posted nights re-checked by the CLI, from public chain data</span><p className="cmd data"><span className="pr">$</span> {cli}</p></div></div>
-          <p className="foot-stats">{d.evidence.runtimes} runtimes, one hash · {d.evidence.p50} ms p50, {d.evidence.benchAgents} agents × {d.evidence.benchTurns} turns · {d.evidence.golden}/{d.evidence.goldenOf} golden prompts · {d.evidence.injectionsSafe}/{d.evidence.injectionsOf} injections refused or kept in schema</p>
+          <div className="hero-num"><span className="big">{d.matched}/{d.nights}</span><div className="rhs"><b className="ok">✓ MATCH</b><span className="lbl">posted nights re-checked by the CLI, from public chain data</span></div></div>
+          <div className="proof-run">
+            <p className="cmd data"><span className="pr">$</span> {cli}<br /><span className="ok">{lastShort}</span></p>
+            <p className="foot-stats">{d.evidence.runtimes} runtimes, one hash · recorded {d.recorded.at.slice(0, 16).replace("T", " ")} UTC</p>
+          </div>
           <Foot k={8} chain={chain} />
           <aside className="speaker-notes">{notes[7]}</aside>
         </section>
