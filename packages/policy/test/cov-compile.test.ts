@@ -107,6 +107,16 @@ test("a policy outside the schema becomes a schema refusal, not a policy", async
   if (r.kind === "refusal") assert.match(r.reason, /fell outside the schema/);
 });
 
+test("grudge 0 beside a partner_stole_from_me rule is repaired to 1 (found by the P1e bot playtest); no other field is touched", () => {
+  const raw = '{"v":1,"name":"tit","opening":"SHARE","default":"GATHER","grudge":0,"rules":[{"if":"partner_stole_from_me","then":"STEAL"},{"if":"partner_shared_with_me","then":"SHARE"}]}';
+  const j = judgeOutput(raw);
+  assert.ok("policy" in j);
+  if ("policy" in j) { assert.equal(j.policy.grudge, 1); assert.equal(j.policy.rules.length, 2); assert.equal(j.policy.name, "tit"); }
+  // an out-of-schema field is still refused even when the grudge is the other defect
+  const extra = judgeOutput(raw.replace('"v":1', '"v":1,"bonus":9'));
+  assert.ok("refusal" in extra);
+});
+
 test("a thrown fetch (network error) records the error text in the paused reason", async () => {
   stub(new Error("ECONNRESET"));
   const r = await compileOrders("gather", { keys: ["a"], models: ["m1"] });
