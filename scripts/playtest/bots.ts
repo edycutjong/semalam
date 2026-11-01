@@ -40,14 +40,15 @@ function keys(): Record<string, Hex> {
   chmodSync(keyFile, 0o600);
   return k;
 }
-const ordersOf = (p: { orders: string; night2?: string }) => (night >= 2 && p.night2 ? p.night2 : p.orders);
+const rewrite = argv.includes("--rewrite"); // personas that read night 1's breakfast and change their orders (re-commit: the latest commit counts)
+const ordersOf = (p: { orders: string; night2?: string; rewrite?: string }) => (rewrite && p.rewrite ? p.rewrite : night >= 2 && p.night2 ? p.night2 : p.orders);
 
 async function compile() {
   const only = arg("--only", "").split(",").filter(Boolean);
   const prev: any[] = only.length && existsSync(compiledFile) ? JSON.parse(readFileSync(compiledFile, "utf8")).results : [];
   const out: any[] = [];
   const todo = [
-    ...personas.personas.map((p) => ({ id: p.id, style: p.style, orders: ordersOf(p), injection: false })),
+    ...personas.personas.filter((p: any) => !rewrite || p.rewrite).map((p) => ({ id: p.id, style: p.style, orders: ordersOf(p), injection: false })),
     ...(night === 1 ? personas.injections.map((i) => ({ id: i.id, style: "injection", orders: i.orders, injection: true })) : []),
   ];
   for (const t of todo) {
@@ -131,7 +132,7 @@ async function commit() {
     await sleep(1500);
   }
   const rounds = [...new Set(out.filter((o) => o.round).map((o) => o.round))];
-  writeFileSync(path.join(outDir, `commits-n${night}.json`), JSON.stringify({ what: "persona-bot commits on chain 46630 (internal QA, not users)", night, via: local ? "local relayer key calling Orders.commitBySig (same call as /api/relay/commit)" : base, rounds, at: new Date().toISOString(), commits: out }, null, 1));
+  writeFileSync(path.join(outDir, `commits-n${night}${tag}.json`), JSON.stringify({ what: "persona-bot commits on chain 46630 (internal QA, not users)", night, via: local ? "local relayer key calling Orders.commitBySig (same call as /api/relay/commit)" : base, rounds, at: new Date().toISOString(), commits: out }, null, 1));
   console.log("entered", out.filter((o) => o.entered).length, "of", out.length);
 }
 if (cmd === "compile") await compile();

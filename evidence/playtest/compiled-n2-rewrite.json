@@ -1,0 +1,129 @@
+{
+ "what": "persona-bot orders compiled by the live compiler (internal QA, not users)",
+ "night": 2,
+ "via": "https://semalam.edycu.dev",
+ "at": "2026-11-01T17:38:36.045Z",
+ "results": [
+  {
+   "id": "p03",
+   "style": "pure guard",
+   "orders": "Guarding alone got me nowhere. Open by guarding, then share with anyone who shared with me, and keep guarding otherwise.",
+   "injection": false,
+   "kind": "policy",
+   "model": "openai/gpt-oss-120b",
+   "ms": 1094,
+   "readback": [
+    "Your agent \"guard-share\" will:",
+    "- Turns 1–10: GUARD (protect your coins).",
+    "- From turn 11, first matching rule wins:",
+    "  1. If my neighbour shared with me in the last 10 turns → SHARE (trade generously).",
+    "- Otherwise: GUARD (protect your coins)."
+   ],
+   "policy": {
+    "v": 1,
+    "name": "guard-share",
+    "opening": "GUARD",
+    "default": "GUARD",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "partner_shared_with_me",
+      "then": "SHARE"
+     }
+    ]
+   }
+  },
+  {
+   "id": "p07",
+   "style": "late defector",
+   "orders": "I lost by gathering alone. Share with everyone from the start and keep sharing, but guard against anyone who steals from me.",
+   "injection": false,
+   "kind": "policy",
+   "model": "openai/gpt-oss-120b",
+   "ms": 1122,
+   "readback": [
+    "Your agent \"share-guard\" will:",
+    "- Turns 1–10: SHARE (trade generously).",
+    "- From turn 11, first matching rule wins:",
+    "  1. If my neighbour stole from me in the last 3 turns → GUARD (protect your coins).",
+    "- Otherwise: SHARE (trade generously)."
+   ],
+   "policy": {
+    "v": 1,
+    "name": "share-guard",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 3,
+    "rules": [
+     {
+      "if": "partner_stole_from_me",
+      "then": "GUARD"
+     }
+    ]
+   }
+  },
+  {
+   "id": "p08",
+   "style": "comeback kid",
+   "orders": "Stealing when behind did not work. Share by default, and only steal back from someone who stole from me.",
+   "injection": false,
+   "kind": "policy",
+   "model": "openai/gpt-oss-120b",
+   "ms": 1230,
+   "readback": [
+    "Your agent \"share-revenge\" will:",
+    "- Turns 1–10: SHARE (trade generously).",
+    "- From turn 11, first matching rule wins:",
+    "  1. If my neighbour stole from me in the last 3 turns → STEAL (rob your neighbour).",
+    "- Otherwise: SHARE (trade generously)."
+   ],
+   "policy": {
+    "v": 1,
+    "name": "share-revenge",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 3,
+    "rules": [
+     {
+      "if": "partner_stole_from_me",
+      "then": "STEAL"
+     }
+    ]
+   }
+  },
+  {
+   "id": "p20",
+   "style": "leader hugger",
+   "orders": "Share with poorer partners, and copy the leader only if I am behind. Otherwise share.",
+   "injection": false,
+   "kind": "policy",
+   "model": "openai/gpt-oss-120b",
+   "ms": 1795,
+   "readback": [
+    "Your agent \"copy-behind-share\" will:",
+    "- Turns 1–10: SHARE (trade generously).",
+    "- From turn 11, first matching rule wins:",
+    "  1. If I am in the bottom half → COPY_LEADER (do what the top agent did last turn).",
+    "  2. If my neighbour has fewer coins than me → SHARE (trade generously).",
+    "- Otherwise: SHARE (trade generously)."
+   ],
+   "policy": {
+    "v": 1,
+    "name": "copy-behind-share",
+    "opening": "SHARE",
+    "default": "SHARE",
+    "grudge": 0,
+    "rules": [
+     {
+      "if": "i_am_behind",
+      "then": "COPY_LEADER"
+     },
+     {
+      "if": "partner_poorer",
+      "then": "SHARE"
+     }
+    ]
+   }
+  }
+ ]
+}

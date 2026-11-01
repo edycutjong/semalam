@@ -1,0 +1,51 @@
+{
+ "what": "persona-bot commits on chain 46630 (internal QA, not users)",
+ "night": 2,
+ "via": "https://semalam.edycu.dev",
+ "rounds": [
+  4
+ ],
+ "at": "2026-11-01T17:39:06.541Z",
+ "commits": [
+  {
+   "id": "p03",
+   "account": "0xcFad2c61b227831E2c2bdD496f568738D216Da8c",
+   "round": 4,
+   "entered": true,
+   "tx": "0xb1645b6534645dda10ed81617e1720cacd731c6abb7f268b1afc836a27458548",
+   "policyHash": "0x137d9b96d6648a83d6df538be194d0e16c9dfe319bc0710b925f57f3703b93d6",
+   "sealedBytes": 491,
+   "status": 200
+  },
+  {
+   "id": "p07",
+   "account": "0xA0ef9b76c900A9b288664b1E943b92101edcE928",
+   "round": 4,
+   "entered": true,
+   "tx": "0xbc12801dca173f2fb6e90d4eb74836e740ecfa2077fc955ee3aef3123704b226",
+   "policyHash": "0x564ced8e8e4a3563d40a94021b071e2fa18b043f541539d5ffbc14b2a7891915",
+   "sealedBytes": 490,
+   "status": 200
+  },
+  {
+   "id": "p08",
+   "account": "0xcE4CD7d5cB650Da5C72458a69061b5c22B053016",
+   "round": 4,
+   "entered": true,
+   "tx": "0x4d0214053aee78c09b46fcc6925c3b8905b427f0266b7329b29f609d5bd767a0",
+   "policyHash": "0x3c611ed1e56827aaac346563ac76a29027d5668bcb203f80e27657297a0bcbb0",
+   "sealedBytes": 492,
+   "status": 200
+  },
+  {
+   "id": "p20",
+   "account": "0x9eB69609b4611CBed23A5E35d5175f15e032c47c",
+   "round": 4,
+   "entered": true,
+   "tx": "0x02f3d268f4e9d02798eec87b02a7b7c9a34a7d0b9b01a20b8880340bb3d7f22f",
+   "policyHash": "0xe67fe59d9de0cdff77b125fc1ed8402afdffbfb37fa34162e0f7ecefc94feb86",
+   "sealedBytes": 531,
+   "status": 200
+  }
+ ]
+}
