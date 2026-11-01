@@ -21,3 +21,9 @@ next-env.d.ts
 # kitchen-only docs never enter build/ (Next dev may generate AGENTS.md)
 AGENTS.md
 CLAUDE.md
+
+# E2E + Lighthouse output
+test-results/
+playwright-report/
+blob-report/
+.lighthouseci/
