@@ -111,6 +111,8 @@ export default async function Pitch() {
             <p className="lede">The brief asks for “a real reason to use $wif”. We read that as a reason to open the app tonight, and again tomorrow night.</p>
           </div>
           <svg className="big-lamp" viewBox="0 0 240 380" overflow="visible" aria-hidden>
+            <defs><radialGradient id="dk-unlit"><stop offset="0" stopColor="#978dc0" stopOpacity=".26" /><stop offset="1" stopColor="#978dc0" stopOpacity="0" /></radialGradient></defs>
+            <circle cx="120" cy="178" r="150" fill="url(#dk-unlit)" />
             <path d="M120 0v70" stroke="#5c5182" strokeWidth="3" />
             <path d="M86 70h68l-12 26H98z" fill="#2A2140" stroke="#7a6ea0" strokeWidth="2.5" />
             <ellipse cx="120" cy="176" rx="66" ry="78" fill="#2d2454" stroke="#978dc0" strokeWidth="3.5" />
@@ -195,7 +197,7 @@ export default async function Pitch() {
           <h2>Practice costs $WIF. <em>80%</em> burns.</h2>
           <div className="char-ticket big"><span className="burnt"><b>160</b> burned</span><span className="kept"><b>40</b> compute</span></div>
           <p className="wif-line">200 $WIF a practice run: 160 burned by the token&apos;s own burn(), 40 to compute. The season crown needs a paid run. No prize pool.</p>
-          <p className="counter"><b>{d.burned === null ? "—" : d.burned.toLocaleString("en-US")}</b> {d.wif} burned on {chain}{d.paidRuns !== null ? ` · ${d.paidRuns} paid runs${paidQa ? ", all our QA" : ""}` : ""}</p>
+          <p className="counter"><b>{d.burned === null ? "—" : d.burned.toLocaleString("en-US")}</b><span>{d.wif} burned so far on {chain}{d.paidRuns !== null ? ` · ${d.paidRuns} paid runs${paidQa ? ", all our QA" : ""}` : ""}</span></p>
           <Foot k={7} chain={chain} />
           <aside className="speaker-notes">{notes[6]}</aside>
         </section>
