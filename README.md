@@ -17,6 +17,7 @@
   ![Next.js](https://img.shields.io/badge/Next.js_16-black?style=flat&logo=next.js)
   ![drand](https://img.shields.io/badge/drand-timelock-1f6feb?style=flat)
   [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+  [![CI/CD](https://github.com/edycutjong/semalam/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/semalam/actions/workflows/ci.yml)
 
 </div>
 
@@ -107,15 +108,14 @@ Round 1 (house agents only) posted in tx `0x7066a651…b87f`; `semalam replay 1 
 | Exact price, real burn | Fee-on-transfer and no-op burn tokens are refused | `contracts/test/Attacks.t.sol:269`, `:291`, `:304` |
 | Crown rules | Needs every night of the season posted; only the poster can crown; the zero address and the 30 house ids are not eligible | `contracts/test/Attacks.t.sol:345`, `:363` |
 
-### Honest limits (7)
+### Honest limits (6)
 
 1. The chain 4663 deployment is not live yet; everything above runs on the 46630 testnet with a mock token, except the fork test.
-2. GitHub Actions runs on this private repo fail within seconds, so the CI matrix has never completed and is verified by local runs only; Windows determinism is unverified.
-3. `npx semalam` is not published yet (npm token); run the CLI from this repo as shown below.
-4. A Sybil can fill the 1,000-account admission cap per round with own-wallet commits (cost per night is not benchmarked here). Stated, not solved.
-5. Across 48 simulated seeds a pure single-action policy (excluding COPY_LEADER) won outright 5 times, and pure STEAL took 10 of the 13 pure top-10 finishes ([`evidence/sim-tuning.json`](evidence/sim-tuning.json)); real fields are not random, and the playtest is where this is watched.
-6. Gas-free onboarding is a relay with a per-night budget, not account abstraction (cut after the architecture review); when the relay is empty the app asks for your own wallet.
-7. Round 1 is a labelled rehearsal night (house agents only, no season).
+2. `npx semalam` is not published yet (npm token); run the CLI from this repo as shown below.
+3. A Sybil can fill the 1,000-account admission cap per round with own-wallet commits (cost per night is not benchmarked here). Stated, not solved.
+4. Across 48 simulated seeds a pure single-action policy (excluding COPY_LEADER) won outright 5 times, and pure STEAL took 10 of the 13 pure top-10 finishes ([`evidence/sim-tuning.json`](evidence/sim-tuning.json)); real fields are not random, and the playtest is where this is watched.
+5. Gas-free onboarding is a relay with a per-night budget, not account abstraction (cut after the architecture review); when the relay is empty the app asks for your own wallet.
+6. Round 1 is a labelled rehearsal night (house agents only, no season).
 
 Earlier versions had defects (dispute path, relay drain bound, crown verifiability); each is fixed and covered by a test.
 
@@ -140,7 +140,18 @@ pnpm -r --if-present test          # 72 TypeScript tests
 cd contracts && forge test         # 39 Foundry tests; the fork test needs a chain 4663 RPC
 ```
 
-CI workflows (`.github/workflows`): `ci` (Foundry, a Node 20/22 × Linux/macOS/Windows TypeScript matrix, web build, and a determinism job that replays the golden rounds in two fresh processes), `security` (gitleaks on full history, `pnpm audit`) and `codeql`. Vulnerability reports: [SECURITY.md](SECURITY.md).
+**6-stage CI/CD** ([`ci.yml`](.github/workflows/ci.yml)), every push and PR:
+
+| Stage | Gate |
+|---|---|
+| 1 · Quality | `forge test` · package typecheck + tests on Linux/macOS/Windows × Node 20/22 (golden replay on each) · web typecheck + unit tests |
+| 2 · Security | gitleaks on full history · `pnpm audit --audit-level=high` · no GPL-3.0/AGPL-3.0 in production deps |
+| 3 · Build | golden rounds replayed in two fresh processes, hashes diffed · Next.js build · JS budget |
+| 4 · E2E | Playwright (desktop + mobile): every page renders with no secrets, the orders journey, no horizontal scroll at 375/768/1440 px |
+| 5 · Performance | Lighthouse CI; accessibility under 0.9 fails |
+| 6 · Deploy gate | on `main`: https://semalam.edycu.dev answers after Vercel's git deploy |
+
+Plus `codeql` (SAST), weekly `security` re-scan, and Dependabot. Vulnerability reports: [SECURITY.md](SECURITY.md).
 
 ## 📁 Project Structure
 
