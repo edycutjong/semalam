@@ -3,7 +3,7 @@
     "collect": {
       "startServerCommand": "pnpm start -p 3200",
       "startServerReadyPattern": "Ready in",
-      "url": ["http://localhost:3200/play", "http://localhost:3200/board"],
+      "url": ["http://localhost:3200/", "http://localhost:3200/pitch", "http://localhost:3200/play", "http://localhost:3200/board"],
       "numberOfRuns": 3,
       "settings": { "preset": "desktop", "chromeFlags": "--no-sandbox --disable-gpu" }
     },
