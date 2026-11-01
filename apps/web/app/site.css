@@ -274,6 +274,8 @@ html:has(.site) { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top:
   .site .stamps .stamp { font-size: 15px; }
   .site .plank-grid dd { font-size: 13px; }
   .site .s-proof { font-size: 11px; }
+  .site .plank-foot { font-size: 14px; color: var(--warm); text-align: left; }
+  .site .plank-links { display: block; margin-top: 8px; }
   .site .s-ctas .btn { flex: 1 1 100%; }
   /* phones: the ticket comes straight after the pitch, so the signature is in the first view (the nav keeps the CTA) */
   .site .hero-grid { row-gap: 0; }

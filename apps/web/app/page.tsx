@@ -152,7 +152,7 @@ export default async function Landing() {
           </dl>
           <p className="plank-foot">
             {d.testnet ? "Testnet: chain 4663 is not live yet. Nights = artifacts equal to their on-chain hash; burns at most about a minute old." : "Nights = artifacts equal to their hash on chain 4663; burns at most about a minute old."}{" "}
-            <Link href="/board">Full board</Link>{n && <> · <Link href={`/verify/${n.round}`}>verify night {n.round}</Link></>} · <a href={d.links.scrimmage}>paid runs on the explorer</a>
+            <span className="plank-links"><Link href="/board">Full board</Link>{n && <> · <Link href={`/verify/${n.round}`}>verify night {n.round}</Link></>} · <a href={d.links.scrimmage}>paid runs on the explorer</a></span>
           </p>
         </div>
       </section>
@@ -216,7 +216,7 @@ export default async function Landing() {
 
       <section className="close" aria-labelledby="h-close">
         <h2 id="h-close">Seal yours before <em>midnight.</em></h2>
-        <p className="s-sub"><LiveClock round={d.tonight?.round ?? null} />{d.tonight?.commits != null ? ` · ${d.tonight.commits} account${d.tonight.commits === 1 ? "" : "s"} sealed so far` : ""}</p>
+        <p className="s-sub"><LiveClock round={d.tonight?.round ?? null} />{d.tonight?.commits != null ? ` · ${d.tonight.commits} ${d.testnet ? "testnet " : ""}account${d.tonight.commits === 1 ? "" : "s"} sealed so far` : ""}</p>
         <div className="s-ctas center">
           <Link href="/play" className="btn s-primary">Write tonight&apos;s orders</Link>
           <Link href="/pitch" className="btn s-ghost">Read the pitch deck</Link>
