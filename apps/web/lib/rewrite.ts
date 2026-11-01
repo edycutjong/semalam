@@ -17,8 +17,8 @@ export function hintOf(action: string, partnerAction: string | null, who: "you" 
   const me = ACTS.indexOf(action), them = ACTS.indexOf(partnerAction);
   if (me < 0 || them < 0) return "";
   const best = [0, 1, 2, 3].reduce((b, a) => (PAYOFF[a][them] > PAYOFF[b][them] ? a : b), 0), mine = PAYOFF[me][them];
-  if (PAYOFF[best][them] === mine) return `On that turn ${my} ${WORD[action]} was already the best reply to ${their} ${WORD[partnerAction]} (${signed(mine)} on the payoff table).`;
-  return `On that turn, against ${their} ${WORD[partnerAction]}: ${WORD[ACTS[best]]} pays ${signed(PAYOFF[best][them])} on the payoff table, ${my} ${WORD[action]} paid ${signed(mine)}.`;
+  if (PAYOFF[best][them] === mine) return `On that turn ${my} ${WORD[action]} was already the best reply to ${their} ${WORD[partnerAction]} (${signed(mine)} in the frozen payoff matrix).`;
+  return `On that turn, against ${their} ${WORD[partnerAction]}: ${WORD[ACTS[best]]} pays ${signed(PAYOFF[best][them])} (frozen payoff matrix), ${my} ${WORD[action]} paid ${signed(mine)}.`;
 }
 
 /** Last night's orders in the words its readback already used (the player confirmed them before sealing), with the rule

@@ -42,8 +42,8 @@ test("ritual: best is the best share of the field, delta compares the last two s
 test("rewrite hint quotes the frozen payoff table, never a typed number", () => {
   const ACTS = ["GATHER", "GUARD", "SHARE", "STEAL"];
   const s = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : "±0");
-  assert.equal(hintOf("SHARE", "STEAL"), `On that turn, against their steal: guard pays ${s(PAYOFF[1][3])} on the payoff table, your share paid ${s(PAYOFF[2][3])}.`);
-  assert.equal(hintOf("GUARD", "STEAL"), `On that turn your guard was already the best reply to their steal (${s(PAYOFF[1][3])} on the payoff table).`);
+  assert.equal(hintOf("SHARE", "STEAL"), `On that turn, against their steal: guard pays ${s(PAYOFF[1][3])} (frozen payoff matrix), your share paid ${s(PAYOFF[2][3])}.`);
+  assert.equal(hintOf("GUARD", "STEAL"), `On that turn your guard was already the best reply to their steal (${s(PAYOFF[1][3])} in the frozen payoff matrix).`);
   for (const a of ACTS) for (const b of ACTS) {
     const h = hintOf(a, b);
     const best = Math.max(...ACTS.map((_, i) => PAYOFF[i][ACTS.indexOf(b)]));

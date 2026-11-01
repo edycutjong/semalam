@@ -11,5 +11,5 @@ export function rankLine(ranking: Row[], id: string, players: number, agents: nu
   if (me.house) return `HOUSE · ${ordinal(me.rank)} of ${agents} agents`;
   if (me.operator) return `operator address (not a player) · ${ordinal(me.rank)} of ${agents} agents`;
   const ahead = ranking.filter((r) => !r.house && !r.operator && r.rank < me.rank).length;
-  return `${ordinal(ahead + 1)} of ${players} player${players === 1 ? "" : "s"} · ${ordinal(me.rank)} of ${agents} agents`;
+  return `${ordinal(ahead + 1)} of ${players} player${players === 1 ? "" : "s"} · ${ordinal(me.rank)} of ${agents} agents counting the house`;
 }
