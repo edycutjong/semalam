@@ -4,7 +4,7 @@ import path from "node:path";
 import type { Settled } from "@semalam/sim/round";
 import type { Policy } from "@semalam/policy";
 import { SEED_DELAY, closeTime } from "./clock";
-import { seedRoundAt, roundTimeOf } from "@semalam/beacon";
+import { seedRoundAt, roundTimeOf } from "@semalam/beacon/consts";
 
 export type Opponent = { id: string; label: string | null; house: boolean; rank: number; coins: number; policy: Policy };
 export type RoundArtifact = {
