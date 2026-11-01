@@ -8,8 +8,10 @@ const GLYPH: Record<string, string> = { GATHER: "▲", GUARD: "■", SHARE: "◆
 const COLOR: Record<string, string> = { GATHER: "#8FCB6B", GUARD: "#7C8CC4", SHARE: "#F2D16B", STEAL: "#E2543B" };
 
 /** Lamp row = the replay: one lamp per agent, brightness follows rank; the player's lamp is amber. 15 s, scrubbable. */
-export default function ReplayPlayer({ replays, mineId, houseIds, agents }: { replays: AgentRep[]; mineId?: string; houseIds: Set<string>; agents: number }) {
+export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPlay = false, mineLabel = "you" }: { replays: AgentRep[]; mineId?: string; houseIds: Set<string> | string[]; agents: number; autoPlay?: boolean; mineLabel?: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const box = useRef<HTMLElement>(null);
+  const house = useMemo(() => (houseIds instanceof Set ? houseIds : new Set(houseIds)), [houseIds]);
   const [ms, setMs] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -17,6 +19,13 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents }: { re
   const turns = replays[0]?.keyframes.at(-1)?.t ?? 300;
   const step = reduced ? 6 : 0;
   useEffect(() => { setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches); }, []);
+  useEffect(() => { // the landing plays it once, when most of it is on screen
+    const el = box.current;
+    if (!autoPlay || !el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { io.disconnect(); setPlaying(true); } }, { threshold: 0.45 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [autoPlay]);
   useEffect(() => {
     if (!playing || reduced) return;
     let raf = 0; const t0 = performance.now() - ms;
@@ -46,18 +55,18 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents }: { re
       const rad = isMine ? Math.max(7, base * 1.3) : base * (0.5 + 0.5 * bright);
       g.globalAlpha = isMine ? 1 : 0.25 + 0.75 * bright;
       if (isMine) { g.shadowColor = "#FFB547"; g.shadowBlur = 18; }
-      g.fillStyle = isMine ? "#FFB547" : houseIds.has(r.id.toLowerCase()) ? "#6c6280" : "#F2D16B";
+      g.fillStyle = isMine ? "#FFB547" : house.has(r.id.toLowerCase()) ? "#6c6280" : "#F2D16B";
       g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
       g.shadowBlur = 0;
     });
     g.globalAlpha = 1;
-  }, [idx, sorted, mineId, houseIds, agents]);
+  }, [idx, sorted, mineId, house, agents]);
 
   const f = mine?.keyframes[idx];
   const d = mine?.decisive;
   const showDecisive = d && f && f.t >= d.t;
   return (
-    <section aria-label="Replay">
+    <section aria-label="Replay" ref={box}>
       <canvas ref={canvas} className="lamps" role="img" aria-label={`Lamp row: ${replays.length} agents at turn ${f?.t ?? replays[0]?.keyframes[idx]?.t ?? 0}`} />
       <div className="row" style={{ margin: "12px 0" }}>
         <button type="button" className="primary" onClick={() => { if (reduced) return setMs((m) => (m >= DURATION ? 0 : Math.min(DURATION, m + DURATION / 5))); if (ms >= DURATION) setMs(0); setPlaying((p) => !p); }}>
@@ -84,7 +93,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents }: { re
         <span><span className="glyph" style={{ color: COLOR.GUARD }}>■</span> guard</span>
         <span><span className="glyph" style={{ color: COLOR.SHARE }}>◆</span> share</span>
         <span><span className="glyph" style={{ color: COLOR.STEAL }}>✕</span> steal</span>
-        <span>brighter lamp = higher rank · grey = house agent{mine ? " · amber = you" : ""}</span>
+        <span>brighter lamp = higher rank · grey = house agent{mine ? ` · amber = ${mineLabel}` : ""}</span>
       </div>
     </section>
   );

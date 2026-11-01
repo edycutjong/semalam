@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Bungee, Atkinson_Hyperlegible, Martian_Mono } from "next/font/google";
 import "./globals.css";
-import Nav from "@/components/Nav";
 
 const bungee = Bungee({ weight: "400", subsets: ["latin"], variable: "--f-bungee", display: "swap" });
 const atkinson = Atkinson_Hyperlegible({ weight: ["400", "700"], subsets: ["latin"], variable: "--f-atkinson", display: "swap" });
@@ -15,19 +14,12 @@ export const metadata = {
   twitter: { card: "summary_large_image" },
 };
 
+// Fonts + metadata only. The game pages get the nav and footer from app/(game)/layout.tsx; the landing (/) and the deck
+// (/pitch) draw their own full-bleed chrome.
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${bungee.variable} ${atkinson.variable} ${martian.variable}`}>
-      <body>
-        <div className="wrap">
-          <Nav />
-          <main>{children}</main>
-          <footer>
-            SEMALAM · orders are sealed to a public drand beacon and replayed by open code ·{" "}
-            <a href="/verify/1">verify a night</a>
-          </footer>
-        </div>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

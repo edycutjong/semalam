@@ -1,0 +1,21 @@
+{
+  "what": "real run of the bundled replay CLI against chain 46630 (testnet), stdout verbatim",
+  "at": "2026-11-01T04:39:59Z",
+  "machine": "macOS arm64 · Node 22.22.0",
+  "cmd": "node packages/cli/dist/semalam.mjs replay 2 --chain 46630",
+  "round": 2,
+  "chainId": 46630,
+  "exit": 0,
+  "wallSeconds": 4.1,
+  "stdout": [
+    "semalam 0.1.0 · replay round 2 · chain 46630 (testnet) (46630) · Orders 0x64a5…1145 · Results 0x38BB…9587",
+    "sim         semalam-sim/1 == on-chain SIM_VERSION ✓",
+    "house set   0x8530…0fbc == on-chain HOUSE_SET_HASH ✓",
+    "drand       round 33554312 = seedRound(2) ✓ · BLS signature ✓ (quicknet, pinned key)",
+    "commits     19 events · 19 admitted accounts · 0 over capacity",
+    "policies    19 ok · 0 void",
+    "players     19 (19 incl. 0 operator addresses; 3 listed) · agents 49 (30 house)",
+    "top 5       1. house-09 1164 · 2. 0xdCe3…b346 1094 · 3. 0x4d32…9A38 1089 · 4. 0x6c33…03FE 1086 · 5. house-07 1064",
+    "resultHash  0xeb730a0fd38a352d038c9e025593bdbd81d12c6072a669105214ea75a17e67b5  ==  Results.post 0xeb730a0fd38a352d038c9e025593bdbd81d12c6072a669105214ea75a17e67b5  ✓ MATCH"
+  ]
+}
