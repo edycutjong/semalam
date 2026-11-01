@@ -1,6 +1,7 @@
 // Screenshots + console-error check of every product page at 1280 and 375 px; fails on page errors or horizontal scroll.
 import { createRequire } from "node:module";
-const require = createRequire("/Users/edycu/Hackathon/_tools/DemoStudio/package.json");
+// puppeteer from this workspace, or from any install named by PUPPETEER_FROM=<path to its package.json>
+const require = createRequire(process.env.PUPPETEER_FROM ?? import.meta.url);
 const puppeteer = require("puppeteer");
 const [base = "http://localhost:3101", dir] = process.argv.slice(2);
 const paths = ["/", "/board", "/scrimmage", "/fidelity", "/playtest", "/round/1", "/verify/1"];

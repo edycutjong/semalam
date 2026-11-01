@@ -1,6 +1,7 @@
 // Interaction QA: byte-diff hover/focus check per element class + link status. usage: node e2e/hover.mjs <base>
 import { createRequire } from "node:module";
-const require = createRequire("/Users/edycu/Hackathon/_tools/DemoStudio/package.json");
+// puppeteer from this workspace, or from any install named by PUPPETEER_FROM=<path to its package.json>
+const require = createRequire(process.env.PUPPETEER_FROM ?? import.meta.url);
 const puppeteer = require("puppeteer");
 const base = process.argv[2] ?? "http://localhost:3101";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

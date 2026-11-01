@@ -112,7 +112,7 @@ async function main() {
   // a post is ~70k gas: warn while there is still room for these rounds plus three more nights, not after a post fails
   const [bal, gp] = wallet ? await Promise.all([pub.getBalance({ address: wallet.account.address }), pub.getGasPrice()]) : [0n, 0n];
   const need = 70_000n * gp * 2n * BigInt(todo.length + 3);
-  if (wallet && bal < need) log(`POSTER LOW: ${wallet!.account.address} holds ${bal} wei, needs ≥ ${need} for ${todo.length} post(s) + 3 nights — top it up from the deployer (HUMAN-TODO)`);
+  if (wallet && bal < need) log(`POSTER LOW: ${wallet!.account.address} holds ${bal} wei, needs ≥ ${need} for ${todo.length} post(s) + 3 nights — top it up from the deployer`);
   for (const round of todo) {
     // one bad round (RPC error, drand outage) must not stop the later ones in the same run
     try { await settleOne(round); } catch (e) { log(`round ${round}: FAILED — ${(e as Error).message.split("\n")[0]} (retried next run)`); }

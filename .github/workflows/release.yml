@@ -1,0 +1,97 @@
+name: release
+
+# Semantic version from Angular-convention commits, cut only after the CI/CD pipeline is green on main.
+#   fix: / perf:                      → patch   0.1.0 → 0.1.1
+#   feat:                             → minor   0.1.1 → 0.2.0
+#   feat!: / fix!: / BREAKING CHANGE: → major   0.2.0 → 1.0.0
+#   docs: chore: ci: test: refactor: style: build: → no release
+# The first release is v0.1.0 and covers the whole history before it.
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Compute the next version
+        id: ver
+        run: |
+          set -euo pipefail
+          LAST=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo "")
+          if [ -z "$LAST" ]; then
+            echo "No tag yet: first release v0.1.0"
+            { echo "next=v0.1.0"; echo "range="; echo "skip=false"; } >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          LOG=$(git log --format=%B "${LAST}..HEAD")
+          BUMP=none
+          echo "$LOG" | grep -qE '^[a-z]+(\(.+\))?!:|BREAKING CHANGE:' && BUMP=major
+          [ "$BUMP" = none ] && echo "$LOG" | grep -qE '^feat(\(.+\))?:' && BUMP=minor
+          [ "$BUMP" = none ] && echo "$LOG" | grep -qE '^(fix|perf)(\(.+\))?:' && BUMP=patch
+          if [ "$BUMP" = none ]; then
+            echo "No feat/fix/perf commits since $LAST — no release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          IFS=. read -r MA MI PA <<< "${LAST#v}"
+          case "$BUMP" in
+            major) MA=$((MA+1)); MI=0; PA=0 ;;
+            minor) MI=$((MI+1)); PA=0 ;;
+            patch) PA=$((PA+1)) ;;
+          esac
+          echo "Bump: $BUMP  $LAST -> v$MA.$MI.$PA"
+          { echo "next=v$MA.$MI.$PA"; echo "range=${LAST}..HEAD"; echo "skip=false"; } >> "$GITHUB_OUTPUT"
+
+      - name: Release notes from the commits
+        if: steps.ver.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          RANGE="${{ steps.ver.outputs.range }}"
+          section() { # $1 title, $2 regex
+            L=$(git log --format='%s (%h)' $RANGE | grep -E "$2" || true)
+            [ -n "$L" ] && { echo "### $1"; echo "$L" | sed 's/^/- /'; echo; } || true
+          }
+          {
+            echo "Live: https://semalam.edycu.dev · CI/CD run: ${{ github.event.workflow_run.html_url || 'manual' }}"
+            echo
+            section "Breaking" '^[a-z]+(\(.+\))?!:'
+            section "Features" '^feat(\(.+\))?:'
+            section "Fixes" '^fix(\(.+\))?:'
+            section "Performance" '^perf(\(.+\))?:'
+            if [ -z "$RANGE" ]; then
+              echo "### Everything up to the first release"
+              git log --format='- %s (%h)' | grep -vE '^- (feat|fix|perf)(\(.+\))?!?:' || true
+            else
+              section "Other changes" '^(docs|chore|ci|test|refactor|style|build)(\(.+\))?:'
+            fi
+          } > notes.md
+          cat notes.md
+
+      - name: Tag and publish the GitHub release
+        if: steps.ver.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT: ${{ steps.ver.outputs.next }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$NEXT" -m "$NEXT"
+          git push origin "$NEXT"
+          gh release create "$NEXT" --title "SEMALAM $NEXT" --notes-file notes.md --verify-tag --latest
