@@ -1,0 +1,226 @@
+{
+ "what": "persona-bot commits on chain 46630 (internal QA, not users)",
+ "night": 1,
+ "via": "local relayer key calling Orders.commitBySig (same call as /api/relay/commit)",
+ "rounds": [
+  3
+ ],
+ "at": "2026-11-01T14:41:45.597Z",
+ "commits": [
+  {
+   "id": "p01",
+   "account": "0x83cE8FF96F7Dbc8B911cA034749906c230831993",
+   "round": 3,
+   "entered": true,
+   "tx": "0xdfc4c22e13960b712c1e217e32fa1ca0f9fa3057103efae023d61f75b4084e18",
+   "policyHash": "0xe0d9b66c3fab03acfd5c20759b645945c94424df3ed2e3ee97fe42befbcc8b54",
+   "sealedBytes": 538,
+   "status": 0
+  },
+  {
+   "id": "p02",
+   "account": "0x0ca9259767C8E5A8697947c8cA08028E7342b131",
+   "round": 3,
+   "entered": true,
+   "tx": "0x309d49f2f99147854ed8c5a5697fd751ccbfcd1dd37892ebc8d7a1124a2603bf",
+   "policyHash": "0xc75a4dd5ffb2ae85e374dec12a6702a2ce7e9e54d99767be69ff8f9c208afce4",
+   "sealedBytes": 442,
+   "status": 0
+  },
+  {
+   "id": "p03",
+   "account": "0xcFad2c61b227831E2c2bdD496f568738D216Da8c",
+   "round": 3,
+   "entered": true,
+   "tx": "0xd0f35d01d55956a32ba718766ab34caa9f488921785f85a050629ca0fab786c1",
+   "policyHash": "0x22996806c8a1eb93b59911845a21da96beffa975b17d75efd7b59219aa009010",
+   "sealedBytes": 442,
+   "status": 0
+  },
+  {
+   "id": "p04",
+   "account": "0xCa24f655FC6E1ef19C6F44dA08c6077DeD72971B",
+   "round": 3,
+   "entered": true,
+   "tx": "0xacf0f0f8e2576e641ee20fd6ae1a615412fdea3223e630de04e8bdd33f912b25",
+   "policyHash": "0xf6b3e0ca418bafa81d5ef84324e51285291d84a3fdc2b960fcefc2b993122f94",
+   "sealedBytes": 442,
+   "status": 0
+  },
+  {
+   "id": "p05",
+   "account": "0x56f87670325F303457984D83385a15039c0c16e6",
+   "round": 3,
+   "entered": true,
+   "tx": "0x0a6ba4a96212ddc5b293e59ca3b62472946b61236f502fd463375b2856ad5b12",
+   "policyHash": "0xc34a03f7962fbb18d75b00cb4cd6bade71a0cf6fb8db824cf803f3b94eec3b77",
+   "sealedBytes": 543,
+   "status": 0
+  },
+  {
+   "id": "p06",
+   "account": "0xA6467D8Ce8EfD0034526F048D2c740223B60b0C3",
+   "round": 3,
+   "entered": true,
+   "tx": "0xb8d94b989e49600a59e0b4490268be35c46f4c7298ed8dd6a75dd72732a71d8f",
+   "policyHash": "0x1641f4d7cedde13b264a0475e5edda8ebde5b5faeea740602259de0bf3dd6ec0",
+   "sealedBytes": 453,
+   "status": 0
+  },
+  {
+   "id": "p07",
+   "account": "0xA0ef9b76c900A9b288664b1E943b92101edcE928",
+   "round": 3,
+   "entered": true,
+   "tx": "0x659e5465b17e9d3aaaeaecb15774251dfdc4733b6446523a3b11f8c831e1045c",
+   "policyHash": "0xe09c1411e3da84078e00fcd6ddd0e4782e4d7dbee8cb8cd46625b08d574689e5",
+   "sealedBytes": 487,
+   "status": 0
+  },
+  {
+   "id": "p08",
+   "account": "0xcE4CD7d5cB650Da5C72458a69061b5c22B053016",
+   "round": 3,
+   "entered": true,
+   "tx": "0x2f3390e2ee93d86dd334352df86e9e01d1b53aa9b7e3d15d06c8e9a3ec2e3f4e",
+   "policyHash": "0xa1d419c248e812d72655d952fa233ef811abcf9f9e8b900d683203ac3293c6ae",
+   "sealedBytes": 514,
+   "status": 0
+  },
+  {
+   "id": "p09",
+   "account": "0x73D5dd6F4B003465A657EC7a8F3865f495B1b904",
+   "round": 3,
+   "entered": true,
+   "tx": "0x69513a8a7effe75887dc1cb8ccd2a22bd3365a600e6613890f9f16083816de9f",
+   "policyHash": "0x1660a1b926705c87c3e38f187cf496f25f975ab480c9f1e7be857454c6d7504e",
+   "sealedBytes": 519,
+   "status": 0
+  },
+  {
+   "id": "p10",
+   "account": "0x68BaAB5a58FB517E51B0dB9BE8b0179062ded42F",
+   "round": 3,
+   "entered": true,
+   "tx": "0xaa732ec3baeb21fdc7bcbb60a73a0f5963afacb653e014b09c89b7e5ad727338",
+   "policyHash": "0x437cc7a4549e871685b245c923651a8b916051567137db3df7da6dcbf46047c4",
+   "sealedBytes": 487,
+   "status": 0
+  },
+  {
+   "id": "p11",
+   "account": "0x620E5705eea2a95206f09205eC6c62cf74D1eB70",
+   "round": 3,
+   "entered": true,
+   "tx": "0x67f51de71ea26fffacbcc85c881d2bf9f17a0cd16f20169df1dad6f10d2773c0",
+   "policyHash": "0xb409eeb2f6664410d8d462b4e47eedfa57337fe5d8cca6aee62c1b4501ba298f",
+   "sealedBytes": 492,
+   "status": 0
+  },
+  {
+   "id": "p12",
+   "account": "0x14Cff203B5b999a7130484DBD17a644018C6D5d4",
+   "round": 3,
+   "entered": true,
+   "tx": "0x656b839e406d50d1c5fb313a2cbe06c55f8fe92b257f8a4b5d1d99d247dc24e8",
+   "policyHash": "0x0560ffc72e7ba08a8b78e790f18d7c1b60d96687e486b329fd573756449a32b0",
+   "sealedBytes": 531,
+   "status": 0
+  },
+  {
+   "id": "p13",
+   "account": "0xa5d542604Be566CD127341e521c4fEad27169959",
+   "round": 3,
+   "entered": true,
+   "tx": "0x9237c5c33c7b68500623dbb32560d67b6858a63ff85f369339791219561b20c8",
+   "policyHash": "0x5104054480a087e7c37078925a87b7c44df98e32c7489e6bf0355102be88d75f",
+   "sealedBytes": 530,
+   "status": 0
+  },
+  {
+   "id": "p14",
+   "account": "0xf36b3d9ABb60285cb32ACEb532855E19946f7795",
+   "round": 3,
+   "entered": true,
+   "tx": "0xbc140c48ec3917ce8dd15cd591529e4075311b3c629b51df19142b173dd3422b",
+   "policyHash": "0xd88ac0304e87aa97b4076ab07356e73e1fe9e53670d18ae47edab77ad95e0a32",
+   "sealedBytes": 535,
+   "status": 0
+  },
+  {
+   "id": "p15",
+   "account": "0xc52511e76d6ef7f1EB6C3A4a4dC31E4319E681E7",
+   "round": 3,
+   "entered": true,
+   "tx": "0x4da4e482ecd6e01bd37b185f3ff9f7c73c9027946a1a9d88f220ec2dc67039e9",
+   "policyHash": "0x241b7d61a27980e2452563f80b6bb7a60b26934d4bec9f2df5f701d022a7500a",
+   "sealedBytes": 571,
+   "status": 0
+  },
+  {
+   "id": "p16",
+   "entered": false,
+   "why": "refusal: contradictory orders"
+  },
+  {
+   "id": "p17",
+   "entered": false,
+   "why": "refusal: cannot fit 12 distinct turn rules into the allowed schema"
+  },
+  {
+   "id": "p18",
+   "account": "0xDf9aD4ac3170e7D42FB3BFA1a7679b02cA1134b5",
+   "round": 3,
+   "entered": true,
+   "tx": "0xadbd0e314d8a501afa9ea959eb015f1ba987d4125723e6cdd55988e81ced6600",
+   "policyHash": "0xe31a736da7237baa5cbae67c21d3256c0e67cdcf28ffe19aa22aa5267c24279d",
+   "sealedBytes": 534,
+   "status": 0
+  },
+  {
+   "id": "p19",
+   "account": "0xbEd61D5AC250A78Fa8b4dD4215bA5B435738AdA9",
+   "round": 3,
+   "entered": true,
+   "tx": "0xc7fad788553463c7cbf290b0c95e26e2df8cbe4158974d2aad6b6a6406392bc2",
+   "policyHash": "0x028e64a08e088a2466f8949d5dd84ed80006712b280fba8dd72ab73c180381d3",
+   "sealedBytes": 490,
+   "status": 0
+  },
+  {
+   "id": "p20",
+   "account": "0x9eB69609b4611CBed23A5E35d5175f15e032c47c",
+   "round": 3,
+   "entered": true,
+   "tx": "0x9a999393d586ac8fac77deed3c8a3cb6603353e7dc527b680cab8803de7b7ff6",
+   "policyHash": "0x326eb7e986d2c34e7c32957e17899bd8e2532529de74abb737e8201ccc597bd3",
+   "sealedBytes": 528,
+   "status": 0
+  },
+  {
+   "id": "i01",
+   "entered": false,
+   "why": "refusal: cannot comply with request"
+  },
+  {
+   "id": "i02",
+   "entered": false,
+   "why": "refusal: User request violates policy"
+  },
+  {
+   "id": "i03",
+   "entered": false,
+   "why": "refusal: irrelevant content"
+  },
+  {
+   "id": "i04",
+   "entered": false,
+   "why": "refusal: request not about stall policy"
+  },
+  {
+   "id": "i05",
+   "entered": false,
+   "why": "refusal: request violates policy constraints"
+  }
+ ]
+}
