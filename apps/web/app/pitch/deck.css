@@ -217,6 +217,7 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .wheel .split { display: flex; margin: 12px 0 0; height: 36px; border-radius: 6px; overflow: hidden; font: normal 400 16px/36px var(--font-data); }
 .deck .wheel .split i { font-style: normal; }
 .deck .wheel .split i:first-child { flex: 4; color: var(--ink); background: radial-gradient(120% 160% at 30% 50%, #463029 0, #22171b 60%, #140e14 100%); box-shadow: inset -14px 0 18px -10px rgba(255, 110, 50, .6); }
+.deck .wheel .per { display: block; margin-top: 6px; font: 400 15px var(--font-data); color: #4a3d6b; }
 .deck .wheel .split i:last-child { flex: 1; color: var(--paper-ink); background: #d9c49a; }
 .deck .wheel .nodes li.n3 { background: var(--paper); color: var(--paper-ink); border-color: var(--paper); } .deck .wheel .nodes li.n3 b { color: var(--paper-ink); }
 .deck .wheel .hub { position: absolute; left: 50%; top: 50%; width: 270px; margin: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
@@ -255,6 +256,8 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .ask h2 { font-size: 104px; }
 .deck .url { font: 400 40px var(--font-data); color: var(--ink); margin: 26px 0 0; }
 .deck .url.small { font-size: 26px; color: var(--muted); margin-top: 14px; }
+.deck .ask-lamps { position: absolute; left: 0; right: 0; bottom: 96px; opacity: .9; }
+.deck .ask { position: relative; z-index: 1; margin: 0 0 auto; padding-top: 40px; }
 .deck .qr { margin: 0; background: var(--paper); padding: 36px; border-radius: 18px; transform: rotate(2deg); box-shadow: 0 30px 60px rgba(0, 0, 0, .5); }
 .deck .qr svg { display: block; width: 100%; height: auto; }
 .deck .qr figcaption { font: 400 19px var(--font-data); color: var(--paper-ink); text-align: center; margin-top: 18px; }

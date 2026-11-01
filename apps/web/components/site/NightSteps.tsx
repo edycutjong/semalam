@@ -123,7 +123,7 @@ export default function NightSteps({ d, legend }: { d: Data; legend: string }) {
               {s.strip.map((c) => (
                 <li key={c.t} className={c.theirs === "STEAL" ? "hit" : ""}>
                   <p className="data">turn {c.t} · {c.who}</p>
-                  <p className="acts"><Glyph a={c.theirs} /><b>{c.theirs}</b><span>vs</span><Glyph a={c.mine} /><b>{c.mine}</b><em className={c.delta < 0 ? "neg" : "pos"}>{signed(c.delta)}</em></p>
+                  <p className="acts"><Glyph a={c.mine} /><b>{c.mine}</b><span>vs</span><Glyph a={c.theirs} /><b>{c.theirs}</b><em className={c.delta < 0 ? "neg" : "pos"}>{signed(c.delta)}</em></p>
                   <p className="note data">{c.note}</p>
                 </li>
               ))}
