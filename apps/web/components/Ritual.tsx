@@ -32,7 +32,7 @@ export default function Ritual({ account, round, sealedTonight, onRitual }: { ac
   const r = nights && round >= 1 ? ritualOf(nights, sealedTonight ? [...local, round] : local, round) : null;
   useEffect(() => { if (r) onRitual?.(r); }, [r?.streak, r?.played.length]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!r || !r.played.length) return null;
-  const played = new Set(r.played), from = Math.max(1, round - 6);
+  const played = new Set(r.played), from = Math.max(r.played[0], round - 6); // the string starts at your first sealed night
   const lamps = Array.from({ length: round - from + 1 }, (_, i) => from + i);
   return (
     <div className="ritual" aria-label="Your nights">
@@ -44,9 +44,9 @@ export default function Ritual({ account, round, sealedTonight, onRitual }: { ac
         })}
       </ol>
       <p className="data">
-        {r.streak >= 2 ? `${r.streak} nights in a row` : `${r.played.length} night${r.played.length === 1 ? "" : "s"} played`}
+        {r.streak >= 2 ? `${r.streak} nights in a row` : `${r.played.length} night${r.played.length === 1 ? "" : "s"} sealed`}
         {r.best && <> · best <Link href={`/round/${r.best.round}`}>{ordinal(r.best.playerRank!)} of {r.best.players} player{r.best.players === 1 ? "" : "s"}</Link> (round {r.best.round})</>}
-        {r.last && r.prev && r.delta !== null && <> · round {r.last.round}: {ordinal(r.last.playerRank!)} of {r.last.players} {r.delta > 0 ? `▲${r.delta}` : r.delta < 0 ? `▼${-r.delta}` : "="} vs round {r.prev.round}</>}
+        {r.last && r.prev && <> · round {r.last.round}: {ordinal(r.last.playerRank!)} of {r.last.players} (round {r.prev.round}: {ordinal(r.prev.playerRank!)} of {r.prev.players})</>}
       </p>
     </div>
   );

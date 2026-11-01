@@ -1,7 +1,8 @@
 // Sound, synthesized in the browser with Web Audio — no audio files. Nothing plays before a user gesture; music is off
 // by default; effects switch on with the first interaction; both choices are remembered per viewer (localStorage).
-// The music is a generative night-market loop: a 16-beat gamelan cycle (slendro saron + peking, kenong, gong) over a
-// low pad and crickets, so it never repeats audibly and costs zero bytes to download.
+// The music is a night-market loop built from three 16-beat gamelan cycles (slendro saron + peking, kenong, gong) over a
+// low pad and crickets; every cycle is picked and varied at random (dropped notes, ornaments, peking doubling), so it
+// rarely plays the same way twice, and it costs zero bytes to download.
 import { lsGet, lsSet } from "./ls";
 
 export type SoundPrefs = { sfx: boolean; music: boolean };
@@ -38,6 +39,8 @@ export function unlockSound(): AudioContext | null {
   for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
   document.addEventListener("visibilitychange", onVisibility);
   if (soundPrefs().music) startMusic();
+  ctx.onstatechange = () => window.dispatchEvent(new Event("semalam:sound"));
+  window.dispatchEvent(new Event("semalam:sound"));
   return ctx;
 }
 export const soundReady = () => Boolean(ctx && ctx.state === "running");
@@ -113,6 +116,26 @@ export const sfx = {
     bp.connect(p ?? out);
     noise(t, 0.34, bp);
   },
+  /** a share reaching the followed lamp: one soft high bell */
+  pling() {
+    if (!live()) return;
+    const t = ctx!.currentTime, f = 1318.5 * (Math.random() < 0.5 ? 1 : 1.1487);
+    tone("sine", f, t, t + 0.5, env(t, 0.06, 0.003, 0.4, pan(0.15, sfxBus)));
+  },
+  /** a UI press (chips, small controls): a short, dry tick — not the coin */
+  click() {
+    if (!live()) return;
+    const t = ctx!.currentTime;
+    const bp = ctx!.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1800; bp.Q.value = 2.5;
+    bp.connect(env(t, 0.18, 0.001, 0.02, sfxBus));
+    noise(t, 0.03, bp);
+  },
+  /** the round closing at 00:00 WIB: a low bronze bell */
+  bell() {
+    if (!live()) return;
+    const t = ctx!.currentTime, out = env(t, 0.32, 0.01, 3.2, sfxBus);
+    tone("sine", 220, t, t + 3.4, out); tone("sine", 221.4, t, t + 3.4, gain(0.7, out)); tone("sine", 220 * 2.76, t, t + 1.2, env(t, 0.08, 0.004, 1, out));
+  },
   /** paper rustle when a ticket is read back: crackly high noise */
   rustle() {
     if (!live()) return;
@@ -130,14 +153,15 @@ export const sfx = {
 const BEAT = 60 / 66; // 66 BPM, one balungan note per beat
 const SLENDRO: Record<number, number> = { 1: 1, 2: 1.1487, 3: 1.3195, 5: 1.5157, 6: 1.7411 }; // ~240-cent steps
 const BASE = 277.18; // the saron's degree 1
-// two 16-beat gongan; 0 = rest. Negative = the low octave.
+// three 16-beat gongan; 0 = rest. Negative = the low octave.
 const CYCLES = [
   [2, 1, 2, -6, 2, 1, 2, -6, 3, 5, 6, 5, 3, 2, 1, 2],
   [5, 6, 5, 3, 2, 1, 2, 3, 5, 3, 2, 1, 2, 3, 2, 1],
   [0, 3, 0, 2, 0, 3, 5, 6, 0, 5, 0, 3, 2, 1, 2, -6],
 ];
 const hz = (d: number) => (d < 0 ? BASE / 2 : BASE) * SLENDRO[Math.abs(d)];
-let timer: ReturnType<typeof setInterval> | null = null, nextAt = 0, beat = 0, cycle = 0, pad: { stop: () => void } | null = null, seed = 7;
+let timer: ReturnType<typeof setInterval> | null = null, nextAt = 0, beat = 0, cycle = 0, pat = 0, pad: { stop: () => void } | null = null;
+let seed = (Date.now() & 0x7fffffff) || 7; // a different evening every visit
 const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 
 /** a struck bronze bar: inharmonic bar modes plus a slightly detuned twin for the gamelan shimmer (ombak) */
@@ -169,14 +193,15 @@ function startPad() {
 function schedule() {
   if (!ctx) return;
   while (nextAt < ctx.currentTime + 0.45) {
-    const pat = CYCLES[cycle % CYCLES.length], d = pat[beat], t = nextAt + (rnd() - 0.5) * 0.012;
-    if (d) bar(t, hz(d), 0.16 + rnd() * 0.05, 1.9, -0.25);
+    const d = CYCLES[pat][beat], t = nextAt + (rnd() - 0.5) * 0.012, keep = beat % 4 === 3 || rnd() > 0.12; // drop ~1 in 8 off-beat notes
+    if (d && keep) bar(t, hz(d), 0.16 + rnd() * 0.05, 1.9, -0.25);
+    if (d && keep && rnd() < 0.1) bar(t + BEAT * 0.5, hz(d) * SLENDRO[2], 0.07, 1.1, -0.1); // a passing ornament
     if (d && cycle % 2 === 1) { bar(t + BEAT / 2, hz(d) * 2, 0.045 + rnd() * 0.02, 0.9, 0.35); } // peking doubles every other cycle
     if (beat % 4 === 3) bar(t, hz(beat === 15 ? 1 : 5) / 2, 0.1, 3.2, 0.1); // kenong marks each quarter
     if (beat === 15) gong(t + BEAT * 0.98);
     if (rnd() < 0.35) crickets(t + rnd() * BEAT);
     nextAt += BEAT;
-    if (++beat === 16) { beat = 0; cycle++; }
+    if (++beat === 16) { beat = 0; cycle++; pat = rnd() < 0.5 ? pat : Math.floor(rnd() * CYCLES.length); } // stay or move on
   }
 }
 function startMusic() {
@@ -196,6 +221,7 @@ function stopMusic() {
 }
 function onVisibility() {
   if (!ctx) return;
-  if (document.hidden) stopMusic();
-  else if (soundPrefs().music) startMusic();
+  if (document.hidden) { stopMusic(); return; }
+  if (ctx.state !== "running") void ctx.resume().catch(() => { /* needs the next gesture */ }); // iOS suspends on background
+  if (soundPrefs().music) startMusic();
 }

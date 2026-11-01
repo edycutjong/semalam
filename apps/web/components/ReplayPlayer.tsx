@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { duckMusic, sfx } from "@/lib/sound";
+import { duckMusic, sfx, soundPrefs, soundReady, unlockSound } from "@/lib/sound";
 
 export type Frame = { t: number; coins: number; rank: number };
 export type AgentRep = { id: string; keyframes: Frame[]; decisive: { t: number; action: string; partner: string | null; partnerAction: string | null; delta: number; why: string } };
@@ -62,6 +62,13 @@ function seg(M: Model, p: number) {
   let lo = 0, hi = M.J;
   while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (M.samples[mid] <= p) lo = mid; else hi = mid - 1; }
   return Math.max(0, Math.min(Math.max(0, M.J - 1), lo));
+}
+/** the last sample at or before turn p, up to the final one (captions: never an interpolated value shown as data) */
+function atOrBefore(M: Model, p: number) {
+  if (M.act) return Math.max(0, Math.min(M.J, Math.floor(p)));
+  let lo = 0, hi = M.J;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (M.samples[mid] <= p) lo = mid; else hi = mid - 1; }
+  return lo;
 }
 /** time warp: every turn gets equal time except around the decisive turn, which plays in slow motion */
 function warpOf(T: number, d: number | null) {
@@ -129,6 +136,12 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
   const [playing, setPlaying] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [say, setSay] = useState("");
+  const [mute, setMute] = useState(false); // effects are on but this page has not had a gesture yet
+  useEffect(() => {
+    const check = () => setMute(soundPrefs().sfx && !soundReady());
+    check(); window.addEventListener("semalam:sound", check);
+    return () => window.removeEventListener("semalam:sound", check);
+  }, []);
   const S = useRef({ pos: 0, target: 0, clock: 0, playing: false, last: 0, raf: 0, ignite: -1, fade: null as HTMLCanvasElement | null, fadeAt: 0, shown: -1, heard: 0 });
   const eng = useRef<{ kick: () => void; snap: () => HTMLCanvasElement | null } | null>(null);
   const endRef = useRef(onEnd); endRef.current = onEnd;
@@ -190,7 +203,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
       g!.stroke();
       g!.lineWidth = 0.8; g!.beginPath();
       const j = seg(M, p), j1 = Math.min(M.J, j + 1), s0 = M.samples[j], s1 = M.samples[j1];
-      const k0 = s1 > s0 ? clamp01((p - s0) / (s1 - s0)) : 0, e = M.act ? ease(k0) : k0 * k0 * (3 - 2 * k0), mc = lerp(M.maxc[j], M.maxc[j1], e) || 1;
+      const k0 = s1 > s0 ? clamp01((p - s0) / (s1 - s0)) : 0, e = M.act ? ease(k0) : k0, mc = lerp(M.maxc[j], M.maxc[j1], e) || 1; // keyframes (10 turns apart) move linearly: no pulse every 10 turns
       for (let i = 0; i < n; i++) {
         const cn = lerp(M.coins[j * n + i], M.coins[j1 * n + i], e);
         R[i] = G.base * (0.45 + 0.55 * Math.sqrt(Math.max(0, cn) / mc)) * (i === fi ? 1.25 : 1);
@@ -233,8 +246,9 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
           const gy = (y + r + 20 - py) * z + h / 2 < h - 2 ? y + r + 16 : dy - 16; // below the lamp, or above the swing when the edge is near
           for (const [str, col] of parts) { g!.strokeText(str, gx, gy); g!.fillStyle = col; g!.fillText(str, gx, gy); gx += g!.measureText(str).width; }
         } else if (tag) {
+          const ty = (y + r + 18 - py) * z + h / 2 < h - 2 ? y + r + 15 : y - r - 9; // keep the tag inside the frame
           g!.globalAlpha = 0.85 * (1 - b) * dawn; g!.textAlign = "center"; g!.font = `400 10px ${fam}`; g!.lineJoin = "round"; g!.strokeStyle = "#150F27"; g!.lineWidth = 3;
-          g!.strokeText(tag, x, y + r + 15); g!.fillStyle = mine ? AMBER : PAPER; g!.fillText(tag, x, y + r + 15);
+          g!.strokeText(tag, x, ty); g!.fillStyle = mine ? AMBER : PAPER; g!.fillText(tag, x, ty);
         }
       }
       g!.globalAlpha = 1;
@@ -258,8 +272,9 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
       for (let k = prev + 1; k <= K; k++) {
         if (k === dT && d) { setSay(d.why); if (d.action === "STEAL" || d.partnerAction === "STEAL") sfx.whoosh(); else sfx.chime(0.25); continue; }
         if (M.act && M.partner) {
-          const q = M.partner[(k - 1) * M.n + fi], stolen = q >= 0 && M.act[(k - 1) * M.n + q] === 3;
-          if (stolen && performance.now() - s.heard > 380) { s.heard = performance.now(); sfx.whoosh(-1); }
+          const q = M.partner[(k - 1) * M.n + fi], pa = q >= 0 ? M.act[(k - 1) * M.n + q] : -1, now = performance.now();
+          if (pa === 3 && now - s.heard > 380) { s.heard = now; sfx.whoosh(-1); } // a neighbour steals from the followed lamp
+          else if (pa === 2 && now - s.heard > 420) { s.heard = now; sfx.pling(); } // a neighbour shares with it
           else if (M.coins[k * M.n + fi] > M.coins[(k - 1) * M.n + fi]) sfx.tick();
         } else if (M.samples.includes(k)) { const jj = M.samples.indexOf(k); if (jj > 0 && M.coins[jj * M.n + fi] > M.coins[(jj - 1) * M.n + fi]) sfx.tick(); }
       }
@@ -317,7 +332,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
   }, [autoPlay, cum]);
 
   // caption numbers: the exact turn with a trace, else the last stored keyframe at or before it (labelled with its turn)
-  const cj = turn <= 0 ? 0 : M.act ? Math.min(M.J, turn) : seg(M, turn + 1e-6);
+  const cj = turn <= 0 ? 0 : atOrBefore(M, turn + 1e-6);
   const shownT = M.act ? turn : cj > 0 ? M.samples[cj] : 0;
   const fr = fi >= 0 && cj > 0 ? { rank: M.rank[cj * M.n + fi], coins: M.coins[cj * M.n + fi] } : null;
   const showDecisive = d && dT != null && turn >= dT;
@@ -332,6 +347,11 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
         <input type="range" min={0} max={T} value={Math.min(T, turn)} step={reduced ? T / 5 : 1} aria-label="Scrub the replay" aria-valuetext={`turn ${shownT} of ${T}`}
           onChange={(e) => stepTo(Number(e.target.value))} style={{ flex: 1, minWidth: 140 }} />
         <span className="data">turn {shownT}/{T}</span>
+        {mute && (
+          <button type="button" className="chip snd-hint" onClick={() => { unlockSound(); setMute(false); if (turn >= T && fi >= 0) sfx.chime(1 - (M.rank[M.J * M.n + fi] - 1) / Math.max(1, agents - 1), 0.05); }}>
+            ♪ tap for sound
+          </button>
+        )}
       </div>
       <div className="caption">
         {focus ? (
@@ -340,7 +360,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
             {showDecisive && d && (
               <p style={{ margin: "6px 0 0" }}>
                 <span className="glyph" style={{ color: COLOR[d.action] }}>{GLYPH[d.action]}</span> {d.why}
-                {d.partner ? <span className="muted"> · neighbour {d.partner.slice(0, 6)}…{d.partner.slice(-4)}</span> : null}
+                {d.partner ? <span className="muted"> · neighbour {house.has(d.partner.toLowerCase()) ? "a house agent" : `${d.partner.slice(0, 6)}…${d.partner.slice(-4)}`}</span> : null}
               </p>
             )}
           </>
@@ -352,7 +372,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
         <span><span className="glyph" style={{ color: COLOR.GUARD }}>■</span> guard</span>
         <span><span className="glyph" style={{ color: COLOR.SHARE }}>◆</span> share</span>
         <span><span className="glyph" style={{ color: COLOR.STEAL }}>✕</span> steal</span>
-        <span>brighter lamp = higher rank · bigger = more coins · grey = house agent{mine ? ` · amber = ${mineLabel}` : ""}{M.act ? " · arcs = this turn's steals (red) and shares (yellow)" : ""}</span>
+        <span>brighter lamp = higher rank (the followed lamp stays lit) · bigger = more coins · grey = house agent{mine ? ` · amber = ${mineLabel}` : ""}{M.act && !reduced ? " · arcs = this turn's steals (red) and shares (yellow); busy turns show a sample, the followed lamp's always" : ""}</span>
       </div>
     </section>
   );

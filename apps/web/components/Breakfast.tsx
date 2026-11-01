@@ -18,6 +18,7 @@ import { MAX_VARIANTS, editedPolicy } from "@/lib/whatif";
 import { status, type StatusJson } from "@/lib/commit";
 import { REWRITE_KEY, hintOf, ordersText, type Rewrite } from "@/lib/rewrite";
 import { sfx } from "@/lib/sound";
+import { isQA } from "@/lib/qa";
 
 export type BreakfastData = {
   round: number; resultHash: string; drandRound: number; randomness: string; policySetHash: string; houseSetHash: string;
@@ -55,9 +56,11 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
   const [variants, setVariants] = useState<{ off: number[]; rank: number; coins: number }[]>([]);
   const [st, setSt] = useState<StatusJson | null>(null);
   const [streak, setStreak] = useState(0);
+  const [own, setOwn] = useState(""); // this browser's own address (its commit or its key) — never a typed one
   useEffect(() => {
     const saved = lsGet<{ account?: string } | null>(`semalam.committed.${d.round}`, null);
-    setAddr(saved?.account ?? restoreSigner()?.address ?? "");
+    const a = saved?.account ?? restoreSigner()?.address ?? "";
+    setOwn(a); setAddr(a);
   }, [d.round]);
   const valid = /^0x[0-9a-fA-F]{40}$/.test(addr);
   useEffect(() => { // tonight's round and close, for the countdown and the "sealed tonight" lamp
@@ -112,31 +115,51 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
     lsSet(REWRITE_KEY, rw);
     router.push("/play");
   }
+  const isOwn = Boolean(own) && addr.toLowerCase() === own.toLowerCase();
+  const qa = d.ranking.filter((r) => !r.house && !r.operator && isQA(r.id)).length;
   const tonight = st && st.round > 0 && st.round > d.round ? st : null;
   const sealedTonight = Boolean(tonight && valid && tonight.commits.length > 0);
 
   return (
-    <div className="grid2">
-      <section aria-label="Your night">
+    <div className="breakfast">
+      <section className="b-head" aria-label="Your night">
         <div className="eyebrow">Breakfast · round {d.round}</div>
-        <h1>{mine ? "Your night" : "The night"}</h1>
-        {line ? <RankReveal line={line} from={mine && !mine.house && !mine.operator ? d.players : 0} /> : <p className="lead">{d.players} player{d.players === 1 ? "" : "s"} and {d.agents - d.players} house/operator agents played. {d.players === 0 ? "A house-only night — no player commits were admitted." : ""}</p>}
-        {valid && st && <Ritual account={addr} round={Math.max(st.round, d.round + 1)} sealedTonight={sealedTonight} onRitual={(r) => setStreak(r.streak)} />}
+        <h1>{mine ? (isOwn ? "Your night" : "Their night") : "The night"}</h1>
+        {line ? <RankReveal line={line} from={mine && !mine.house && !mine.operator ? d.players : 0} /> : (
+          <p className="lead">{d.players} player account{d.players === 1 ? "" : "s"}{qa ? ` (${qa === d.players ? "all" : qa} our own QA runs, labelled — not users)` : ""} and {d.agents - d.players} house/operator agents played. {d.players === 0 ? "A house-only night — no player commits were admitted." : ""}</p>
+        )}
+        {isOwn && valid && st && <Ritual account={addr} round={Math.max(st.round, d.round + 1)} sealedTonight={sealedTonight} onRitual={(r) => setStreak(r.streak)} />}
         {!mine && (
           <div>
-            <label htmlFor="who">Find your agent by address</label>
+            <label htmlFor="who">Find an agent by address</label>
             <div className="row"><input id="who" type="text" value={typed} placeholder="0x…" onChange={(e) => setTyped(e.target.value)} style={{ flex: 1, minWidth: 220, fontSize: 16 }} />
               <button type="button" onClick={() => setAddr(typed.trim())} disabled={!/^0x[0-9a-fA-F]{40}$/.test(typed.trim())}>Show</button></div>
             {addr && !mine && <p className="note">No agent with that address played round {d.round} (no commit, void, or over capacity).</p>}
           </div>
         )}
+      </section>
+      <section className="b-market" aria-label="The market">
+        <ReplayPlayer replays={d.replays} mineId={mine?.id} houseIds={houseIds} agents={d.agents} trace={trace} autoPlay={baseline !== "checking"} mineLabel={isOwn ? "you" : "that agent"} />
+        {mine && myPolicy && dd && (
+          <div className="card decisive" aria-label={isOwn ? "Your decisive turn" : "Their decisive turn"}>
+            <div className="eyebrow">{isOwn ? "Your" : "Their"} decisive turn · {dd.t}</div>
+            <p style={{ margin: "0 0 6px" }}>{dd.why}</p>
+            <p className="muted" style={{ margin: isOwn ? "0 0 12px" : 0, fontSize: 16 }}>{hintOf(dd.action, dd.partnerAction)}</p>
+            {isOwn && <button type="button" className="primary" onClick={rewriteFromHere}>Rewrite from turn {dd.t}</button>}
+          </div>
+        )}
+        {isOwn && mine && line && !mine.house && !mine.operator && (
+          <MorningCard round={d.round} line={line} coins={mine.coins} agents={d.agents} replays={d.replays} mineId={mine.id} houseIds={houseIds} why={dd?.why ?? ""} resultHash={d.resultHash} streak={streak} />
+        )}
+      </section>
+      <div className="b-rest">
         {mine && myPolicy && (
           <Ticket state="settled" fresh title={myPolicy.name} lines={readback(myPolicy)} stamp={`SETTLED · ${(/^(\S+ of \d+)/.exec(line ?? "")?.[1] ?? "").toUpperCase()}`} hash={d.resultHash} hashLabel="result hash" tx={d.tx ?? undefined} txUrl={d.txUrl ?? undefined} />
         )}
         {mine && myPolicy && myPolicy.rules.length > 0 && (
           <div className="card" aria-label="What if">
             <h3 style={{ fontSize: 20 }}>What if…</h3>
-            <p className="muted" style={{ marginTop: 0 }}>Turn one of your own rules off and re-run this night in your browser. Up to {MAX_VARIANTS} tries. A new draft goes to the <Link href="/scrimmage">scrimmage</Link>.</p>
+            <p className="muted" style={{ marginTop: 0 }}>Turn one of these rules off and re-run this night in your browser. Up to {MAX_VARIANTS} tries. Take what you learn into <Link href="/play">tonight's orders</Link>.</p>
             {myPolicy.rules.map((r, i) => (
               <label key={i} style={{ display: "flex", gap: 10, alignItems: "center", minHeight: 44, color: "var(--ink)" }}>
                 <input type="checkbox" style={{ width: 22, height: 22 }} checked={!off.has(i)} onChange={(e) => setOff((o) => { const n = new Set(o); e.target.checked ? n.delete(i) : n.add(i); return n; })} />
@@ -153,24 +176,10 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
           <p className="data tonight-line">round {tonight.round} closes in <Countdown round={tonight.round} closeTime={tonight.closeTime} chainNow={tonight.chainNow} serverNow={tonight.serverNow} />{sealedTonight ? " · sealed — you can re-commit until the close" : ""}</p>
         )}
         <div className="row" style={{ marginTop: 12 }}>
-          {!(mine && myPolicy && dd) && <Link className="btn" href="/play">{sealedTonight ? "Tonight" : "Write tonight's orders"}</Link>}
+          {!(isOwn && mine && myPolicy && dd) && <Link className="btn" href="/play">{sealedTonight ? "Tonight" : "Write tonight's orders"}</Link>}
           <Link className="btn quiet" href={`/verify/${d.round}`}>Verify this night</Link>
         </div>
-      </section>
-      <section aria-label="The market">
-        <ReplayPlayer replays={d.replays} mineId={mine?.id} houseIds={houseIds} agents={d.agents} trace={trace} autoPlay />
-        {mine && myPolicy && dd && (
-          <div className="card decisive" aria-label="Your decisive turn">
-            <div className="eyebrow">Your decisive turn · {dd.t}</div>
-            <p style={{ margin: "0 0 6px" }}>{dd.why}</p>
-            <p className="muted" style={{ margin: "0 0 12px", fontSize: 16 }}>{hintOf(dd.action, dd.partnerAction)}</p>
-            <button type="button" className="primary" onClick={rewriteFromHere}>Rewrite from turn {dd.t}</button>
-          </div>
-        )}
-        {mine && line && !mine.house && !mine.operator && (
-          <MorningCard round={d.round} line={line} coins={mine.coins} agents={d.agents} replays={d.replays} mineId={mine.id} houseIds={houseIds} why={dd?.why ?? ""} resultHash={d.resultHash} streak={streak} />
-        )}
-      </section>
+      </div>
     </div>
   );
 }

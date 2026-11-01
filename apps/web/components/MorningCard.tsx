@@ -43,11 +43,12 @@ async function drawCard(p: Props): Promise<Blob | null> {
   });
   g.fillStyle = "#F7E9CC"; g.font = `400 26px ${body}`;
   const words = p.why.split(" "); let ln = "", y = 524;
-  for (const w of words) { if (g.measureText(`${ln} ${w}`).width > W - 128 && ln) { g.fillText(ln, 64, y); ln = w; y += 34; } else ln = ln ? `${ln} ${w}` : w; }
-  if (ln && y < 580) g.fillText(ln, 64, y);
+  for (const w of words) { if (g.measureText(`${ln} ${w}`).width > W - 128 && ln) { if (y <= 558) g.fillText(ln, 64, y); ln = w; y += 34; } else ln = ln ? `${ln} ${w}` : w; }
+  if (ln && y <= 558) g.fillText(ln, 64, y);
   g.fillStyle = "#A89C8A"; g.font = `400 17px ${mono}`;
-  g.fillText(`result hash ${short(p.resultHash)} · npx semalam replay ${p.round}${IS_TESTNET ? " --chain 46630" : ""}`, 64, 600);
-  g.textAlign = "right"; g.fillText(`${location.host}/round/${p.round}`, W - 64, 600);
+  g.fillText(`result hash ${short(p.resultHash)}`, 64, 584);
+  g.textAlign = "right"; g.fillText(`${location.host}/round/${p.round}`, W - 64, 584); g.textAlign = "left";
+  g.fillText(`replay it from the repo: node packages/cli/dist/semalam.mjs replay ${p.round}${IS_TESTNET ? " --chain 46630" : ""}`, 64, 610);
   return new Promise((res) => c.toBlob(res, "image/png"));
 }
 

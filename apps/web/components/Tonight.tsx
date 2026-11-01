@@ -119,6 +119,16 @@ export default function Tonight() {
   async function pickWallet() { try { const s = await walletSigner(); setSigner(s); await seal(s); } catch (e) { setErr((e as Error).message); } }
 
   const open = Boolean(st && st.round > 0 && nowC > 0 && nowC < st.closeTime);
+  const wasOpen = useRef(false);
+  useEffect(() => { if (wasOpen.current && !open) sfx.bell(); wasOpen.current = open; }, [open]); // the market closes: one bell
+  function nightlyReminder() { // opt-in: the viewer's own calendar reminds them at 22:30 WIB (15:30 UTC); nothing is sent anywhere
+    const at = new Date(); at.setUTCHours(15, 30, 0, 0); if (at.getTime() < Date.now()) at.setUTCDate(at.getUTCDate() + 1);
+    const z = (x: Date) => `${x.toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`;
+    const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//SEMALAM//nightly//EN", "BEGIN:VEVENT", `UID:semalam-nightly-${Date.now()}@${location.host}`, `DTSTAMP:${z(new Date())}`,
+      `DTSTART:${z(at)}`, "DURATION:PT15M", "RRULE:FREQ=DAILY", "SUMMARY:SEMALAM — write tonight's orders (closes 00:00 WIB)", `URL:${location.origin}/play`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    const u = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })), a = document.createElement("a");
+    a.href = u; a.download = "semalam-nightly.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+  }
 
   return (
     <div className="grid2">
@@ -127,6 +137,7 @@ export default function Tonight() {
         <h1>Tonight</h1>
         <p className="lead">Write your orders before bed. At 00:00 WIB your agent plays the night market; replay it at breakfast.</p>
         {st && <p className="data">closes in <Countdown round={st.round} closeTime={st.closeTime} chainNow={st.chainNow} serverNow={st.serverNow} /> · <span className={`badge ${st.relay ? "relay" : ""}`}>{st.relay ? "gasless · relay" : st.relayState === "spent-tonight" ? "relay spent for tonight — use your own wallet" : "relay empty — use your own wallet"}</span></p>}
+        {st && <p style={{ margin: "-6px 0 14px" }}><button type="button" className="quiet chip" onClick={nightlyReminder}>Nightly reminder (.ics)</button></p>}
         {stErr && <p className="note warn" role="alert">{stErr}</p>}
         {signer && st && st.round > 0 && <Ritual account={signer.address} round={st.round} sealedTonight={st.commits.length > 0} />}
         {hint && phase !== "sealed" && (
@@ -152,7 +163,7 @@ export default function Tonight() {
               <span className="muted" style={{ fontSize: 14 }}>Try one:</span>
               {EXAMPLES.map((x) => (
                 <button key={x.label} type="button" className={`chip ${orders === x.text ? "on" : ""}`} aria-pressed={orders === x.text}
-                  onClick={() => { setOrders(x.text); setRes(null); sfx.tick(); }} disabled={phase === "sealing" || phase === "sealed"}>{x.label}</button>
+                  onClick={() => { setOrders(x.text); setRes(null); sfx.click(); }} disabled={phase === "sealing" || phase === "sealed"}>{x.label}</button>
               ))}
             </div>
             <textarea id="orders" value={orders} onChange={(e) => setOrders(e.target.value)} disabled={phase === "sealing" || phase === "sealed"}

@@ -6,6 +6,7 @@ import { currentRound, seasonOf } from "@/lib/clock";
 import { seasonBoard } from "@/lib/season";
 
 import { addrUrl } from "@/lib/config";
+import { isQA } from "@/lib/qa";
 
 export const dynamic = "force-dynamic";
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -33,9 +34,10 @@ export default async function Board() {
   try { payers = new Set((await paidLogs()).filter((p) => seasonOf(p.round) === season).map((p) => p.payer.toLowerCase())); } catch { payNote = "Paid-scrimmage logs could not be read just now — crown-eligibility is unknown, not “no”."; }
   const sb = season > 0 ? seasonBoard(nights, payers) : null;
   const top = s.ranking.slice(0, 50);
+  const qaN = s.ranking.filter((r) => !r.house && !r.operator && isQA(r.id)).length; // our own QA runs are labelled, never counted as users
   return (
     <>
-      <div className="eyebrow">Round {last} · {s.players} player{s.players === 1 ? "" : "s"} · {s.agents - s.players - (s.playersAll - s.players)} house agents</div>
+      <div className="eyebrow">Round {last} · {s.players} player account{s.players === 1 ? "" : "s"}{qaN ? ` (${qaN === s.players ? "all" : qaN} our own QA runs)` : ""} · {s.agents - s.players - (s.playersAll - s.players)} house agents</div>
       <h1>Board</h1>
       {pending && <p className="note" role="status">Round {pending.round}: {pending.label}{pending.detail ? ` — ${pending.detail}` : ""}</p>}
       <p className="lead">{s.players === 0 ? "A house-only night: no player commits were admitted, so nobody scored. " : ""}House agents are labelled and never score or win the crown. Ties break by fewer steals, then a hash — never by address order.</p>
@@ -46,7 +48,7 @@ export default async function Board() {
           <tr key={r.id} className={r.house ? "house" : ""} style={{ "--i": i } as CSSProperties}>
             <td className="data">{r.rank}</td>
             <td className="data">{playerRank.get(r.id) ? `${playerRank.get(r.id)} of ${s.players}` : "—"}</td>
-            <td className="data">{r.house ? <><span className="badge">house</span> {r.label}</> : r.operator ? <><span className="badge">operator</span> {short(r.id)}</> : <a href={addrUrl(r.id)}>{short(r.id)}</a>}</td>
+            <td className="data">{r.house ? <><span className="badge">house</span> {r.label}</> : r.operator ? <><span className="badge">operator</span> {short(r.id)}</> : <>{isQA(r.id) && <span className="badge" title="our own QA run, not a user">qa</span>} <a href={addrUrl(r.id)}>{short(r.id)}</a></>}</td>
             <td className="data">{r.coins}</td><td className="data">{r.steals}</td><td className="data">{r.points}</td>
           </tr>))}</tbody>
       </table></div>

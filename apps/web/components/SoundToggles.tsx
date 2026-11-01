@@ -8,10 +8,11 @@ export default function SoundToggles() {
   useEffect(() => {
     setP(soundPrefs());
     const off = onSoundPrefs((n) => setP({ ...n }));
-    const first = () => { unlockSound(); };
-    window.addEventListener("pointerdown", first, { once: true, capture: true });
-    window.addEventListener("keydown", first, { once: true, capture: true });
-    return () => { off(); window.removeEventListener("pointerdown", first, true); window.removeEventListener("keydown", first, true); };
+    // every gesture re-unlocks (cheap once running): iOS can suspend or interrupt the context at any time
+    const touch = () => { unlockSound(); };
+    window.addEventListener("pointerdown", touch, { capture: true, passive: true });
+    window.addEventListener("keydown", touch, { capture: true, passive: true });
+    return () => { off(); window.removeEventListener("pointerdown", touch, true); window.removeEventListener("keydown", touch, true); };
   }, []);
   const music = p?.music ?? false, fx = p?.sfx ?? true;
   return (
