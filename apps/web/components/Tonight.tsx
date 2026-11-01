@@ -16,6 +16,15 @@ import { copyText, lsSet } from "@/lib/ls";
 type Compiled = { kind: "policy"; policy: Policy; readback: string[]; model: string } | { kind: "refusal"; reason: string } | { kind: "paused"; reason: string } | { kind: "invalid"; reason: string };
 type Phase = "write" | "build" | "readback" | "identity" | "sealing" | "sealed";
 
+// One-tap starters for the orders box; each stays inside PolicySchema v1 (<= 3 rules, known conditions).
+const EXAMPLES: { label: string; text: string }[] = [
+  { label: "Good neighbour", text: "Share with neighbours who shared with me, gather otherwise. If someone steals from me, steal back for a few turns — but never steal from the leader." },
+  { label: "Quiet hoarder", text: "Keep my head down and gather all night. Guard whenever a known thief is next to me. Never share, never steal." },
+  { label: "Night raider", text: "Open by stealing. Steal from anyone richer than me, gather from everyone else. If I end up leading, switch to guarding my pile." },
+  { label: "Copycat", text: "Copy whatever the leader is doing. If my partner stole from me, guard. If I fall behind, steal from anyone richer." },
+  { label: "Grudge keeper", text: "Share with everyone, all night. Anyone who steals from me, I steal back from them for the rest of the night. Never forgive." },
+];
+
 export default function Tonight() {
   const [st, setSt] = useState<StatusJson | null>(null);
   const [stErr, setStErr] = useState<string | null>(null);
@@ -114,8 +123,15 @@ export default function Tonight() {
         ) : (
           <>
             <label htmlFor="orders">Your orders — plain language, up to {MAX_ORDERS} characters</label>
+            <div className="row examples" role="group" aria-label="Example orders">
+              <span className="muted" style={{ fontSize: 14 }}>Try one:</span>
+              {EXAMPLES.map((x) => (
+                <button key={x.label} type="button" className={`chip ${orders === x.text ? "on" : ""}`} aria-pressed={orders === x.text}
+                  onClick={() => { setOrders(x.text); setRes(null); }} disabled={phase === "sealing" || phase === "sealed"}>{x.label}</button>
+              ))}
+            </div>
             <textarea id="orders" value={orders} onChange={(e) => setOrders(e.target.value)} disabled={phase === "sealing" || phase === "sealed"}
-              placeholder="Be kind to neighbours who are kind to me. If someone steals from me, steal back — but never from the top ten." />
+              placeholder="Share with neighbours who shared with me, gather otherwise. If someone steals from me, steal back for a few turns — but never steal from the leader." />
             <div className="row" style={{ justifyContent: "space-between", margin: "6px 0 14px" }}>
               <span className={`counter ${len > MAX_ORDERS ? "over" : ""}`}>{len}/{MAX_ORDERS}</span>
               <span className="muted" style={{ fontSize: 15 }}>The AI path lets the operator read your words. The builder never does.</span>
