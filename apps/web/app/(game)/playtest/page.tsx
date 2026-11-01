@@ -22,7 +22,7 @@ export default function Playtest() {
       </ul>
       <h2 style={{ fontSize: 24, marginTop: 32 }}>Contracts</h2>
       <p className="data"><a href={addrUrl(ORDERS)}>Orders</a> · <a href={addrUrl(RESULTS)}>Results</a> · <a href={addrUrl(SCRIMMAGE)}>Scrimmage</a> · <a href={addrUrl(WIF)}>{WIF_LABEL}</a></p>
-      <p className="note">Verify any night yourself: <span className="data" style={{ overflowWrap: "anywhere" }}>node packages/cli/dist/semalam.mjs replay &lt;round&gt; --chain {CHAIN_ID}</span> (from a clone of the repo)</p>
+      <p className="note">Verify any night yourself: <span className="data" style={{ overflowWrap: "anywhere" }}>node packages/cli/dist/semalam.mjs replay &lt;round&gt; --chain {CHAIN_ID}</span> (from a clone of the repo, after pnpm install && pnpm --filter semalam build)</p>
     </>
   );
 }

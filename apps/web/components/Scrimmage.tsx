@@ -159,7 +159,7 @@ export default function Scrimmage() {
               <p className="data">paying as {signer.address.slice(0, 8)}…{signer.address.slice(-6)} · {bal === null ? "balance…" : `${Number(bal / 10n ** 18n)} ${WIF_LABEL}`}</p>
               {!enough && bal !== null && (
                 <div className="note">
-                  Paid runs need 200 {WIF_LABEL} and a little ETH at the address above — the free run needs neither{IS_TESTNET ? <> — <a href="https://faucet.testnet.chain.robinhood.com">testnet ETH faucet</a>, then mint test tokens</> : ""}. This is the same address that plays; the session key never moves {WIF_LABEL}.
+                  Paid runs need 200 {WIF_LABEL} and a little ETH at the address above — the free run (your first commit) needs neither{IS_TESTNET ? <> — <a href="https://faucet.testnet.chain.robinhood.com">testnet ETH faucet</a>, then mint test tokens</> : ""}. This is the same address that plays; the session key never moves {WIF_LABEL}.
                   {IS_TESTNET && <div style={{ marginTop: 8 }}><button type="button" onClick={mint} disabled={busy}>Mint 1,000 {WIF_LABEL}</button></div>}
                 </div>
               )}

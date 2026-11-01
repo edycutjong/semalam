@@ -122,12 +122,13 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
 
   return (
     <div className="breakfast">
-      <section className="b-head" aria-label="Your night">
+      <section className="b-head" aria-label={isOwn ? "Your night" : "The night"}>
         <div className="eyebrow">Breakfast · round {d.round}</div>
         <h1>{mine ? (isOwn ? "Your night" : "Their night") : "The night"}</h1>
         {line ? <RankReveal line={line} from={mine && !mine.house && !mine.operator ? d.players : 0} /> : (
-          <p className="lead">{d.players} player account{d.players === 1 ? "" : "s"}{qa ? ` (${qa === d.players ? "all" : qa} our own QA runs, labelled — not users)` : ""} and {d.agents - d.players} house/operator agents played. {d.players === 0 ? "A house-only night — no player commits were admitted." : ""}</p>
+          <p className="lead">{d.players} player account{d.players === 1 ? "" : "s"}{qa ? ` (${qa === d.players ? "all" : qa} our own QA runs, not users)` : ""} and {d.agents - d.players} house/operator agents played. {d.players === 0 ? "A house-only night — no player commits were admitted." : ""}</p>
         )}
+        {line && qa > 0 && <p className="muted data" style={{ margin: "-10px 0 16px" }}>{qa === d.players ? `all ${d.players} player accounts this night are` : `${qa} of the ${d.players} player accounts are`} our own QA runs — not users</p>}
         {isOwn && valid && st && <Ritual account={addr} round={Math.max(st.round, d.round + 1)} sealedTonight={sealedTonight} onRitual={(r) => setStreak(r.streak)} />}
         {!mine && (
           <div>
@@ -139,12 +140,12 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
         )}
       </section>
       <section className="b-market" aria-label="The market">
-        <ReplayPlayer replays={d.replays} mineId={mine?.id} houseIds={houseIds} agents={d.agents} trace={trace} autoPlay={baseline !== "checking"} mineLabel={isOwn ? "you" : "that agent"} />
+        <ReplayPlayer replays={d.replays} mineId={mine?.id} houseIds={houseIds} agents={d.agents} trace={trace} ready={baseline !== "checking"} autoPlay={baseline !== "checking"} mineLabel={isOwn ? "you" : "that agent"} />
         {mine && myPolicy && dd && (
           <div className="card decisive" aria-label={isOwn ? "Your decisive turn" : "Their decisive turn"}>
             <div className="eyebrow">{isOwn ? "Your" : "Their"} decisive turn · {dd.t}</div>
             <p style={{ margin: "0 0 6px" }}>{dd.why}</p>
-            <p className="muted" style={{ margin: isOwn ? "0 0 12px" : 0, fontSize: 16 }}>{hintOf(dd.action, dd.partnerAction)}</p>
+            <p className="muted" style={{ margin: isOwn ? "0 0 12px" : 0, fontSize: 16 }}>{hintOf(dd.action, dd.partnerAction, isOwn ? "you" : "they")}</p>
             {isOwn && <button type="button" className="primary" onClick={rewriteFromHere}>Rewrite from turn {dd.t}</button>}
           </div>
         )}

@@ -42,14 +42,14 @@ button:hover:not(:disabled), .btn:hover { background: var(--ink); color: var(--b
 button:active:not(:disabled), .btn:active { transform: translateY(1px) scale(.98); }
 /* primary = a paper ticket (design.md): amber ink stays the settled state — stamps, lit lamps, your rank */
 button.primary { background: var(--paper); border-color: var(--paper); color: var(--paper-ink); }
-button.primary:hover:not(:disabled) { background: #fffaf0; border-color: #fffaf0; color: var(--paper-ink); box-shadow: 0 0 22px rgba(255,181,71,.3); }
+button.primary:hover:not(:disabled) { background: #fffaf0; border-color: #fffaf0; color: var(--paper-ink); box-shadow: 0 0 22px rgba(255,244,218,.35); }
 button.quiet, .btn.quiet { border-color: var(--rule); color: var(--muted); }
 button.quiet:hover:not(:disabled), .btn.quiet:hover { border-color: var(--ink); background: var(--rule); color: var(--ink); }
 button:disabled { opacity: .45; cursor: not-allowed; }
 textarea, input[type=text], select { width: 100%; font: 400 20px/1.45 var(--font-body); color: var(--ink); background: #241C3E; border: 2px solid var(--rule); border-radius: 8px; padding: 14px 16px; transition: border-color .15s, background-color .15s; }
 textarea { min-height: 150px; resize: vertical; }
 textarea:hover, input:hover, select:hover { border-color: var(--before); }
-textarea:focus, input[type=text]:focus, select:focus { border-color: var(--after); outline: none; background: #2A2147; }
+textarea:focus, input[type=text]:focus, select:focus { border-color: var(--ink); outline: none; background: #2A2147; }
 input[type=range]:focus-visible, input[type=checkbox]:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 select { font-size: 16px; min-height: 44px; padding: 8px 12px; }
 label { display: block; font-size: 16px; color: var(--muted); margin-bottom: 6px; }
@@ -152,6 +152,7 @@ button.snd:hover:not(:disabled) { background: var(--rule); color: var(--ink); bo
 .nights li.lit { background: var(--act-share); border-color: var(--act-share); box-shadow: 0 0 10px rgba(242,209,107,.45); animation: lamp-on .5s cubic-bezier(.2,1.4,.4,1) both; animation-delay: calc(var(--k, 0) * 70ms); }
 .nights li.sealed { border-color: var(--before); background: rgba(124,140,196,.4); }
 .nights li.open { border-style: dashed; border-color: var(--muted); }
+.nights li.dark { background: transparent; border-style: dotted; opacity: .55; } /* an empty hook, not a dark disc */
 @keyframes lamp-on { from { transform: scale(.55); opacity: .35; } to { transform: none; opacity: 1; } }
 
 /* board rows rise in; the verify verdict lands like a stamp */

@@ -27,7 +27,7 @@ export default async function Verify({ params }: { params: Promise<{ n: string }
       <p className="lead">Everything below comes from public chain logs and the public drand beacon. The same open code runs on your machine.</p>
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="data" style={{ marginBottom: 8, overflowWrap: "anywhere" }}>$ node packages/cli/dist/semalam.mjs replay {n} {chainFlag}</div>
-        <p style={{ margin: 0 }} className="muted">Run it from a clone of the <a href="https://github.com/edycutjong/semalam">repo</a> (the npm package is not published yet). Exit 0 prints the hash below and says MATCH. {CHAIN_ID === 46630 ? `Testnet uses ${WIF_LABEL}, a labelled stand-in.` : ""}</p>
+        <p style={{ margin: 0 }} className="muted">Run it from a clone of the <a href="https://github.com/edycutjong/semalam">repo</a> after <span className="data">pnpm install && pnpm --filter semalam build</span> (the npm package is not published yet). Exit 0 prints the hash below and says MATCH. {CHAIN_ID === 46630 ? `Testnet uses ${WIF_LABEL}, a labelled stand-in.` : ""}</p>
       </div>
       {verdict && <p className={`verdict ${verdict === "MATCH" ? "ok" : "bad"}`} role="status" style={{ fontSize: 22, fontFamily: "var(--font-display)" }}>{verdict === "MATCH" ? "✓ MATCH" : `✗ ${verdict.replace(/-/g, " ").toLowerCase()}`}</p>}
       {!art && state && <p className="note" role="status">{state.label}{state.detail ? ` — ${state.detail}` : ""}</p>}

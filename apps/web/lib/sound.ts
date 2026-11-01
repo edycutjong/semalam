@@ -1,8 +1,9 @@
 // Sound, synthesized in the browser with Web Audio — no audio files. Nothing plays before a user gesture; music is off
 // by default; effects switch on with the first interaction; both choices are remembered per viewer (localStorage).
 // The music is a night-market loop built from three 16-beat gamelan cycles (slendro saron + peking, kenong, gong) over a
-// low pad and crickets; every cycle is picked and varied at random (dropped notes, ornaments, peking doubling), so it
-// rarely plays the same way twice, and it costs zero bytes to download.
+// low pad and crickets: after the first cycle each one is kept or swapped at random and varied at random (about 1 in 8
+// off-beat notes dropped, occasional ornaments); the peking doubles every other cycle; seeded from the clock, so each
+// visit differs; zero bytes to download.
 import { lsGet, lsSet } from "./ls";
 
 export type SoundPrefs = { sfx: boolean; music: boolean };
@@ -23,7 +24,7 @@ const MUSIC_LEVEL = 0.5, SFX_LEVEL = 0.6;
 /** Call from inside a user gesture (click, key). Creates or resumes the one AudioContext. */
 export function unlockSound(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  if (ctx) { if (ctx.state === "suspended") void ctx.resume(); return ctx; }
+  if (ctx) { if (ctx.state !== "running") void ctx.resume().catch(() => { /* next gesture */ }); return ctx; } // suspended or iOS "interrupted"
   const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AC) return null;
   try { ctx = new AC({ latencyHint: "interactive" }); } catch { return null; }

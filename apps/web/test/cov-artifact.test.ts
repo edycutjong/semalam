@@ -65,7 +65,7 @@ test("namedState: unposted detail names the replay command with the round", () =
   const close = closeTime(2, G);
   const s = namedState(2, close + SEED_DELAY + 3600, 3, false);
   assert.equal(s.code, "unposted");
-  assert.match(s.detail!, /npx semalam replay 2 --chain <id>/);
+  assert.match(s.detail!, /semalam\.mjs replay 2 --chain <id>/);
 });
 test("namedState: once the beacon is out and the hash is posted, the replay data is pending", () => {
   const close = closeTime(2, G);

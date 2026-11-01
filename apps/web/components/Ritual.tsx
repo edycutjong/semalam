@@ -39,7 +39,7 @@ export default function Ritual({ account, round, sealedTonight, onRitual }: { ac
       <ol className="nights">
         {lamps.map((n, k) => {
           const tonight = n === round, on = played.has(n);
-          const label = tonight ? `round ${n}, tonight: ${on ? "sealed" : "open"}` : `round ${n}: ${on ? "played" : "not played"}`;
+          const label = tonight ? `round ${n}, tonight: ${on ? "sealed" : "open"}` : `round ${n}: ${on ? "sealed" : "not sealed"}`;
           return <li key={n} className={tonight ? (on ? "sealed" : "open") : on ? "lit" : "dark"} title={label} style={{ "--k": k } as CSSProperties}><span className="sr">{label}</span></li>;
         })}
       </ol>

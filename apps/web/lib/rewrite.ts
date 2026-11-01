@@ -11,13 +11,14 @@ const VERB: Record<string, string> = { GATHER: "gather", GUARD: "guard", SHARE: 
 const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : "±0");
 
 /** What that turn paid and the best single-turn reply to the partner's move — numbers straight from PAYOFF / ALONE. */
-export function hintOf(action: string, partnerAction: string | null): string {
-  if (!partnerAction) return `Your stall had no partner that turn: an unpaired stall always gathers alone for ${signed(ALONE)}.`;
+export function hintOf(action: string, partnerAction: string | null, who: "you" | "they" = "you"): string {
+  const you = who === "you", my = you ? "your" : "its", their = you ? "their" : "the partner's";
+  if (!partnerAction) return `${you ? "Your" : "That"} stall had no partner that turn: an unpaired stall always gathers alone for ${signed(ALONE)}.`;
   const me = ACTS.indexOf(action), them = ACTS.indexOf(partnerAction);
   if (me < 0 || them < 0) return "";
   const best = [0, 1, 2, 3].reduce((b, a) => (PAYOFF[a][them] > PAYOFF[b][them] ? a : b), 0), mine = PAYOFF[me][them];
-  if (PAYOFF[best][them] === mine) return `On that turn your ${WORD[action]} was already the best reply to their ${WORD[partnerAction]} (${signed(mine)} on the payoff table).`;
-  return `On that turn, against their ${WORD[partnerAction]}: ${WORD[ACTS[best]]} pays ${signed(PAYOFF[best][them])} on the payoff table, your ${WORD[action]} paid ${signed(mine)}.`;
+  if (PAYOFF[best][them] === mine) return `On that turn ${my} ${WORD[action]} was already the best reply to ${their} ${WORD[partnerAction]} (${signed(mine)} on the payoff table).`;
+  return `On that turn, against ${their} ${WORD[partnerAction]}: ${WORD[ACTS[best]]} pays ${signed(PAYOFF[best][them])} on the payoff table, ${my} ${WORD[action]} paid ${signed(mine)}.`;
 }
 
 /** Last night's orders in the words its readback already used (the player confirmed them before sealing), with the rule

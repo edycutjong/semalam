@@ -124,7 +124,7 @@ export default function Tonight() {
   function nightlyReminder() { // opt-in: the viewer's own calendar reminds them at 22:30 WIB (15:30 UTC); nothing is sent anywhere
     const at = new Date(); at.setUTCHours(15, 30, 0, 0); if (at.getTime() < Date.now()) at.setUTCDate(at.getUTCDate() + 1);
     const z = (x: Date) => `${x.toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`;
-    const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//SEMALAM//nightly//EN", "BEGIN:VEVENT", `UID:semalam-nightly-${Date.now()}@${location.host}`, `DTSTAMP:${z(new Date())}`,
+    const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//SEMALAM//nightly//EN", "BEGIN:VEVENT", `UID:semalam-nightly@${location.host}`, `DTSTAMP:${z(new Date())}`,
       `DTSTART:${z(at)}`, "DURATION:PT15M", "RRULE:FREQ=DAILY", "SUMMARY:SEMALAM — write tonight's orders (closes 00:00 WIB)", `URL:${location.origin}/play`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
     const u = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })), a = document.createElement("a");
     a.href = u; a.download = "semalam-nightly.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(u), 4000);

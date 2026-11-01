@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { duckMusic, sfx, soundPrefs, soundReady, unlockSound } from "@/lib/sound";
+import { duckMusic, setMusic, sfx, soundPrefs, soundReady, unlockSound } from "@/lib/sound";
 
 export type Frame = { t: number; coins: number; rank: number };
 export type AgentRep = { id: string; keyframes: Frame[]; decisive: { t: number; action: string; partner: string | null; partnerAction: string | null; delta: number; why: string } };
@@ -112,8 +112,9 @@ function sprite(color: string) {
 
 /** The lamp row is the replay: one lamp per agent; brightness follows rank, size follows coins; the player's lamp is
  * amber. 15 s, continuous, scrubbable; slow motion and a close-up on the followed lamp's decisive turn. */
-export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPlay = false, mineLabel = "you", trace, onEnd }: {
+export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPlay = false, mineLabel = "you", trace, onEnd, ready = true }: {
   replays: AgentRep[]; mineId?: string; houseIds: Set<string> | string[]; agents: number; autoPlay?: boolean; mineLabel?: string; trace?: Trace | null; onEnd?: () => void;
+  /** false while the caller is still checking the night (Breakfast's hash re-run): play waits so the model never swaps mid-play */ ready?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const houseKey = [...houseIds].map((h) => h.toLowerCase()).sort().join(","); // callers may pass a new Set each render
@@ -238,7 +239,9 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
           const k = (p - (dT - 1)) / 2.8, al = smooth(0, 0.15, k) * (1 - smooth(0.7, 1, k));
           g!.globalAlpha = al; g!.textAlign = "center"; g!.lineJoin = "round"; g!.strokeStyle = "#150F27"; g!.lineWidth = 4;
           const dl = `${d.delta >= 0 ? "+" : "−"}${Math.abs(d.delta)}`, dy = y - r - 10 - 12 * k;
-          g!.font = `700 13px ${fam}`; g!.strokeText(dl, x, dy); g!.fillStyle = d.delta >= 0 ? COLOR.GATHER : COLOR.STEAL; g!.fillText(dl, x, dy);
+          g!.font = `700 13px ${fam}`;
+          const tw = g!.measureText(dl).width; g!.fillStyle = "rgba(21,15,39,.82)"; g!.beginPath(); g!.roundRect?.(x - tw / 2 - 5, dy - 12, tw + 10, 16, 5); g!.fill(); // an ink plate under the swing
+          g!.strokeText(dl, x, dy); g!.fillStyle = d.delta >= 0 ? COLOR.GATHER : COLOR.STEAL; g!.fillText(dl, x, dy);
           // the matchup, each glyph in its action colour: mine vs theirs
           g!.font = `400 10px ${fam}`; g!.textAlign = "left";
           const parts: [string, string][] = [[GLYPH[d.action] ?? "", COLOR[d.action] ?? PAPER], [" vs ", PAPER], [d.partnerAction ? GLYPH[d.partnerAction] : "alone", d.partnerAction ? COLOR[d.partnerAction] : PAPER]];
@@ -341,7 +344,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
     <section aria-label="Replay">
       <canvas ref={canvas} className="lamps" role="img" aria-label={`Lamp row: ${replays.length} agents at turn ${shownT} of ${T}`} />
       <div className="row" style={{ margin: "12px 0" }}>
-        <button type="button" className="primary" onClick={play} aria-label={reduced ? "Step through the night" : undefined}>
+        <button type="button" className="primary" onClick={play} disabled={!ready} aria-label={reduced ? "Step through the night" : undefined}>
           {reduced ? (turn >= T ? "from the start" : "step through →") : playing ? "pause" : turn >= T ? "replay" : "play 15 s"}
         </button>
         <input type="range" min={0} max={T} value={Math.min(T, turn)} step={reduced ? T / 5 : 1} aria-label="Scrub the replay" aria-valuetext={`turn ${shownT} of ${T}`}
@@ -352,6 +355,9 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
             ♪ tap for sound
           </button>
         )}
+        {mute && !soundPrefs().music && (
+          <button type="button" className="chip snd-hint" onClick={() => { unlockSound(); setMusic(true); setMute(false); }}>♪ with night-market music</button>
+        )}
       </div>
       <div className="caption">
         {focus ? (
@@ -360,7 +366,7 @@ export default function ReplayPlayer({ replays, mineId, houseIds, agents, autoPl
             {showDecisive && d && (
               <p style={{ margin: "6px 0 0" }}>
                 <span className="glyph" style={{ color: COLOR[d.action] }}>{GLYPH[d.action]}</span> {d.why}
-                {d.partner ? <span className="muted"> · neighbour {house.has(d.partner.toLowerCase()) ? "a house agent" : `${d.partner.slice(0, 6)}…${d.partner.slice(-4)}`}</span> : null}
+                {d.partner ? <span className="muted"> · partner: {house.has(d.partner.toLowerCase()) ? "a house agent" : `${d.partner.slice(0, 6)}…${d.partner.slice(-4)}`}</span> : null}
               </p>
             )}
           </>
