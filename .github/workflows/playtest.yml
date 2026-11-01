@@ -1,0 +1,67 @@
+# Nightly bot playtest (internal QA — persona bots are never players, testers or traction).
+# 15:00 UTC = 22:00 WIB, two hours before the 00:00 WIB close: 20 persona bots write orders, the live compiler reads
+# them back (5 injection orders on odd days must be REFUSED), and every compiled policy is sealed and relayed.
+# Testnet 46630 only: the job stops if the API it talks to reports any other chain. The bots' addresses are listed in
+# evidence/qa-accounts-46630.json, so every page labels them QA.
+name: playtest
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      night:
+        description: "persona order set (1 = first orders + injections, 2 = rewritten orders)"
+        default: ""
+permissions:
+  contents: read
+concurrency: playtest
+jobs:
+  bots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE: ${{ vars.PLAYTEST_BASE || 'https://semalam-edy-cus-projects.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: testnet only
+        run: |
+          # P1e drives the bots by hand on the first two testnet nights (00:00 WIB 2 and 3 Nov); the schedule starts after.
+          if [ "${{ github.event_name }}" = schedule ] && [ "$(date -u +%Y%m%d)" -lt 20261103 ]; then echo "P1e owns tonight"; echo "SKIP=1" >> "$GITHUB_ENV"; exit 0; fi
+          CHAIN=$(curl -sf "$BASE/api/status" | jq -r .chainId)
+          echo "API $BASE answers chain $CHAIN"
+          if [ "$CHAIN" != "46630" ]; then echo "::error::bots run on testnet 46630 only (got $CHAIN) — set repo var PLAYTEST_BASE to a testnet deployment"; exit 1; fi
+      - name: bot keys (throwaway testnet signers; the relay pays gas)
+        if: env.SKIP != '1'
+        env:
+          KEYS: ${{ secrets.PLAYTEST_BOTS_JSON }}
+        run: |
+          test -n "$KEYS" || { echo "::error::secret PLAYTEST_BOTS_JSON is missing"; exit 1; }
+          mkdir -p ~/.config/semalam && printf '%s' "$KEYS" > ~/.config/semalam/playtest-bots.json && chmod 600 ~/.config/semalam/playtest-bots.json
+      - name: compile the persona orders on the live compiler
+        if: env.SKIP != '1'
+        working-directory: scripts
+        run: |
+          N="${{ inputs.night }}"; [ -n "$N" ] || N=$(( $(date -u +%j | sed 's/^0*//') % 2 + 1 ))
+          echo "NIGHT=$N" >> "$GITHUB_ENV"
+          pnpm exec tsx playtest/bots.ts compile --night "$N" --base "$BASE"
+      - name: seal and relay every compiled policy
+        if: env.SKIP != '1'
+        working-directory: scripts
+        run: pnpm exec tsx playtest/bots.ts commit --night "$NIGHT" --base "$BASE" | tee commit.log
+      - name: summary
+        if: always()
+        run: |
+          {
+            echo "### Bot playtest (internal QA, chain 46630) — order set $NIGHT"
+            grep -E '^entered' scripts/commit.log || echo "no commit summary"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playtest-${{ github.run_id }}
+          path: evidence/playtest/
+          retention-days: 30
