@@ -18,6 +18,7 @@
   ![drand](https://img.shields.io/badge/drand-timelock-1f6feb?style=flat)
   [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
   [![CI/CD](https://github.com/edycutjong/semalam/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/semalam/actions/workflows/ci.yml)
+  [![Release](https://img.shields.io/github/v/release/edycutjong/semalam?sort=semver&display_name=tag&logo=github)](https://github.com/edycutjong/semalam/releases/latest)
 
 </div>
 
@@ -145,7 +146,7 @@ cd contracts && forge test         # 39 Foundry tests; the fork test needs a cha
 | 5 · Performance | Lighthouse CI; accessibility under 0.9 fails |
 | 6 · Deploy gate | on `main`: https://semalam.edycu.dev answers after Vercel's git deploy |
 
-Plus `codeql` (SAST), weekly `security` re-scan, and Dependabot. Vulnerability reports: [SECURITY.md](SECURITY.md).
+Plus `codeql` (SAST), weekly `security` re-scan, and Dependabot. Versions are automatic: after the pipeline passes on `main`, [`release.yml`](.github/workflows/release.yml) reads the Angular-convention commits since the last tag (`feat:` minor, `fix:`/`perf:` patch, `!` major), tags `vX.Y.Z` and publishes a [GitHub release](https://github.com/edycutjong/semalam/releases) with grouped notes. Vulnerability reports: [SECURITY.md](SECURITY.md).
 
 ## 📁 Project Structure
 
