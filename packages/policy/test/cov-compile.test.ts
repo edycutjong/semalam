@@ -1,7 +1,7 @@
 // Coverage gap-fillers for src/compile.ts. The LLM (Groq) is always stubbed; no real network call is made.
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { PRESETS, canonical } from "../src/index.ts";
+import { PRESETS, Policy, canonical, readback, shadowed } from "../src/index.ts";
 import { compileOrders, cleanReason, judgeOutput, GROQ_URL, MODELS } from "../src/compile.ts";
 
 const realFetch = globalThis.fetch;
@@ -115,6 +115,20 @@ test("grudge 0 beside a partner_stole_from_me rule is repaired to 1 (found by th
   // an out-of-schema field is still refused even when the grudge is the other defect
   const extra = judgeOutput(raw.replace('"v":1', '"v":1,"bonus":9'));
   assert.ok("refusal" in extra);
+});
+
+test("a turn ladder is put latest-first, and a rule that can never fire is called out in the readback (P1e bot playtest: 'steal after 100, guard after 200')", () => {
+  const raw = '{"v":1,"name":"ladder","opening":"SHARE","default":"SHARE","grudge":3,"rules":[{"if":"turn_after","n":100,"then":"STEAL"},{"if":"partner_poorer","then":"SHARE"},{"if":"turn_after","n":200,"then":"GUARD"}]}';
+  const j = judgeOutput(raw);
+  assert.ok("policy" in j);
+  if ("policy" in j) {
+    assert.deepEqual(j.policy.rules.map((r) => r.n ?? r.if), [200, "partner_poorer", 100]); // only the turn_after slots swap
+    assert.equal(shadowed(j.policy).length, 0);
+  }
+  const dup = Policy.parse({ v: 1, name: "dup", opening: "GATHER", default: "GATHER", grudge: 1, rules: [{ if: "turn_after", n: 100, then: "STEAL" }, { if: "turn_after", n: 200, then: "GUARD" }] });
+  assert.deepEqual(shadowed(dup), [[1, 0]]);
+  assert.ok(readback(dup).some((l) => /rule 2 can never fire — rule 1/.test(l)));
+  assert.equal(shadowed(Policy.parse({ ...dup, rules: [{ if: "partner_poorer", then: "SHARE" }, { if: "partner_richer", then: "STEAL" }] })).length, 0);
 });
 
 test("a thrown fetch (network error) records the error text in the paused reason", async () => {

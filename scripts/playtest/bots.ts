@@ -1,5 +1,5 @@
 // Bot playtest runner (internal QA — persona bots are never players, testers or traction).
-//   tsx playtest/bots.ts compile [--night 1|2] [--only p05,p12] [--base URL]    orders -> live /api/compile -> evidence/playtest/compiled-n<night>.json
+//   tsx playtest/bots.ts compile [--night 1|2] [--only p05,p12] [--tag -after-fix] [--base URL]    orders -> live /api/compile -> evidence/playtest/compiled-n<night>.json
 //   tsx playtest/bots.ts commit  [--night 1|2] [--local] [--base URL]    seal -> EIP-712 sign -> relay commitBySig -> read back
 // Bot keys live in ~/.config/semalam/playtest-bots.json (600), never in the tree. Each bot's address is listed in
 // evidence/qa-accounts-46630.json before its night settles, so the pages label it as QA.
@@ -25,7 +25,8 @@ const base = arg("--base", "https://semalam.edycu.dev");
 const local = argv.includes("--local");
 const envOf = (f: string, k: string) => readFileSync(path.join(homedir(), ".config/semalam", f), "utf8").match(new RegExp(`${k}=(.+)`))![1].trim().replace(/^"|"$/g, "");
 const outDir = path.join(root, "evidence/playtest");
-const compiledFile = path.join(outDir, `compiled-n${night}.json`);
+const tag = arg("--tag", "");
+const compiledFile = path.join(outDir, `compiled-n${night}${tag}.json`);
 const keyFile = path.join(homedir(), ".config/semalam/playtest-bots.json");
 const GENESIS = JSON.parse(readFileSync(path.join(root, "evidence/deployments-46630.json"), "utf8")).genesis as number;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

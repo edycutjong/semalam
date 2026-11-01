@@ -81,12 +81,31 @@ function conditionWords(r: z.infer<typeof Rule>, grudge: number): string {
   };
   return w[r.if][r.not ? 1 : 0];
 }
+/** [later, earlier] pairs where the later rule can never fire: same condition, or a later "after turn n" that an earlier "after turn m ≤ n" already covers. */
+export function shadowed(p: Policy): [number, number][] {
+  const out: [number, number][] = [];
+  p.rules.forEach((r, j) => {
+    const i = p.rules.slice(0, j).findIndex((e) => e.if === r.if && !!e.not === !!r.not && (r.if !== "turn_after" || (!r.not && (e.n as number) <= (r.n as number)) || e.n === r.n));
+    if (i >= 0) out.push([j, i]);
+  });
+  return out;
+}
+/** A turn ladder ("after 100 steal, after 200 guard") only works latest-first: put the plain "after turn n" rules in descending n inside the slots they already occupy. */
+export function tidy(p: Policy): Policy {
+  const slots = p.rules.flatMap((r, i) => (r.if === "turn_after" && !r.not ? [i] : []));
+  if (slots.length < 2) return p;
+  const sorted = slots.map((i) => p.rules[i]).sort((a, b) => (b.n as number) - (a.n as number));
+  const rules = [...p.rules];
+  slots.forEach((i, k) => (rules[i] = sorted[k]));
+  return { ...p, rules };
+}
 /** Plain words, in order, every rule; the UI and the CLI print exactly this. */
 export function readback(p: Policy): string[] {
   const lines = [`Your agent "${p.name}" will:`, `- Turns 1–10: ${ACTION_WORDS[p.opening]}.`];
   if (p.rules.length) lines.push("- From turn 11, first matching rule wins:");
   p.rules.forEach((r, i) => lines.push(`  ${i + 1}. If ${conditionWords(r, p.grudge)} → ${ACTION_WORDS[r.then]}.`));
   lines.push(`- ${p.rules.length ? "Otherwise" : "From turn 11"}: ${ACTION_WORDS[p.default]}.`);
+  shadowed(p).forEach(([j, i]) => lines.push(`- Note: rule ${j + 1} can never fire — rule ${i + 1} already matches whenever it would.`));
   if (!p.rules.some((r) => r.if === "partner_stole_from_me") && p.grudge > 0) lines.push(`- Remembers a theft against it for ${p.grudge} turns.`);
   return lines;
 }
