@@ -52,7 +52,7 @@ export default async function Landing() {
             <p className="eyebrow s-eye"><span className={`chip-net${d.testnet ? " test" : ""}`}>{chain}</span><LiveClock round={d.tonight?.round ?? null} /></p>
             <h1 id="h1">You sleep. Your agent works the <em>night market.</em></h1>
             <p className="s-lede">
-              Picture a night-shift nurse in Surabaya typing three sentences before bed: <i>gather early, never steal from the biggest,
+              Picture a night-shift nurse in Surabaya typing three short orders before bed: <i>gather early, never steal from the biggest,
               punish whoever steals from me.</i> The orders stay sealed through the <b>00:00 WIB</b> close, then their agent plays
               <b> 300 turns</b> against everyone else&apos;s. At breakfast: a <b>15-second</b> replay, a rank, a hash anyone can check.
             </p>
@@ -85,23 +85,23 @@ export default async function Landing() {
           <dl className="plank-grid">
             <div>
               <dt><CountUp value={d.nights} /></dt>
-              <dd>nights settled on chain<small>{d.matched} of {d.nights} re-checked by the CLI: ✓ MATCH{d.houseOnly.length ? ` · ${d.houseOnly.length > 1 ? "nights" : "night"} ${d.houseOnly.join(", ")}: house agents only, no player commits` : ""}</small></dd>
+              <dd>nights settled on chain<small>{d.matched} of {d.nights} re-checked: ✓ MATCH{d.houseOnly.length ? ` · ${d.houseOnly.length > 1 ? "nights" : "night"} ${d.houseOnly.join(", ")}: house agents only` : ""}</small></dd>
             </div>
             <div>
               <dt>{n ? <CountUp value={n.agents} /> : "0"}</dt>
-              <dd>agents played night {n?.round ?? "—"}<small>{n ? `${n.players} ${d.testnet ? "testnet" : "player"} accounts${n.qaPlayers ? (n.qaPlayers === n.players ? ", all our own QA runs," : ` (${n.qaPlayers} our own QA runs)`) : ""} + ${n.house} labelled house agents` : "the first night has not settled"}</small></dd>
+              <dd>agents played night {n?.round ?? "—"}<small>{n ? `${n.players} ${d.testnet ? "testnet" : "player"} accounts${n.qaPlayers ? (n.qaPlayers === n.players ? " (our QA runs)" : ` (${n.qaPlayers} our QA runs)`) : ""} + ${n.house} house agents` : "the first night has not settled"}</small></dd>
             </div>
             <div>
               <dt>{d.burned === null ? "—" : <CountUp value={d.burned} decimals={d.burned % 1 ? 1 : 0} />}</dt>
-              <dd>{d.wif} burned<small>{d.paidRuns === null ? "chain read failed just now" : `${d.paidRuns} paid practice run${d.paidRuns === 1 ? "" : "s"}${d.paidQa ? (d.paidQa === d.paidRuns ? ", all by our QA accounts" : `, ${d.paidQa} by our QA accounts`) : ""}`}{d.testnet ? " · MockWIF stands in for $WIF on testnet" : ""}</small></dd>
+              <dd>{d.wif} burned<small>{d.paidRuns === null ? "chain read failed just now" : `${d.paidRuns} paid run${d.paidRuns === 1 ? "" : "s"}${d.paidQa ? (d.paidQa === d.paidRuns ? ", all our QA" : `, ${d.paidQa} our QA`) : ""}`}{d.testnet ? " · testnet stand-in for $WIF" : ""}</small></dd>
             </div>
             <div>
               <dt><CountUp value={d.evidence.runtimes} /></dt>
-              <dd>runtimes, one hash<small>the golden nights replay to the same hashes: macOS Node 20/22/24, Linux arm64 + amd64 Node 20/22</small></dd>
+              <dd>runtimes, one hash<small>golden nights: macOS Node 20/22/24, Linux Node 20/22</small></dd>
             </div>
           </dl>
           <p className="plank-foot">
-            {d.testnet ? "Testnet. Settled nights come from their artifacts, each equal to the hash posted on chain; the burn counter and the clock read the chain live. The chain 4663 deployment is not live yet." : "Settled nights come from their artifacts, each equal to the hash posted on chain 4663; the burn counter and the clock read it live."}{" "}
+            {d.testnet ? "Testnet; the chain 4663 deployment is not live yet. Nights come from artifacts equal to their on-chain hash; the burn counter is at most about a minute old." : "Nights come from artifacts equal to their hash on chain 4663; the burn counter is at most about a minute old."}{" "}
             <Link href="/board">Full board</Link>{n && <> · <Link href={`/verify/${n.round}`}>verify night {n.round}</Link></>} · <a href={d.links.scrimmage}>paid runs on the explorer</a>
           </p>
         </div>
@@ -129,7 +129,8 @@ export default async function Landing() {
       <section id="how" className="s-sec how" aria-labelledby="h-how">
         <h2 id="h-how">Bedtime. Midnight. Breakfast.</h2>
         <ol className="rail">
-          <li className="act">
+          <li className="act sealed">
+            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
             <p className="t">23:40 · tonight</p>
             <h3>Write it like you&apos;d tell a friend.</h3>
             <p>Up to 280 characters. A model compiles them once into a policy of at most 6 fields and 3 rules; plain code reads it back. You seal only what you read.</p>
@@ -139,17 +140,19 @@ export default async function Landing() {
               <ul>{d.compiled.lines.slice(1).map((l, i) => <li key={i} className={l.startsWith("  ") ? "in" : ""}>{l.replace(/^\s*-\s*/, "").trim()}</li>)}</ul>
             </div>
           </li>
-          <li className="act mid">
-            <p className="t">00:00 WIB · the market plays</p>
+          <li className="act mid dark">
+            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
+            <p className="t">00:00 WIB close · plays at 00:05</p>
             <h3>Every agent, 300 turns.</h3>
             <p>Each turn an agent gathers, guards, shares or steals with a neighbour; every 50 turns the ring reseats. Thirty labelled house agents fill the field. No model plays: plain code does.</p>
             <ul className="acts" aria-label="The four actions">{ACTS.map((a) => <li key={a.k}><span className="glyph" style={{ color: a.c }} aria-hidden>{a.g}</span>{a.k}</li>)}</ul>
           </li>
-          <li className="act">
+          <li className="act settled">
+            <svg viewBox="0 0 120 150" aria-hidden className="stop-lamp"><path d="M60 0v26" className="cord" /><circle cx="60" cy="86" r="56" className="halo" /><path d="M42 26h36l-6 13H48z" className="cap" /><ellipse cx="60" cy="80" rx="30" ry="36" className="globe" /><ellipse cx="60" cy="84" rx="12" ry="17" className="mantle" /></svg>
             <p className="t">06:10 · breakfast</p>
             <h3>Your lamp, your rank, your rewrite.</h3>
-            <p>A 15-second replay, the turn with your biggest swing, and your rank on the ticket. Change a rule and go again tonight.</p>
-            {f?.decisive && <p className="decisive"><span className="data">{f.decisive}</span><small>night {n!.round}&apos;s biggest single-turn swing for the {ordinal(f.rank)}-place ticket{f.ruleFired ? "" : " (none of its rules fired)"}</small></p>}
+            <p>A 15-second replay, the turn where your own rules moved the most coins, and your rank on the ticket. Change a rule and go again tonight.</p>
+            {f?.decisive && <p className="decisive"><span className="data">{f.decisive}</span><small>night {n!.round}, {ordinal(f.rank)}-place ticket: {f.ruleFired ? "the biggest swing from one of its rules" : "its biggest single-turn swing (none of its rules fired)"}</small></p>}
           </li>
         </ol>
       </section>
@@ -202,11 +205,11 @@ export default async function Landing() {
         <p className="eyebrow s-eye">Questions a judge would ask</p>
         <h2 id="h-faq">Before you play.</h2>
         <div className="faq-list">
-          <details><summary>Does an AI play the game?</summary><p>No. A model reads your words once, when you write them, and turns them into a small typed policy you approve. The night itself is plain deterministic code: same inputs, same hash, on any machine.</p></details>
+          <details><summary>Does an AI play the game?</summary><p>No. A model reads your words once, when you write them, and turns them into a small typed policy you approve. The night itself is plain deterministic code: same inputs, same hash, on all nine runtimes we tested.</p></details>
           <details><summary>Can anyone read my orders before midnight, even you?</summary><p>Not the sealed policy: it is timelock-encrypted to the drand beacon published about five minutes after the close and opens for everyone at once, us included. The sentences you type do pass through our compile endpoint and the model provider; the no-LLM builder keeps them in your browser.</p></details>
           <details><summary>What stops you from posting a fake result?</summary><p>The contract accepts only the beacon round fixed for that night, and the runner posts only when its hash equals the CLI&apos;s. Anyone can re-run a night from public data; a mismatch is disputed in public, never re-posted.</p></details>
           <details><summary>Where does the $WIF go?</summary><p>A paid practice run is exactly 200 $WIF: 160 burned with the token&apos;s own burn() and 40 to compute. The contracts hold no prize pool and have no owner withdrawal.</p></details>
-          <details><summary>Do I need gas or a wallet?</summary><p>No. A key is made in your browser and a relay pays the gas, within nightly limits. When the relay is empty, the app asks for your own wallet instead.</p></details>
+          <details><summary>Do I need gas or a wallet?</summary><p>For writing and sealing orders, no: a key is made in your browser and a relay pays the gas, within nightly limits; when the relay is empty, the app asks for your own wallet. A paid practice run needs $WIF and a little ETH in that same address.</p></details>
           <details><summary>Is it live on mainnet?</summary><p>{d.testnet ? "Not yet. Everything on this page runs on the chain 46630 testnet, with MockWIF in place of $WIF. The page reads chain 4663 once the mainnet contracts are deployed." : "Yes. The numbers on this page are read from chain 4663 and the real $WIF."}</p></details>
         </div>
       </section>
