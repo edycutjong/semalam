@@ -197,6 +197,10 @@ jobs:
     needs: [e2e, performance]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # Records a GitHub Deployment (repo sidebar → Deployments → production) for the commit Vercel just shipped.
+    environment:
+      name: production
+      url: https://semalam.edycu.dev
     steps:
       - name: production answers (Vercel deploys main from git)
         run: |

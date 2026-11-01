@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Local backup runner (GitHub Actions is the primary; this is the fallback while Actions billing is blocked).
 # Polls every 2 minutes, settles every closed round without a post (oldest first), then commits + pushes the artifacts
-# behind the same gate as every push: gitleaks + the kitchen grep. Stops at --until <unix> (default: 4 h from now).
+# behind the same gate as every push: gitleaks + the private-notes grep. Stops at --until <unix> (default: 4 h from now).
 # usage: scripts/settle/nightly.sh [--until <unix>] [--chain 46630]   (POSTER key: ~/.config/semalam/poster.env)
 set -uo pipefail
 cd "$(dirname "$0")/../.."

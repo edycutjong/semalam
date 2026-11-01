@@ -1,6 +1,7 @@
 // A3: with the compiler paused (provider mocked to fail), the no-LLM builder still produces a schema-valid policy and commits.
 import { createRequire } from "node:module";
-const require = createRequire("/Users/edycu/Hackathon/_tools/DemoStudio/package.json");
+// puppeteer from this workspace, or from any install named by PUPPETEER_FROM=<path to its package.json>
+const require = createRequire(process.env.PUPPETEER_FROM ?? import.meta.url);
 const puppeteer = require("puppeteer");
 const base = process.argv[2] ?? "http://localhost:3101";
 const browser = await puppeteer.launch({ headless: true, executablePath: process.env.CHROME ?? undefined, args: ["--no-sandbox"] });

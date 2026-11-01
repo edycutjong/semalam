@@ -1,7 +1,8 @@
 // Browser e2e of the core flow on a running app: write → compile → readback → seal (local key, relay) → SEALED stamp.
 // usage: node e2e/flow.mjs <baseUrl> [screenshotDir]
 import { createRequire } from "node:module";
-const require = createRequire("/Users/edycu/Hackathon/_tools/DemoStudio/package.json");
+// puppeteer from this workspace, or from any install named by PUPPETEER_FROM=<path to its package.json>
+const require = createRequire(process.env.PUPPETEER_FROM ?? import.meta.url);
 const puppeteer = require("puppeteer");
 const base = process.argv[2] ?? "http://localhost:3101";
 const shots = process.argv[3];
@@ -34,7 +35,7 @@ await shot("3-sealed");
 // --- scrimmage: free run, then a paid run with the same browser key (funded from the deployer for the test)
 let scrim = {};
 if (process.env.SCRIM) {
-  const { privateKeyToAccount } = require("/Users/edycu/Hackathon/others/worldisflat-build/semalam/build/scripts/node_modules/viem/accounts");
+  const { privateKeyToAccount } = createRequire(import.meta.url)("viem/accounts");
   const key = await page.evaluate(() => localStorage.getItem("semalam.localKey.v1"));
   const addr = privateKeyToAccount(key).address;
   const { execFileSync } = await import("node:child_process");
