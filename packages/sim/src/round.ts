@@ -5,7 +5,7 @@ import { encodeAbiParameters, keccak256, hexToBytes, getAddress, type Hex, type 
 import { Policy, canonical } from "@semalam/policy";
 import { run, replayOf, points, SIM_VERSION, type Agent, type NightResult, type AgentReplay } from "./index.ts";
 import { HOUSE, HOUSE_SET_HASH, houseAgents, type HouseSet } from "./house.ts";
-import { QUICKNET, seedRoundAt, stanzaOf } from "@semalam/beacon";
+import { QUICKNET, seedRoundAt, stanzaOf } from "@semalam/beacon/consts";
 
 export const ADMISSION_CAP = 1000;
 export const MAX_SEALED = 1536;

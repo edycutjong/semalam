@@ -1,7 +1,6 @@
 "use client";
 // Seal → sign → relay → read back. "Entered" is shown only after the Committed event matches (spec step 4).
 import { bytesToHex, createWalletClient, http, keccak256, toBytes, type Address, type Hex } from "viem";
-import { seal, stanzaOf, seedRoundAt, QUICKNET } from "@semalam/beacon";
 import { canonical, Policy } from "@semalam/policy";
 import { MAX_SEALED } from "@semalam/sim/round";
 import { COMMIT_TYPES, ORDERS_ABI } from "./abi";
@@ -13,6 +12,8 @@ export type Sealed = { policy: Policy; plaintext: string; policyHash: Hex; seale
 
 /** Re-derives everything the chain will check, so a bad blob never leaves the browser. */
 export async function sealPolicy(policy: Policy, round: number): Promise<Sealed> {
+  // tlock + the BLS curve are ~600 KB: load them when the player seals, not on every page view.
+  const { seal, stanzaOf, seedRoundAt, QUICKNET } = await import("@semalam/beacon");
   const p = Policy.parse(policy);
   const plaintext = canonical(p);
   const drandRound = seedRoundAt(closeTime(round));

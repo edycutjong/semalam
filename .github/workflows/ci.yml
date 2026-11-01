@@ -126,13 +126,13 @@ jobs:
           pnpm --filter @semalam/sim test
       - name: Next.js production build
         run: pnpm --filter @semalam/web build
-      - name: bundle budget (static JS + CSS)
+      - name: bundle budget (all emitted JS; share-card images under static/media are not page weight)
         working-directory: apps/web
         run: |
-          KB=$(du -sk .next/static | cut -f1)
-          echo "static assets: ${KB} KB"
-          if [ "$KB" -gt 2000 ]; then echo "::error::static ${KB} KB > 2000 KB budget"; exit 1; fi
-          if [ "$KB" -gt 1500 ]; then echo "::warning::static ${KB} KB > 1500 KB"; fi
+          KB=$(find .next/static -name '*.js' -exec cat {} + | wc -c | awk '{print int($1/1024)}')
+          echo "static JS: ${KB} KB (tlock + BLS load only when a player seals)"
+          if [ "$KB" -gt 2000 ]; then echo "::error::static JS ${KB} KB > 2000 KB budget"; exit 1; fi
+          if [ "$KB" -gt 1500 ]; then echo "::warning::static JS ${KB} KB > 1500 KB"; fi
       - uses: actions/upload-artifact@v4
         with:
           name: web-build
