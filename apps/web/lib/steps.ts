@@ -14,10 +14,11 @@ import { ordinal } from "./rank";
 
 const ACTS: Act[] = ["GATHER", "GUARD", "SHARE", "STEAL"];
 export type Who = { name: string; house: boolean };
+export type Cell = { t: number; who: string; theirs: Act; mine: Act; delta: number; note: string };
 export type Step = {
   t: number; rank: number; coins: number; delta: number;
-  act: Act; partner: (Who & { act: Act }) | null;
-  head: string; text: string; rule?: string;
+  act: Act; partner: (Who & { act: Act }) | null; pj: number;
+  head: string; text: string; rule?: string; strip?: Cell[];
 };
 export type NightSteps = {
   round: number; agents: number; turns: number; resultHash: string;
@@ -58,7 +59,7 @@ export async function nightSteps(round: number, taggedId: string): Promise<Night
   const who = (j: number): Who => {
     const h = houseOf(j);
     const id = res.field[j].id;
-    return h ? { name: h.label, house: true } : { name: `${IS_TESTNET ? "testnet account" : "player"} ${short(id)}${QA.has(id.toLowerCase()) ? " (QA)" : ""}`, house: false };
+    return h ? { name: h.label, house: true } : { name: `${QA.has(id.toLowerCase()) ? "QA account" : IS_TESTNET ? "testnet account" : "player"} ${short(id)}`, house: false };
   };
   const pol: Policy = res.field[i].policy;
   const coinsAt = (t: number) => (t === 0 ? 20 : tr[t - 1].coins[i]);
@@ -66,11 +67,11 @@ export async function nightSteps(round: number, taggedId: string): Promise<Night
   const line = tr.map((x) => x.rank[i]);
   const ruleLines = readback(pol).filter((l) => /^\s*\d+\.\s/.test(l)).map((l) => l.replace(/^\s*\d+\.\s*/, "").replace(/\s*\(.*?\)\s*\.?$/, "").trim());
 
-  const step = (t: number, head: string, text: string, rule?: string): Step => {
+  const step = (t: number, head: string, text: string, extra: { rule?: string; strip?: Cell[] } = {}): Step => {
     const x = tr[t - 1], p = x.partner[i];
     return {
       t, rank: x.rank[i], coins: x.coins[i], delta: x.coins[i] - coinsAt(t - 1), act: ACTS[x.act[i]],
-      partner: p >= 0 ? { ...who(p), act: ACTS[x.act[p]] } : null, head, text, ...(rule ? { rule } : {}),
+      partner: p >= 0 ? { ...who(p), act: ACTS[x.act[p]] } : null, pj: p, head, text, ...extra,
     };
   };
   const steps: Step[] = [];
@@ -106,7 +107,8 @@ export async function nightSteps(round: number, taggedId: string): Promise<Night
       while (since > 1 && tr[since - 2].rank[L] === 1) since--;
       const lp = res.field[L].policy;
       const always = lp.opening === "STEAL" && lp.default === "STEAL" && lp.rules.length === 0;
-      why = `The leader since turn ${since}, ${who(L).name}, ${always ? "always steals" : "steals"}. Its neighbour ${tName} copies the leader, so it steals too: ${signed(coinsAt(tTheft) - coinsAt(tTheft - 1))} coins.`;
+      const after = tp.rules[fr].if === "turn_after" ? ` after turn ${tp.rules[fr].n}` : "";
+      why = `At turn ${since} ${who(L).name} takes the lead, and it ${always ? "always steals" : "steals"}. ${tName}, this lamp's neighbour, copies the leader${after}, so it steals too: ${signed(coinsAt(tTheft) - coinsAt(tTheft - 1))} coins.`;
     }
     steps.push(step(tTheft, "a neighbour turns thief", why));
     if (hits.length > 1) {
@@ -115,25 +117,45 @@ export async function nightSteps(round: number, taggedId: string): Promise<Night
       let fired = 0;
       for (let t = tTheft; t <= tEnd; t++) if (tr[t - 1].fired[i] === kRet && kRet >= 0) fired++;
       const gap = Math.min(...hits.slice(1).map((t, k) => t - hits[k]));
-      let text = `${hits.length} thefts, ${signed(lost)} coins: ${ordinal(rankAt(tEnd))}.`;
+      let text = `Robbed ${hits.length} times, ${signed(lost)} coins: ${ordinal(rankAt(tEnd))}.`;
       let rule: string | undefined;
       if (kRet >= 0) {
         rule = `its rule ${kRet + 1}: ${ruleLines[kRet] ?? ""}${fired > 0 ? ` (fired ${fired} times in this run)` : ""}`;
-        if (fired === 0 && gap > pol.grudge) text += ` Its rule never fires: the thief comes back every ${ordinal(gap)} turn, and the rule looks back ${pol.grudge} turn${pol.grudge === 1 ? "" : "s"}.`;
+        if (fired === 0 && gap > pol.grudge) text += ` Its rule remembers ${pol.grudge} turn${pol.grudge === 1 ? "" : "s"} back; the thief sits beside it every ${ordinal(gap)} turn, so it never steals back.`;
       }
-      steps.push(step(tEnd, `${hits.length} thefts later`, text, rule));
+      // the first turns of the run, cell by cell, straight from the trace
+      const strip: Cell[] = [];
+      for (let t = tTheft; t <= Math.min(T, tTheft + 2); t++) {
+        const x = tr[t - 1], p = x.partner[i];
+        if (p < 0) continue;
+        const robbed = x.act[p] === 3 && p === thief;
+        const back = t - (t > tTheft ? hits.filter((h) => h < t).at(-1) ?? tTheft : tTheft);
+        strip.push({ t, who: who(p).name, theirs: ACTS[x.act[p]], mine: ACTS[x.act[i]], delta: x.coins[i] - coinsAt(t - 1),
+          note: t === tTheft ? "robbed" : robbed ? (x.fired[i] < 0 && back > pol.grudge ? `robbed again · last theft ${back} turns ago` : "robbed again") : "the other neighbour" });
+      }
+      steps.push(step(tEnd, `robbed ${hits.length} times`, text, { rule, strip }));
     }
   }
   // 5 · its lowest point after the best, when that is a separate moment
   const after = Math.max(tEnd, tBest);
   let tLow = 0, low = 0;
   for (let t = after + 1; t < T; t++) if (line[t - 1] > low) { low = line[t - 1]; tLow = t; }
-  if (tLow && low > rankAt(after) && low > line[T - 1]) steps.push(step(tLow, "the lowest point", `Lowest point: ${ordinal(low)}, ${coinsAt(tLow).toLocaleString("en-US")} coins.`));
+  if (tLow && low > rankAt(after) && low > line[T - 1]) steps.push(step(tLow, "its lowest rank", `Lowest rank: ${ordinal(low)} (${coinsAt(tLow).toLocaleString("en-US")} coins).`));
   // 6 · the close
   const top = res.ranking[0];
   const topJ = res.field.findIndex((a) => a.id === top.id);
-  const topNote = topJ === i ? "" : houseOf(topJ) ? ` The night's 1st, ${who(topJ).name}, is a house agent: house agents never score.` : "";
-  steps.push(step(T, `settled · ${ordinal(rankAt(T))} of ${N}`, `Settled: ${ordinal(rankAt(T))} of ${N} agents, ${coinsAt(T).toLocaleString("en-US")} coins.${topNote}`));
+  const topNote = topJ === i ? "" : houseOf(topJ) ? ` 1st was ${who(topJ).name}, a house agent: no season points.` : "";
+  // both pools (A11): the whole field, and the accounts alone (house agents and operator addresses left out)
+  const ops = new Set(s.ranking.filter((r) => r.operator).map((r) => r.id.toLowerCase()));
+  const acct = (j: number) => !res.field[j].house && !ops.has(res.field[j].id.toLowerCase());
+  const accts = res.field.map((_, j) => j).filter(acct);
+  const ahead = accts.filter((j) => tr[T - 1].rank[j] < rankAt(T)).length;
+  const allQa = accts.every((j) => QA.has(res.field[j].id.toLowerCase()));
+  const pool = acct(i) ? `, ${ordinal(ahead + 1)} of the ${accts.length} ${IS_TESTNET ? "testnet accounts" : "players"}${allQa ? " (all our QA runs)" : ""}` : "";
+  let shared = 0, met = 0;
+  if (tLow) for (let t = tLow + 1; t <= T; t++) { const p = tr[t - 1].partner[i]; if (p >= 0) { met++; if (tr[t - 1].act[p] === 2) shared++; } }
+  const climb = tLow && met ? ` After turn ${tLow} its neighbours shared back on ${shared} of ${met} meetings.` : "";
+  steps.push(step(T, `settled · ${ordinal(rankAt(T))} of ${N}`, `Settled: ${ordinal(rankAt(T))} of ${N} agents${pool}, ${coinsAt(T).toLocaleString("en-US")} coins.${climb}${topNote}`));
 
   const want = new Set<number>(steps.map((x) => x.t));
   for (let t = FRAME; t <= T; t += FRAME) want.add(t);

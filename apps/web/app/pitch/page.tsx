@@ -80,10 +80,10 @@ export default async function Pitch() {
   const notes = [
     "SEMALAM is a night market your agent plays while you sleep. Orders at bedtime; after the midnight close (Jakarta time) every agent plays one tournament; at breakfast you watch it back. The ticket is real: the 4th place of the latest testnet night, one of our own QA accounts, not a user.",
     "The brief asks for a real reason to use $wif. Holding is not one: a held token gives you nothing to do tonight and nothing to check at breakfast. The card is an illustration of that night, not data. A reason has to bring a holder back tonight, and again tomorrow night.",
-    "Picture our player, a night-shift nurse — an illustrative persona, not a user. In bed, lights off, one thumb, three short orders. This is a real call to the live compiler with exactly that sentence: the model runs once, plain code reads the policy back as these lines, and only what you read gets sealed. No model plays the night.",
+    "Picture our player, a night-shift nurse — an illustrative persona, not a user. In bed, lights off, one thumb, three short orders. This is a real call to the live compiler with exactly that sentence: the model runs once, plain code reads the policy back as these lines, and only what you read gets sealed. No model plays the night. Note the order in the readback: rule 1 (steal back from a thief) comes before rule 2 (gather beside a richer neighbour), so a richer neighbour who robbed you still gets robbed back. Reading that before sealing is the point.",
     "One night in four stops. Sealed with a drand timelock at bedtime; closed at midnight; opened and played after the beacon five minutes later; posted on chain only when the CLI agrees (night 2 posted at 00:25 WIB), then replayed at breakfast.",
     "Press → to play the latest night forward. This page re-ran it from the settled artifact when it was built and got the posted result hash, so every turn here is the real night. The stops are picked from that trace by fixed rules: the opening, the tagged lamp's first best rank, the first theft against it after that, the end of that theft run, its lowest point, the close. The tagged lamp is one of our own QA accounts running tit-for-tat; house agents are grey, labelled, and never score.",
-    "This is the $WIF reason and the flywheel. Tonight is free. At breakfast the replay shows why you lost; practice beyond your free run costs 200 $WIF, and 160 of it is burned by the token's own burn function, 40 pays the compute. The season crown needs a paid run that season. Nothing pays out, so there is no pot to drain: the Scrimmage contract is immutable, has no owner and no withdrawal. On testnet the burns so far are our QA runs, with a mock token.",
+    "This is the $WIF reason and the flywheel. Tonight is free. At breakfast the replay shows why you lost. To test a changed rule you practise against last night's top 30: beyond your free run that costs 200 $WIF, 160 of it burned by the token's own burn function and 40 for the compute. Then you seal the fix for the next night. The season crown is an on-chain title, no money, and only an account with a paid run that season can take it. Nothing pays out, so there is no pot to drain: the practice contract (Scrimmage) is immutable, with no owner and no withdrawal. On testnet the burns so far are our QA runs, with a mock token.",
     `We don't ask anyone to trust our server: the CLI recomputes every night from chain data. Every posted night is re-checked by the CLI before it goes on chain, and the golden nights hash the same on ${d.evidence.runtimes} runtimes. The night itself is plain code: ${d.evidence.p50} ms at the median for ${d.evidence.benchAgents} agents × ${d.evidence.benchTurns} turns on an M1 Max. The compiler passed ${d.evidence.golden}/${d.evidence.goldenOf} golden prompts and refused or kept in schema ${d.evidence.injectionsSafe}/${d.evidence.injectionsOf} injections.`,
     "Honest status: testnet only, numbers from our own QA runs, house agents labelled. The three notes are shortened from our README's Honest limits 1, 3 and 5.",
     "The ask: play one night and check the hash at breakfast. The QR opens tonight's page.",
@@ -112,14 +112,16 @@ export default async function Pitch() {
         <section className="slide s2" aria-label="The problem">
           <div className="hook">
             <h2>Holding is not a reason to <em>come back.</em></h2>
-            <p className="lede">The brief asks for “a real reason to use $wif”. We read that as a reason to open the app tonight, and again tomorrow night.</p>
+            <p className="lede">The judging rules ask for “a real reason to use $wif”. We read that as a reason to open the app tonight, and again tomorrow night.</p>
           </div>
           <figure className="held-card">
-            <p className="who">a holder&apos;s night, today · an illustration</p>
-            <ol aria-label="Held at 23:40, at 00:00, at 03:00 and at 06:10">
-              {["23:40", "00:00", "03:00", "06:10"].map((t, k) => <li key={t}><span className="data">{t}</span><span className={`held h${k}`}>HELD</span></li>)}
+            <p className="who">a holder&apos;s night · an illustration</p>
+            <ol aria-label="23:40, bed: held. 03:00, woke and checked the chart: held. 06:10, breakfast: nothing to check.">
+              <li><span className="when"><b className="data">23:40</b><small>bed</small></span><span className="held h0">HELD</span></li>
+              <li><span className="when"><b className="data">03:00</b><small>woke, checked the chart</small></span><span className="held h1">HELD</span></li>
+              <li><span className="when"><b className="data">06:10</b><small>breakfast</small></span><span className="slot" aria-hidden /></li>
             </ol>
-            <figcaption>breakfast: nothing to check</figcaption>
+            <figcaption>nothing to check at breakfast.</figcaption>
           </figure>
           <Foot k={2} chain={chain} />
           <aside className="speaker-notes">{notes[1]}</aside>
@@ -146,6 +148,7 @@ export default async function Pitch() {
 
         <section className="slide s5" aria-label="How a night works">
           <h2>Sealed. Seeded. Settled.</h2>
+          <p className="lede plain">Locked at bedtime. Opened by a public random number no single party controls. Played by plain code anyone can re-run.</p>
           <ol className="night">
             {STOPS.map((s) => (
               <li key={s.t} className={s.k}>
@@ -180,24 +183,24 @@ export default async function Pitch() {
           <div className="wheel-wrap">
             <div className="wheel">
               <svg viewBox="0 0 760 760" aria-hidden className="ring">
-                <defs><marker id="wh-a" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0 10 5 0 10z" /></marker></defs>
+                <defs><marker id="wh-a" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" /></marker></defs>
                 <circle cx="380" cy="380" r="300" className="track" />
                 {[[-58, 2], [32, 92], [122, 182], [212, 272]].map(([a0, a1]) => { const r = 300, p = (a: number) => `${380 + r * Math.cos((a * Math.PI) / 180)} ${380 + r * Math.sin((a * Math.PI) / 180)}`; return <path key={a0} d={`M ${p(a0 + 16)} A ${r} ${r} 0 0 1 ${p(a1 - 16)}`} className="arc" markerEnd="url(#wh-a)" />; })}
                 <g className="runner"><circle cx="380" cy="80" r="11" /></g>
               </svg>
               <ol className="nodes">
                 <li className="n1"><b>tonight</b>play free</li>
-                <li className="n2"><b>breakfast</b>the replay shows why you lost</li>
-                <li className="n3"><b>practise</b>200 $WIF a run: 160 burned, 40 compute</li>
-                <li className="n4"><b>the crown</b>needs a paid run that season</li>
+                <li className="n2"><b>breakfast</b>see why you lost</li>
+                <li className="n3"><b>practise</b>change a rule, test it against last night&apos;s top 30<span className="split" aria-label="200 $WIF a run: 160 burned, 40 to compute"><i>160 burned</i><i>40</i></span></li>
+                <li className="n4"><b>next night</b>seal the fix</li>
               </ol>
-              <p className="hub"><b>{d.burned === null ? "—" : d.burned.toLocaleString("en-US")}</b><span>{d.wif} burned so far · {chain}{d.paidRuns !== null ? ` · ${d.paidRuns} paid runs${paidQa ? ", all our QA" : ""}` : ""}</span></p>
+              <p className="hub"><b>{d.burned === null ? "—" : d.burned.toLocaleString("en-US")}</b><span>{d.wif} burned so far{paidQa ? ", all by our QA runs" : ""}</span><span className="sub">{chain}{d.paidRuns !== null ? ` · ${d.paidRuns} paid runs` : ""}</span></p>
             </div>
             <div className="holds">
               <h3>Why it holds up</h3>
-              <p><b>No prize pool.</b> Nothing to drain, nothing to farm.</p>
-              <p><b>Burned by the token&apos;s own burn().</b> 80% of every practice run.</p>
-              <p><b>Immutable.</b> The Scrimmage contract has no owner and no withdrawal.</p>
+              <p><b>No prize pool.</b> Nothing pays out, so nothing can be drained: the practice contract is immutable, with no owner and no withdrawal.</p>
+              <p><b>80% burned.</b> 160 of every 200 $WIF practice run, by the token&apos;s own burn().</p>
+              <p><b>The crown is a title.</b> No money: only an account with a paid run that season can take it.</p>
             </div>
           </div>
           <Foot k={6} chain={chain} />
@@ -209,7 +212,7 @@ export default async function Pitch() {
           <div className="hero-num"><span className="big">{d.matched}/{d.nights}</span><div className="rhs"><b className="ok">✓ MATCH</b><span className="lbl">posted nights re-checked by the CLI, from public chain data</span></div></div>
           <div className="proof-run">
             <p className="cmd data"><span className="pr">$</span> {cli}<br /><span className="ok">{lastShort}</span></p>
-            <p className="foot-stats">{d.evidence.runtimes} runtimes, one hash · recorded {d.recorded.at.slice(0, 16).replace("T", " ")} UTC{steps ? ` · slide 5 re-ran night ${steps.round} when this page was built: the same hash` : ""}</p>
+            <p className="foot-stats">{d.evidence.runtimes} runtimes, one hash · recorded {d.recorded.at.slice(0, 16).replace("T", " ")} UTC</p>
           </div>
           <Foot k={7} chain={chain} />
           <aside className="speaker-notes">{notes[6]}</aside>
@@ -220,8 +223,8 @@ export default async function Pitch() {
           <p className="status data">{chain} · {d.nights} nights posted · night {n?.round ?? "—"}: {n?.players ?? 0} {qa ? "QA" : "player"} accounts + {n?.house ?? 0} house · {d.paidRuns ?? "—"} paid runs{paidQa ? " (QA)" : ""}</p>
           <ul className="limits">
             <li><b>Not live yet.</b> The chain 4663 deployment is not live; everything runs on the 46630 testnet with a mock token.</li>
-            <li><b>Stated, not solved.</b> A Sybil can fill the 1,000-account cap per round with own-wallet commits.</li>
-            <li><b>A relay, not AA.</b> Gas-free is a relay with nightly limits; when it is empty you use your own wallet.</li>
+            <li><b>Stated, not solved.</b> One person with many wallets can fill the 1,000-account cap per round.</li>
+            <li><b>Gas-free, with limits.</b> Our relay pays the gas up to a nightly limit; after that you use your own wallet.</li>
           </ul>
           <Foot k={8} chain={chain} />
           <aside className="speaker-notes">{notes[7]}</aside>

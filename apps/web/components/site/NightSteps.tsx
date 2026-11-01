@@ -77,9 +77,11 @@ export default function NightSteps({ d, legend }: { d: Data; legend: string }) {
   const atStop = turn === s.t;
   const playing = !atStop;
   const N = d.agents;
+  const settled = shown === lastK && atStop;
+  const ring = atStop && s.pj >= 0 && s.partner ? s.pj : -1;
 
   return (
-    <div className={`ns${playing ? " playing" : ""}`}>
+    <div className={`ns${playing ? " playing" : ""}${settled ? " settled" : ""}`}>
       <div className="ns-top">
         <h2>Night {d.round}, turn by turn.</h2>
         <p className="ns-proof data">re-run when this page was built · result hash {d.resultHash.slice(0, 8)}…{d.resultHash.slice(-4)} = the posted hash <b className="ok">✓</b></p>
@@ -88,19 +90,20 @@ export default function NightSteps({ d, legend }: { d: Data; legend: string }) {
         <defs>
           <radialGradient id="ns-p"><stop offset="0" stopColor="#F2D16B" stopOpacity=".6" /><stop offset=".5" stopColor="#F2D16B" stopOpacity=".13" /><stop offset="1" stopColor="#F2D16B" stopOpacity="0" /></radialGradient>
           <radialGradient id="ns-h"><stop offset="0" stopColor="#A89C8A" stopOpacity=".4" /><stop offset=".5" stopColor="#A89C8A" stopOpacity=".08" /><stop offset="1" stopColor="#A89C8A" stopOpacity="0" /></radialGradient>
-          <radialGradient id="ns-f"><stop offset="0" stopColor="#FFB547" stopOpacity=".8" /><stop offset=".45" stopColor="#FFB547" stopOpacity=".24" /><stop offset="1" stopColor="#FFB547" stopOpacity="0" /></radialGradient>
+          <radialGradient id="ns-f"><stop offset="0" stopColor={settled ? "#FFB547" : "#FFF4DA"} stopOpacity=".8" /><stop offset=".45" stopColor={settled ? "#FFB547" : "#FFF4DA"} stopOpacity=".22" /><stop offset="1" stopColor={settled ? "#FFB547" : "#FFF4DA"} stopOpacity="0" /></radialGradient>
         </defs>
         <path d={`M-10 ${12} Q ${W / 2} ${18 + 2 * 66} ${W + 10} ${12}`} className="wire" />
         {geo.map((g, j) => {
           const b = 1 - (frame.r[j] - 1) / Math.max(1, N);
           const k = g.tag ? "f" : g.house ? "h" : "p";
-          const rx = g.tag ? 11 : 7.5, ry = g.tag ? 13.5 : 9.5;
+          const rx = g.tag ? 14 : 7.5, ry = g.tag ? 17 : 9.5;
           return (
             <g key={j} className={`lamp ${k}`}>
               <line x1={g.x} y1={g.wy} x2={g.x} y2={g.cy - ry} className="cord" />
               <circle cx={g.x} cy={g.cy} r={g.tag ? 64 : 14 + 32 * b} fill={`url(#ns-${k})`} style={{ opacity: g.tag ? 1 : 0.18 + 0.66 * b }} />
               <ellipse cx={g.x} cy={g.cy} rx={rx} ry={ry} className="globe" style={{ opacity: g.tag ? 1 : 0.28 + 0.72 * b }} />
               <ellipse cx={g.x} cy={g.cy + 1} rx={rx * 0.42} ry={ry * 0.5} className="mantle" style={{ opacity: g.tag ? 1 : 0.12 + 0.88 * b }} />
+              {j === ring && <circle cx={g.x} cy={g.cy} r="19" className={`ring ${s.partner!.act.toLowerCase()}`} />}
               {g.tag && <g className="tag"><line x1={g.x} y1={g.cy + ry} x2={g.x} y2={g.cy + ry + 16} className="cord" /><rect x={g.x - 40} y={g.cy + ry + 16} width="80" height="30" rx="4" /><text x={g.x} y={g.cy + ry + 38} textAnchor="middle">{ordinal(rankNow).toUpperCase()}</text></g>}
             </g>
           );
@@ -115,11 +118,25 @@ export default function NightSteps({ d, legend }: { d: Data; legend: string }) {
         </div>
         <div className="ns-story" aria-live="polite">
           <p className="ns-head data"><span>stop {shown + 1} of {d.steps.length} · {s.head}</span><span className="ns-hint">{shown < lastK ? "→ plays the night to the next turning point" : "settled · → next slide"}</span></p>
-          <div className="ns-duel">
-            <span className="side"><Glyph a={s.act} /><b>{s.act}</b><i>{d.tag.policy} · the tagged lamp</i></span>
-            {s.partner ? <><span className="vs">vs</span><span className="side"><Glyph a={s.partner.act} /><b>{s.partner.act}</b><i>{s.partner.name}{s.partner.house ? " · house agent" : ""}</i></span></> : <span className="vs">alone this turn</span>}
-            <span className={`dl ${s.delta < 0 ? "neg" : "pos"}`}>{signed(s.delta)}</span>
-          </div>
+          {s.strip ? (
+            <ol className="ns-strip" aria-label="The first turns of the run, from the trace">
+              {s.strip.map((c) => (
+                <li key={c.t} className={c.theirs === "STEAL" ? "hit" : ""}>
+                  <p className="data">turn {c.t} · {c.who}</p>
+                  <p className="acts"><Glyph a={c.theirs} /><b>{c.theirs}</b><span>vs</span><Glyph a={c.mine} /><b>{c.mine}</b><em className={c.delta < 0 ? "neg" : "pos"}>{signed(c.delta)}</em></p>
+                  <p className="note data">{c.note}</p>
+                </li>
+              ))}
+            </ol>
+          ) : settled ? (
+            <p className="ns-seal">settled · {ordinal(s.rank)} of {N}</p>
+          ) : (
+            <div className="ns-duel">
+              <span className="side"><Glyph a={s.act} /><b>{s.act}</b><i>{d.tag.policy}</i></span>
+              {s.partner ? <><span className="vs">vs</span><span className="side"><Glyph a={s.partner.act} /><b>{s.partner.act}</b><i>{s.partner.name}{s.partner.house ? " · house" : ""}</i></span></> : <span className="vs">alone this turn</span>}
+              <span className={`dl ${s.delta < 0 ? "neg" : "pos"}`}>{signed(s.delta)}</span>
+            </div>
+          )}
           <p className="ns-text">{s.text}</p>
           {s.rule && <p className="ns-rule data">{s.rule}</p>}
         </div>
@@ -127,7 +144,6 @@ export default function NightSteps({ d, legend }: { d: Data; legend: string }) {
       <figure className="ns-line">
         <svg viewBox={`0 0 ${LW} ${LH}`} role="img" aria-label={`The tagged lamp's rank after every turn: ${d.steps.map((x) => `${ordinal(x.rank)} at turn ${x.t}`).join(", ")}.`}>
           <defs><clipPath id="ns-clip"><rect x="-20" y="-20" width={lx(turn) + 20} height={LH + 40} /></clipPath></defs>
-          <text x="0" y="12" className="lbl">its rank after each turn</text>
           <polyline points={pts} className="ghost" />
           <polyline points={pts} className="drawn" clipPath="url(#ns-clip)" />
           {d.steps.map((x, k) => <g key={x.t} className={`stop${x.t <= turn ? " reached" : ""}${k === shown && atStop ? " here" : ""}`}><circle cx={lx(x.t)} cy={ly(x.rank)} r="9" /><text x={lx(x.t)} y={ly(x.rank) + (k === 0 || x.rank >= maxR - 1 ? 34 : -18)} textAnchor={k === 0 ? "start" : k === lastK ? "end" : "middle"}>{ordinal(x.rank)}</text></g>)}

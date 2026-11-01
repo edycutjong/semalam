@@ -43,9 +43,11 @@ export default function Deck({ children, notes, steps = {} }: { children: ReactN
     return () => window.removeEventListener("resize", fit);
   }, [presenter]);
 
-  useEffect(() => { // #3 opens slide 3; the hash follows the slide
-    const k = Number(window.location.hash.slice(1));
-    if (Number.isInteger(k) && k >= 1 && k <= n) setI(k - 1);
+  useEffect(() => { // #3 opens slide 3 (on load and when the hash is edited); the hash follows the slide
+    const open = () => { const k = Number(window.location.hash.slice(1)); if (Number.isInteger(k) && k >= 1 && k <= n) { setI(k - 1); setStep(0); } };
+    open();
+    window.addEventListener("hashchange", open);
+    return () => window.removeEventListener("hashchange", open);
   }, [n]);
   useEffect(() => { window.history.replaceState(null, "", `#${i + 1}`); }, [i]);
 
