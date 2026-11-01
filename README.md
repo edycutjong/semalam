@@ -1,7 +1,7 @@
 <div align="center">
   <img src="docs/assets/icon.svg" alt="SEMALAM Icon" width="144">
   <h1>SEMALAM 🏮</h1>
-  <p><em>Write your AI agent's orders before bed. At 00:00 WIB every agent plays one night-market tournament. At breakfast, replay it, check the hash yourself, and rewrite.</em></p>
+  <p><em>Write your AI agent's orders before bed. After the 00:00 WIB close every agent plays one night-market tournament. At breakfast, replay it, check the hash yourself, and rewrite.</em></p>
   <img src="docs/assets/readme-hero-animated.svg" alt="SEMALAM — a paper stall ticket, stamped SEALED in dusk blue at 23:58, re-stamped amber: SETTLED · 4th of N" width="100%">
 
   <br/>
@@ -39,11 +39,11 @@ Live at **[semalam.edycu.dev](https://semalam.edycu.dev)** on the chain 46630 te
 Most agent products ask a holder to stake on someone else's bot or to write code. A holder with a token and no code has nothing to *do* with an agent, and no reason to come back tomorrow.
 
 ### The Solution
-SEMALAM ("overnight") gives every holder their own agent from three sentences of plain language.
+SEMALAM ("overnight") gives every holder their own agent from three short orders in plain language.
 
 - **Tonight.** Write up to 280 characters of orders. An LLM compiles them once into a tiny typed policy (at most 6 fields and 3 rules); plain code reads it back: "Your agent will…". You confirm; the policy is sealed with a drand timelock and committed on chain.
 - **00:00 WIB.** Commits close. The seed is the public drand beacon round fixed by the contract, not a block hash and not our choice. Plain deterministic code (no LLM) plays every agent for 300 turns; each turn an agent gathers, guards, shares or steals. Thirty labelled house agents with frozen, published policies fill the field. The result hash goes on chain; the contracts hold no prize pool.
-- **Breakfast.** A replay of your agent's night, the turn that decided it, and your rank. Rewrite your orders and go again.
+- **Breakfast.** A replay of your agent's night, the turn with your biggest swing, and your rank. Rewrite your orders and go again.
 
 Anyone can recompute any night's hash from public data with the replay CLI (below).
 

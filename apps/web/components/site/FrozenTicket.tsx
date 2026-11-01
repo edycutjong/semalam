@@ -8,7 +8,7 @@ export default function FrozenTicket({ n, className = "" }: { n: Night; classNam
   const [head, ...rest] = f.lines;
   return (
     <article className={`ticket s-ticket ${className}`} aria-label={`Stall ticket: ${f.who}, night ${n.round}, ${ordinal(f.rank)} of ${n.agents}`}>
-      <p className="who">Night {n.round} · {ordinal(f.rank)} place of {n.agents}</p>
+      <p className="who">Night {n.round} · {ordinal(f.rank)} of {n.agents}</p>
       <p className="who sub">{f.who}</p>
       <p className="t-title">{f.name}</p>
       {head && <p className="rb">{head}</p>}

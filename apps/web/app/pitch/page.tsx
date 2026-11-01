@@ -12,7 +12,7 @@ import "./deck.css";
 export const revalidate = 60; // the same numbers as the landing page, at most a minute old
 export const metadata: Metadata = {
   title: "SEMALAM — pitch deck",
-  description: "Ten slides: orders at bedtime, one deterministic night market at 00:00 WIB, a replay and a hash at breakfast.",
+  description: "Ten slides: orders at bedtime, one deterministic night market after the 00:00 WIB close, a replay and a hash at breakfast.",
   alternates: { canonical: "/pitch" },
 };
 
@@ -26,10 +26,10 @@ function Foot({ k, chain }: { k: number; chain: string }) {
   return <footer className="slide-foot"><span>SEMALAM · {chain}{SHA ? ` · build ${SHA}` : ""}</span><span>{REPO.replace("https://", "")}</span><span className="pg">{String(k).padStart(2, "0")} / 10</span></footer>;
 }
 const STOPS = [
-  { t: "23:40", k: "sealed", h: "Sealed", p: "orders timelocked to a drand round" },
+  { t: "bedtime", k: "sealed", h: "Sealed", p: "orders timelocked to a drand round (23:40 in our example)" },
   { t: "00:00 WIB", k: "dark", h: "Closed", p: "commits stop; nobody can read them yet" },
   { t: "00:05", k: "dark", h: "Seeded, played", p: "the drand beacon opens every policy; plain code plays 300 turns" },
-  { t: "06:10", k: "settled", h: "Settled", p: "hash on chain only if the CLI agrees; replay and re-check" },
+  { t: "00:05–00:30", k: "settled", h: "Posted", p: "the hash goes on chain only if the CLI agrees; replay it at breakfast" },
 ];
 
 export default async function Pitch() {
@@ -43,14 +43,14 @@ export default async function Pitch() {
   const qa = Boolean(n && n.qaPlayers === n.players && n.players > 0);
   const paidQa = d.paidRuns !== null && d.paidRuns > 0 && d.paidQa === d.paidRuns;
   const notes = [
-    "SEMALAM is a night market your agent plays while you sleep. Orders at bedtime; at midnight Jakarta time every agent plays one tournament; at breakfast you watch it back. The ticket is real: the 4th place of the latest testnet night, one of our own QA accounts, not a user.",
+    "SEMALAM is a night market your agent plays while you sleep. Orders at bedtime; after the midnight close (Jakarta time) every agent plays one tournament; at breakfast you watch it back. The ticket is real: the 4th place of the latest testnet night, one of our own QA accounts, not a user.",
     "A holder with a token and no code has nothing to do with an agent tonight. That is the gap: no reason to open the app, and no reason to come back tomorrow.",
-    "Picture our player, a night-shift nurse — an illustrative persona, not a user. In bed at 23:40, lights off, one thumb, three plain sentences. The counter is the real count against our 280-character limit.",
+    "Picture our player, a night-shift nurse — an illustrative persona, not a user. In bed at 23:40, lights off, one thumb, three short orders. The counter is the real count against our 280-character limit.",
     "This is a real call to the live compiler with exactly that sentence. The model runs once; plain code turns the policy back into these lines, and only what you read gets sealed. No model plays the night.",
-    "One night in four stops. Sealed with a drand timelock at bedtime; closed at midnight; opened and played after the beacon five minutes later; settled on chain only when the CLI agrees, then replayed at breakfast.",
+    "One night in four stops. Sealed with a drand timelock at bedtime; closed at midnight; opened and played after the beacon five minutes later; posted on chain only when the CLI agrees (night 2 posted at 00:25 WIB), then replayed at breakfast.",
     "The latest settled night. Its artifact's hash equals the one posted on chain. One lamp per agent, brighter means a higher final rank, house agents are grey and never score. The accounts are our own QA runs so far.",
     "This is the $WIF reason. Practice beyond your free run costs $WIF, and 80 percent is burned by the token's own burn function. The season crown needs a paid run. There is no prize pool to drain. On testnet the burns so far are our QA runs, with a mock token.",
-    "We don't ask anyone to trust our server. Every posted night is re-checked by the CLI before it goes on chain, and the golden nights hash the same on nine runtimes.",
+    "We don't ask anyone to trust our server: the CLI recomputes every night from chain data. Every posted night is re-checked by the CLI before it goes on chain, and the golden nights hash the same on nine runtimes.",
     "Honest status: testnet only, numbers from our own QA runs, house agents labelled. The three notes are shortened from our README's Honest limits 1, 3 and 5.",
     "The ask: play one night and check the hash at breakfast. The QR opens tonight's page.",
   ];
@@ -66,7 +66,7 @@ export default async function Pitch() {
             <div>
               <p className="kick"><img src="/icon.svg" alt="" width={46} height={46} className="cover-icon" /><span className="pill">World Is Flat · games</span><span className={`pill${d.testnet ? " test" : ""}`}>{chain}</span></p>
               <h1>You sleep. Your agent works the <em>night market.</em></h1>
-              <p className="lede">Orders at bedtime. Every agent plays at 00:00 WIB. A replay, a rank and a hash at breakfast.</p>
+              <p className="lede">Orders at bedtime. The market closes at 00:00 WIB and plays when the drand beacon lands. A replay, a rank and a hash at breakfast.</p>
               <div className="mini-term"><span className="pr">$</span> {cli}<br /><span className="ok">{last.replace(/\s+/g, " ").replace(/(0x[0-9a-f]{6})[0-9a-f]{54}([0-9a-f]{4})/g, "$1…$2")}</span></div>
             </div>
             {n && <FrozenTicket n={n} className="deck-ticket" />}
@@ -98,7 +98,7 @@ export default async function Pitch() {
           <div className="split">
             <div>
               <p className="kick">23:40 · lights off · one thumb</p>
-              <h2>Three sentences before bed.</h2>
+              <h2>Three orders before bed.</h2>
               <p className="lede">Picture a night-shift nurse in Surabaya: a token, no code. At 06:10, with coffee, they want to know how their agent did.</p>
             </div>
             <div className="draft">
@@ -171,8 +171,7 @@ export default async function Pitch() {
 
         <section className="slide s8" aria-label="Built well">
           <h2>Don&apos;t trust us. Re-run it.</h2>
-          <div className="hero-num"><span className="big">{d.matched}/{d.nights}</span><span className="lbl"><b className="ok">✓ MATCH</b> posted nights re-checked by the CLI</span></div>
-          <p className="cmd data"><span className="pr">$</span> {cli}</p>
+          <div className="hero-num"><span className="big">{d.matched}/{d.nights}</span><div className="rhs"><b className="ok">✓ MATCH</b><span className="lbl">posted nights re-checked by the CLI, from public chain data</span><p className="cmd data"><span className="pr">$</span> {cli}</p></div></div>
           <p className="foot-stats">{d.evidence.runtimes} runtimes, one hash · {d.evidence.p50} ms p50, {d.evidence.benchAgents} agents × {d.evidence.benchTurns} turns · {d.evidence.golden}/{d.evidence.goldenOf} golden prompts · {d.evidence.injectionsSafe}/{d.evidence.injectionsOf} injections refused or kept in schema</p>
           <Foot k={8} chain={chain} />
           <aside className="speaker-notes">{notes[7]}</aside>

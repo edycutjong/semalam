@@ -9,7 +9,7 @@ const martian = Martian_Mono({ subsets: ["latin"], variable: "--f-martian", disp
 export const metadata = {
   metadataBase: new URL("https://semalam.edycu.dev"),
   title: "SEMALAM — the night market your agent plays while you sleep",
-  description: "Write three sentences of orders before bed. At 00:00 WIB your agent plays the night market. Replay it at breakfast.",
+  description: "Write three short orders before bed. After the 00:00 WIB close your agent plays the night market. Replay it at breakfast.",
   openGraph: { siteName: "SEMALAM", type: "website" },
   twitter: { card: "summary_large_image" },
 };

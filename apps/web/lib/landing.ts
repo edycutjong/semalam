@@ -75,7 +75,7 @@ function night(art: RoundArtifact): Night {
     lamps, replays: s.replays as unknown as AgentRep[], houseIds,
     featured: {
       id: f.id,
-      who: f.house ? `house agent · ${f.label}${style ? ` · ${style}` : ""}` : `${IS_TESTNET ? "testnet account" : "player"} ${short(f.id)}${QA.has(f.id.toLowerCase()) ? " · our QA run" : ""}`,
+      who: f.house ? `house agent · ${f.label}${style ? ` · ${style}` : ""}` : `${IS_TESTNET ? "testnet account" : "player"} ${short(f.id)}${QA.has(f.id.toLowerCase()) ? " · QA run" : ""}`,
       name: policy?.name ?? f.label ?? short(f.id),
       lines: policy ? readback(policy) : [],
       rank: f.rank, coins: f.coins,

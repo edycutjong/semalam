@@ -56,16 +56,18 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .big-lamp .tag-k { font: 400 15px var(--font-display); fill: #2A2140; } .deck .big-lamp .tag-s { font: 400 11px var(--font-data); fill: #4a3d6b; }
 
 /* 3 the person */
-.deck .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 100px; align-items: center; margin: auto 0; }
-.deck .s3 h2 { font-size: 96px; }
+.deck .split { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 90px; align-items: center; margin: auto 0; }
+.deck .s3 h2 { font-size: 112px; }
+.deck .s3 .lede { font-size: 38px; }
 .deck .draft { position: relative; background: var(--paper); color: var(--paper-ink); border-radius: 14px; padding: 44px 50px 40px 70px; transform: rotate(-1.6deg); box-shadow: 0 30px 60px rgba(0, 0, 0, .45); }
 .deck .draft::before, .deck .rb-ticket::before { content: ""; position: absolute; left: 30px; top: 22px; bottom: 22px; border-left: 3px dashed rgba(42, 33, 64, .35); }
-.deck .draft .orders { font: italic 400 46px/1.3 var(--font-body); margin: 0 0 26px; }
+.deck .draft { padding: 60px 64px 130px 84px; }
+.deck .draft .orders { font: italic 400 58px/1.28 var(--font-body); margin: 0 0 30px; }
 .deck .draft .count { font-size: 19px; color: #4a3d6b; margin: 0; }
-.deck .draft .stamp { position: absolute; right: 40px; bottom: 30px; font-size: 26px; animation: none; }
+.deck .draft .stamp { position: absolute; right: 48px; bottom: 40px; font-size: 26px; animation: none; }
 
 /* 4 solution */
-.deck .flow { display: grid; grid-template-columns: minmax(0, .82fr) 210px minmax(0, 1.18fr); gap: 26px; align-items: center; margin-top: auto; }
+.deck .flow { display: grid; grid-template-columns: minmax(0, .58fr) 170px minmax(0, 1.42fr); gap: 24px; align-items: center; margin-top: auto; }
 .deck .flow .in { border: 2px dashed var(--rule); border-radius: 16px; padding: 30px 32px; }
 .deck .flow .in .who { color: var(--muted); }
 .deck .flow .in .orders { font: italic 400 36px/1.35 var(--font-body); margin: 0; }
@@ -76,7 +78,8 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .browser .bar i { width: 12px; height: 12px; border-radius: 50%; background: var(--rule); }
 .deck .browser .bar span { margin-left: 12px; }
 .deck .rb-ticket { margin: 26px 30px 30px; padding: 22px 28px 16px 52px; transform: rotate(-.6deg); }
-.deck .rb-ticket li { font-size: 21px; }
+.deck .rb-ticket li { font-size: 27px; }
+.deck .rb-ticket .who { font-size: 18px; }
 .deck .rb-ticket li.in { padding-left: 22px; }
 .deck .lede.narrow { margin: 46px 0 auto; font-size: 30px; }
 
@@ -84,7 +87,7 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .night { list-style: none; margin: auto 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px; position: relative; }
 .deck .night::before { content: ""; position: absolute; left: -120px; right: -120px; top: 0; height: 40px; border-top: 3px solid #4c4170; border-radius: 50% 50% 0 0 / 30px 30px 0 0; }
 .deck .night li { position: relative; text-align: center; }
-.deck .stop-lamp { width: 240px; height: auto; display: block; margin: 0 auto 8px; overflow: visible; }
+.deck .stop-lamp { width: 330px; height: auto; display: block; margin: 0 auto 8px; overflow: visible; }
 .deck .stop-lamp .cord { stroke: #4c4170; stroke-width: 3; }
 .deck .stop-lamp .cap { fill: #2A2140; stroke: #7a6ea0; stroke-width: 2; }
 .deck .stop-lamp .globe { fill: #2c2449; stroke: #5c5182; stroke-width: 2; } .deck .stop-lamp .mantle { fill: #3A2F55; } .deck .stop-lamp .halo { fill: none; }
@@ -94,8 +97,8 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .night .settled .halo { fill: rgba(255, 181, 71, .2); filter: blur(6px); }
 .deck .night .t { font: 400 26px var(--font-data); letter-spacing: 1px; color: var(--muted); margin: 0 0 10px; }
 .deck .night .sealed .t { color: var(--before); } .deck .night .settled .t { color: var(--after); }
-.deck .night h3 { font-size: 54px; margin: 0 0 16px; }
-.deck .night p:last-child { font-size: 30px; line-height: 1.35; color: #d8ccb4; margin: 0 auto; max-width: 15em; }
+.deck .night h3 { font-size: 58px; margin: 0 0 16px; }
+.deck .night p:last-child { font-size: 32px; line-height: 1.35; color: #d8ccb4; margin: 0 auto; max-width: 15em; }
 
 /* 6 the latest night */
 .deck .s6 .lampstring { margin: -10px -120px 0; }
@@ -112,24 +115,26 @@ html:has(.deck), html:has(.deck) body { height: 100%; overflow: hidden; backgrou
 .deck .burnt { color: var(--ink); background: radial-gradient(120% 140% at 30% 50%, #3b2b26 0, #20161a 55%, #140e14 100%); }
 .deck .kept { flex-direction: column; color: var(--paper-ink); background: var(--paper); box-shadow: inset 22px 0 22px -10px rgba(70, 36, 12, .6); }
 .deck .wif-line { font-size: 34px; line-height: 1.4; color: #d8ccb4; text-align: center; margin: 70px auto 0; max-width: 36em; }
-.deck .counter { margin: 26px 0 auto; text-align: center; font-size: 28px; color: var(--muted); }
-.deck .counter b { font: 400 60px var(--font-display); color: var(--ink); margin-right: 14px; }
+.deck .counter { margin: 26px 0 auto; text-align: center; font: 400 22px var(--font-data); color: var(--muted); }
+.deck .counter b { font-weight: 400; color: var(--ink); margin-right: 6px; }
 
 /* 8 one number */
-.deck .hero-num { margin: auto 0 0; display: flex; align-items: baseline; gap: 48px; }
-.deck .hero-num .big { font: 400 300px/.9 var(--font-display); color: var(--ink); text-shadow: 6px 6px 0 #120d22; }
+.deck .hero-num { margin: auto 0 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 70px; align-items: center; }
+.deck .hero-num .rhs { display: flex; flex-direction: column; gap: 18px; }
+.deck .hero-num .rhs > b { font: 400 110px/1 var(--font-display); }
+.deck .hero-num .big { font: 400 340px/.9 var(--font-display); color: var(--ink); text-shadow: 6px 6px 0 #120d22; }
 .deck .hero-num .lbl { font-size: 38px; line-height: 1.3; color: #d8ccb4; max-width: 13em; }
-.deck .hero-num .lbl b { display: block; font: 400 64px var(--font-display); margin-bottom: 8px; }
-.deck .cmd { margin: 54px 0 0; font-size: 24px; background: #120D22; border: 1px solid var(--rule); border-radius: 12px; padding: 22px 28px; color: var(--ink); }
+
+.deck .cmd { margin: 8px 0 0; font-size: 24px; background: #120D22; border: 1px solid var(--rule); border-radius: 12px; padding: 22px 28px; color: var(--ink); }
 .deck .cmd .pr { color: var(--after); }
-.deck .foot-stats { margin: 26px 0 auto; font: 400 22px/1.5 var(--font-data); color: var(--muted); }
+.deck .foot-stats { margin: 60px 0 auto; font: 400 22px/1.5 var(--font-data); color: var(--muted); }
 
 /* 9 three pinned notes */
 .deck .status { margin: 0; font-size: 22px; color: var(--muted); }
 .deck .limits { list-style: none; padding: 0; margin: auto 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 44px; align-items: start; }
-.deck .limits li { position: relative; background: var(--paper); color: var(--paper-ink); padding: 44px 40px 40px; font-size: 32px; line-height: 1.32; box-shadow: 0 18px 34px rgba(0, 0, 0, .4); }
+.deck .limits li { position: relative; background: var(--paper); color: var(--paper-ink); padding: 60px 52px 56px; font-size: 40px; line-height: 1.32; box-shadow: 0 18px 34px rgba(0, 0, 0, .4); }
 .deck .limits li::before { content: ""; position: absolute; top: -12px; left: 50%; width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff8a6b, #a0301c); box-shadow: 0 3px 4px rgba(0, 0, 0, .35); }
-.deck .limits li b { display: block; font: 400 30px var(--font-display); text-transform: uppercase; color: #a0301c; margin-bottom: 14px; }
+.deck .limits li b { display: block; font: 400 38px var(--font-display); text-transform: uppercase; color: #a0301c; margin-bottom: 14px; }
 .deck .limits li:nth-child(1) { transform: rotate(-1.4deg); } .deck .limits li:nth-child(2) { transform: rotate(1deg); margin-top: 40px; } .deck .limits li:nth-child(3) { transform: rotate(-.6deg); margin-top: 14px; }
 
 /* 10 the ask */
