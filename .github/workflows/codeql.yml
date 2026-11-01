@@ -28,7 +28,7 @@ jobs:
           upload: ${{ github.event.repository.private && 'never' || 'always' }}
           output: sarif
       - if: github.event.repository.private
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: codeql-sarif
           path: sarif

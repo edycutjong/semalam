@@ -133,7 +133,7 @@ jobs:
           echo "static JS: ${KB} KB (tlock + BLS load only when a player seals)"
           if [ "$KB" -gt 2000 ]; then echo "::error::static JS ${KB} KB > 2000 KB budget"; exit 1; fi
           if [ "$KB" -gt 1500 ]; then echo "::warning::static JS ${KB} KB > 1500 KB"; fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: web-build
           path: |
@@ -156,14 +156,14 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: web-build
       - run: pnpm --filter @semalam/web exec playwright install --with-deps chromium
       - name: smoke, orders journey, responsive (no secrets set)
         run: pnpm --filter @semalam/web e2e
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
@@ -184,7 +184,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: web-build
       - name: Lighthouse (accessibility < 0.9 fails; performance, best practices, SEO warn)
