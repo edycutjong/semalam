@@ -8,7 +8,6 @@ const LINKS = [
   { href: "/board", label: "Board" },
   { href: "/scrimmage", label: "Scrimmage" },
   { href: "/fidelity", label: "Check my orders" },
-  { href: "/playtest", label: "Playtest" },
 ];
 export default function Nav() {
   const path = usePathname();

@@ -41,8 +41,8 @@ button, .btn { font: 400 16px/1 var(--font-display); text-transform: uppercase; 
 button:hover:not(:disabled), .btn:hover { background: var(--ink); color: var(--bg); }
 button:active:not(:disabled), .btn:active { transform: translateY(1px) scale(.98); }
 /* primary = a paper ticket (design.md): amber ink stays the settled state — stamps, lit lamps, your rank */
-button.primary { background: var(--paper); border-color: var(--paper); color: var(--paper-ink); }
-button.primary:hover:not(:disabled) { background: #fffaf0; border-color: #fffaf0; color: var(--paper-ink); box-shadow: 0 0 22px rgba(255,244,218,.35); }
+button.primary, .btn.primary { background: var(--paper); border-color: var(--paper); color: var(--paper-ink); }
+button.primary:hover:not(:disabled), .btn.primary:hover { background: #fffaf0; border-color: #fffaf0; color: var(--paper-ink); box-shadow: 0 0 22px rgba(255,244,218,.35); }
 button.quiet, .btn.quiet { border-color: var(--rule); color: var(--muted); }
 button.quiet:hover:not(:disabled), .btn.quiet:hover { border-color: var(--ink); background: var(--rule); color: var(--ink); }
 button:disabled { opacity: .45; cursor: not-allowed; }

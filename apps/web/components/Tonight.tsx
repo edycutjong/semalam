@@ -30,6 +30,11 @@ const EXAMPLES: { label: string; text: string }[] = [
   { label: "Grudge keeper", text: "Share with everyone, all night. Anyone who steals from me, I steal back from them for the rest of the night. Never forgive." },
 ];
 
+/** the free scrimmage runs the round's FIRST sealed orders; only those get the "free" label */
+function lsFirstHash(round: number): string | null {
+  try { return (JSON.parse(localStorage.getItem(`semalam.first.${round}`) ?? "null")?.policyHash ?? null)?.toLowerCase() ?? null; } catch { return null; }
+}
+
 export default function Tonight() {
   const [st, setSt] = useState<StatusJson | null>(null);
   const [stErr, setStErr] = useState<string | null>(null);
@@ -135,8 +140,8 @@ export default function Tonight() {
       <section aria-label="Write your orders">
         <div className="eyebrow">{st ? `Round ${st.round}` : "Tonight"} {st?.testnet && <span className="badge test">testnet · {st.wifLabel}</span>}</div>
         <h1>Tonight</h1>
-        <p className="lead">Write your orders before bed. At 00:00 WIB your agent plays the night market; replay it at breakfast.</p>
-        {st && <p className="data">closes in <Countdown round={st.round} closeTime={st.closeTime} chainNow={st.chainNow} serverNow={st.serverNow} /> · <span className={`badge ${st.relay ? "relay" : ""}`}>{st.relay ? "gasless · relay" : st.relayState === "spent-tonight" ? "relay spent for tonight — use your own wallet" : "relay empty — use your own wallet"}</span></p>}
+        <p className="lead">Write your orders before bed. Seal them and watch them play last night&apos;s field right away, free. At 00:00 WIB your agent plays the real night; replay it at breakfast.</p>
+        {st && <p className="data">closes in <Countdown round={st.round} closeTime={st.closeTime} chainNow={st.chainNow} serverNow={st.serverNow} /> ({new Date(st.closeTime * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} your time) · <span className={`badge ${st.relay ? "relay" : ""}`}>{st.relay ? "gasless · relay" : st.relayState === "spent-tonight" ? "relay spent for tonight — use your own wallet" : "relay empty — use your own wallet"}</span></p>}
         {st && <p style={{ margin: "-6px 0 14px" }}><button type="button" className="quiet chip" onClick={nightlyReminder}>Nightly reminder (.ics)</button></p>}
         {stErr && <p className="note warn" role="alert">{stErr}</p>}
         {signer && st && st.round > 0 && <Ritual account={signer.address} round={st.round} sealedTonight={st.commits.length > 0} />}
@@ -207,13 +212,13 @@ export default function Tonight() {
         {(phase === "identity" || (phase === "sealing" && !entered)) && policy && (
           <div className="card" style={{ marginTop: 18 }}>
             <h3 style={{ fontSize: 20 }}>Who is playing?</h3>
-            <p className="muted" style={{ marginTop: 0 }}>One identity commits and pays. Sealing locks your orders to a public beacon, so nobody can read them from the chain before midnight.{viaLLM ? " The words you typed went through the AI compiler, which the operator can see; the builder never shows anyone." : " Your words never left this browser."}</p>
+            <p className="muted" style={{ marginTop: 0 }}>One identity commits and pays. Sealing locks your orders to a public beacon, so nobody can read them from the chain before midnight.{viaLLM ? " The words you typed went through the AI compiler, which the operator can see; the builder never shows anyone." : " Your words never left this browser."} {st?.relay ? `Sealing signs one typed message, “SEMALAM Orders · Commit”: your address, round ${st.round}, the policy and sealed-blob hashes, a nonce and a 15-minute deadline.` : "Sealing sends one transaction, Orders.commit with the round, the policy hash and the sealed blob."} It approves no token and moves no $WIF.</p>
             {signer?.mode === "local" ? <p className="data" style={{ wordBreak: "break-all" }}>your key stays in this browser · {st?.relay ? <HashLine value={signer.address} short /> : <HashLine value={signer.address} />}</p> : null}
             <div className="row">
               <button type="button" className="primary" onClick={pickLocal} disabled={phase === "sealing"}>Play without a wallet</button>
               <button type="button" onClick={pickWallet} disabled={phase === "sealing" || !hasWallet}>Connect wallet</button>
             </div>
-            <p className="muted" style={{ fontSize: 15 }}>{st?.relay ? "Without a wallet we make a key in this browser; the relay pays the gas, so it costs you nothing." : "The relay is empty right now: a browser key needs a little testnet ETH to commit itself — send some to the address above, then press Seal again, or connect a wallet that has ETH."} Connect a wallet to keep one identity across devices.</p>
+            <p className="muted" style={{ fontSize: 15 }}>{st?.relay ? "Without a wallet we make a key in this browser; the relay pays the gas, so it costs you nothing." : `The relay is empty right now: a browser key needs a little ${st?.testnet ? "testnet " : ""}ETH to commit itself — send some to the address above, then press Seal again, or connect a wallet that has ETH.`} Connect a wallet to keep one identity across devices.</p>
             {signer?.mode === "local" && !st?.relay && <button type="button" className="quiet" onClick={() => { const k = exportLocalKey(); if (k) copyText(k); }}>Copy private key</button>}
             {phase === "sealing" && <p className="data" role="status">{step}</p>}
             {err && <p className="note warn" role="alert">{err}</p>}
@@ -232,7 +237,7 @@ export default function Tonight() {
             )}
             <p className="note">Entered. The chain shows your commit ({entered.mode === "relay" ? "gasless, through the relay" : "sent from your wallet"}). You can re-commit until the close; only your latest counts.</p>
             <div className="row">
-              <Link className="btn" href="/scrimmage">Practise this draft</Link>
+              <Link className="btn primary" href="/scrimmage">{lsFirstHash(entered.round) === entered.policyHash.toLowerCase() ? "Watch it play now · free" : "Practise this draft"}</Link>
               <Link className="btn" href={`/round/${entered.round}`}>Where breakfast will be</Link>
               <button type="button" className="quiet" onClick={() => { setPhase("write"); setEntered(null); setRes(null); }}>Rewrite</button>
             </div>
