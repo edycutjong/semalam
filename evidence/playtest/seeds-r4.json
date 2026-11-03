@@ -1,0 +1,161 @@
+{
+ "what": "re-runs of the settled night's field under other seeds (internal QA)",
+ "round": 4,
+ "seeds": 100,
+ "table": [
+  {
+   "bot": "p07",
+   "median": 4,
+   "best": 1,
+   "worst": 24,
+   "top10": 91
+  },
+  {
+   "bot": "p14",
+   "median": 5,
+   "best": 1,
+   "worst": 18,
+   "top10": 83
+  },
+  {
+   "bot": "p08",
+   "median": 12,
+   "best": 1,
+   "worst": 44,
+   "top10": 49
+  },
+  {
+   "bot": "p10",
+   "median": 13,
+   "best": 1,
+   "worst": 40,
+   "top10": 39
+  },
+  {
+   "bot": "p04",
+   "median": 14,
+   "best": 1,
+   "worst": 41,
+   "top10": 32
+  },
+  {
+   "bot": "p20",
+   "median": 17,
+   "best": 1,
+   "worst": 46,
+   "top10": 37
+  },
+  {
+   "bot": "p03",
+   "median": 17,
+   "best": 2,
+   "worst": 39,
+   "top10": 24
+  },
+  {
+   "bot": "p19",
+   "median": 19,
+   "best": 1,
+   "worst": 39,
+   "top10": 20
+  },
+  {
+   "bot": "p05",
+   "median": 19,
+   "best": 1,
+   "worst": 48,
+   "top10": 15
+  },
+  {
+   "bot": "p06",
+   "median": 19,
+   "best": 1,
+   "worst": 49,
+   "top10": 26
+  },
+  {
+   "bot": "p15",
+   "median": 22,
+   "best": 10,
+   "worst": 49,
+   "top10": 1
+  },
+  {
+   "bot": "p12",
+   "median": 24,
+   "best": 2,
+   "worst": 45,
+   "top10": 14
+  },
+  {
+   "bot": "p01",
+   "median": 25,
+   "best": 1,
+   "worst": 43,
+   "top10": 12
+  },
+  {
+   "bot": "p11",
+   "median": 27,
+   "best": 8,
+   "worst": 45,
+   "top10": 2
+  },
+  {
+   "bot": "p13",
+   "median": 30,
+   "best": 8,
+   "worst": 50,
+   "top10": 4
+  },
+  {
+   "bot": "p18",
+   "median": 33,
+   "best": 10,
+   "worst": 49,
+   "top10": 3
+  },
+  {
+   "bot": "p17",
+   "median": 38,
+   "best": 7,
+   "worst": 49,
+   "top10": 1
+  },
+  {
+   "bot": "p09",
+   "median": 44,
+   "best": 1,
+   "worst": 50,
+   "top10": 11
+  },
+  {
+   "bot": "p02",
+   "median": 44,
+   "best": 11,
+   "worst": 50,
+   "top10": 0
+  },
+  {
+   "bot": "p16",
+   "median": 45,
+   "best": 12,
+   "worst": 50,
+   "top10": 0
+  }
+ ],
+ "winners": {
+  "p10": 3,
+  "house": 50,
+  "p09": 4,
+  "p07": 13,
+  "p14": 8,
+  "p04": 5,
+  "p20": 6,
+  "p19": 1,
+  "p05": 1,
+  "p06": 2,
+  "p08": 6,
+  "p01": 1
+ }
+}
