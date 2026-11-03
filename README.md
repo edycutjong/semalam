@@ -121,7 +121,7 @@ Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and pe
 3. A Sybil can fill the 1,000-account admission cap per round with own-wallet commits (cost per night is not benchmarked here). Stated, not solved.
 4. Across 48 simulated seeds a pure single-action policy (excluding COPY_LEADER) won outright 5 times, and pure STEAL took 10 of the 13 pure top-10 finishes ([`evidence/sim-tuning.json`](evidence/sim-tuning.json)); real fields are not random, and the playtest is where this is watched.
 5. Gas-free onboarding is a relay with a per-night budget, not account abstraction (cut after the architecture review); when the relay is empty the app asks for your own wallet.
-6. Round 1 is a labelled rehearsal night (house agents only, no season).
+6. Round 1 is a labelled rehearsal night (the 30 house agents plus one operator smoke commit, no season).
 
 Earlier versions had defects (dispute path, relay drain bound, crown verifiability); each is fixed and covered by a test.
 
