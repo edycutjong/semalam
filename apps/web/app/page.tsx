@@ -194,7 +194,7 @@ export default async function Landing() {
           <h2 id="h-honest">What isn&apos;t done yet.</h2>
           <p className="s-sub">Lifted from the README&apos;s limits. Judges should hear them from us first.</p>
           <div className="notes">
-            <blockquote className="n1"><p className="k">Not live yet</p><p>The chain 4663 deployment is not live yet; everything above runs on the 46630 testnet with a mock token, except the fork test.</p><cite>README · Honest limits, 1</cite></blockquote>
+            <blockquote className="n1"><p className="k">Hours old</p><p>The chain 4663 deployment is hours old: its first night (round 1) has not been settled yet, and any night shown above that is older comes from the 46630 testnet with a mock token.</p><cite>README · Honest limits, 1</cite></blockquote>
             <blockquote className="n2"><p className="k">Stated, not solved</p><p>A Sybil can fill the 1,000-account admission cap per round with own-wallet commits … Stated, not solved.</p><cite>README · Honest limits, 3</cite></blockquote>
             <blockquote className="n3"><p className="k">A relay, not AA</p><p>Gas-free onboarding is a relay with a per-night budget, not account abstraction … when the relay is empty the app asks for your own wallet.</p><cite>README · Honest limits, 5</cite></blockquote>
           </div>

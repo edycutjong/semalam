@@ -222,7 +222,7 @@ export default async function Pitch() {
           <h2>Where it stands, honestly.</h2>
           <p className="status data">{chain} · {d.nights} nights posted · night {n?.round ?? "—"}: {n?.players ?? 0} {qa ? "QA" : "player"} accounts + {n?.house ?? 0} house · {d.paidRuns ?? "—"} paid runs{paidQa ? " (QA)" : ""}</p>
           <ul className="limits">
-            <li><b>Not live yet.</b> The chain 4663 deployment is not live; everything runs on the 46630 testnet with a mock token.</li>
+            <li><b>Hours old.</b> The chain 4663 deployment is hours old and its first night has not settled; earlier nights shown here are from the 46630 testnet with a mock token.</li>
             <li><b>Stated, not solved.</b> One person with many wallets can fill the 1,000-account cap per round.</li>
             <li><b>Gas-free, with limits.</b> Our relay pays the gas up to a nightly limit; after that you use your own wallet.</li>
           </ul>

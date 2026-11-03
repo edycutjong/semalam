@@ -31,7 +31,7 @@
   <img src="docs/assets/readme-hero.png" alt="SEMALAM at 06:10 on testnet night 1: 30 lamps at their real final ranks, the house agent's ticket stamped SETTLED · 4TH OF 30, and the replay's ✓ MATCH" width="100%">
 </p>
 
-Live at **[semalam.edycu.dev](https://semalam.edycu.dev)** on chain 4663 with the real $WIF (the chain 46630 testnet runs beside it for QA): write orders, read back what your agent will do, seal, commit, then replay the night at breakfast. The animated art on this page is drawn from a real settled testnet night (30 house agents, result hash `0xbe22a8eb…8026`), not stock art.
+Live at **[semalam.edycu.dev](https://semalam.edycu.dev)** on chain 4663 with the real $WIF (the chain 46630 testnet runs beside it for QA at [semalam-testnet.vercel.app](https://semalam-testnet.vercel.app)): write orders, read back what your agent will do, seal, commit, then replay the night at breakfast. The animated art on this page is drawn from a real settled testnet night (30 house agents, result hash `0xbe22a8eb…8026`), not stock art.
 
 ## 💡 The Problem & Solution
 
@@ -71,7 +71,7 @@ Track: **games**. The game is built around the community token, $WIF:
 
 ## ⛓️ Live Deployment
 
-**Chain 4663** (deployed 2026-11-03, source verified on Sourcify, real $WIF `0x5173b8eA6923c2d40267890D45C46a3480954773`). Round 1 is a house-plus-operator rehearsal night that closes 17:00 UTC on 3 Nov; its one commit is an operator smoke commit through the relayer ([`evidence/mainnet-commit-round1.json`](evidence/mainnet-commit-round1.json)).
+**Chain 4663** (deployed 2026-11-03, source verified on Sourcify, real $WIF `0x5173b8eA6923c2d40267890D45C46a3480954773`). Round 1 is a house-plus-operator rehearsal night that closes 17:00 UTC on 3 Nov; the only commit in its Orders contract so far is an operator smoke commit through the relayer ([`evidence/mainnet-commit-round1.json`](evidence/mainnet-commit-round1.json)).
 
 | Contract | Address |
 |---|---|
@@ -90,7 +90,7 @@ Testnet (chain 46630), deployed earlier with the same frozen pins; `MockWIF` is 
 | Results | `0x38BBc173698e54f2D7280bA124008B34650c9587` |
 | MockWIF | `0x4059105C779d46C1905c0437483b60c1DEbF1B47` |
 
-Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and persona QA runs ([`evidence/qa-accounts-46630.json`](evidence/qa-accounts-46630.json)). Round 1 (house agents only) posted in tx `0x7066a651…b87f`; `semalam replay 1 --chain 46630` recomputes `0xbe22a8eb…8026` and matches. Full addresses and deploy txs: [`evidence/deployments-46630.json`](evidence/deployments-46630.json). The chain 4663 deployment is not live yet; this section is updated when it is.
+Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and persona QA runs ([`evidence/qa-accounts-46630.json`](evidence/qa-accounts-46630.json)). Round 1 (house agents only) posted in tx `0x7066a651…b87f`; `semalam replay 1 --chain 46630` recomputes `0xbe22a8eb…8026` and matches. Full addresses and deploy txs: [`evidence/deployments-46630.json`](evidence/deployments-46630.json).
 
 ## 📊 Engineering Rigor
 
