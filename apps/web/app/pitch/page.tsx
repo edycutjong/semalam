@@ -101,7 +101,7 @@ export default async function Pitch() {
               <p className="kick"><img src="/icon.svg" alt="" width={46} height={46} className="cover-icon" /><span className="pill">World Is Flat · games</span><span className={`pill${d.testnet ? " test" : ""}`}>{chain}</span></p>
               <h1>You sleep. Your agent works the <em>night market.</em></h1>
               <p className="lede">Orders at bedtime. The market closes at 00:00 WIB and plays when the drand beacon lands. A replay, a rank and a hash at breakfast.</p>
-              <div className="mini-term"><span className="pr">$</span> {cli}<br /><span className="ok">{lastShort}</span></div>
+              <div className="mini-term"><span className="pr">$</span> {cli}<br /><span className="ok">{lastShort}</span>{d.recorded.chainId === 46630 && <><br /><span>recorded on a 46630 testnet night</span></>}</div>
             </div>
             {n && <FrozenTicket n={n} className="deck-ticket" />}
           </div>
@@ -191,7 +191,7 @@ export default async function Pitch() {
               <ol className="nodes">
                 <li className="n1"><b>tonight</b>play free</li>
                 <li className="n2"><b>breakfast</b>see why you lost</li>
-                <li className="n3"><b>practise</b>change a rule, test it against last night&apos;s top 30<span className="split" aria-hidden><i>160 burned</i><i>40</i></span><small className="per">of 200 $WIF: 40 to compute</small></li>
+                <li className="n3"><b>practise</b>change a rule, test it against {n ? "last night\u2019s top 30" : "the 30 house agents until night 1 settles"}<span className="split" aria-hidden><i>160 burned</i><i>40</i></span><small className="per">of 200 $WIF: 40 to compute</small></li>
                 <li className="n4"><b>next night</b>seal the fix</li>
               </ol>
               <p className="hub"><b>{d.burned === null ? "—" : d.burned.toLocaleString("en-US")}</b><span>{d.wif} burned{paidQa ? " · our QA runs" : ""}</span><span className="sub">{d.testnet ? "testnet" : chain}</span></p>

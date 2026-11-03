@@ -140,9 +140,10 @@ export default function Tonight() {
       <section aria-label="Write your orders">
         <div className="eyebrow">{st ? `Round ${st.round}` : "Tonight"} {st?.testnet && <span className="badge test">testnet · {st.wifLabel}</span>}</div>
         <h1>Tonight</h1>
-        <p className="lead">Write your orders before bed. Seal them and watch them play last night&apos;s field right away, free. At 00:00 WIB your agent plays the real night; replay it at breakfast.</p>
+        <p className="lead">Write your orders before bed. Seal them and watch them play a practice night right away, free, against last night&apos;s top 30 (the 30 house agents until the first night settles). At 00:00 WIB your agent plays the real night; replay it at breakfast.</p>
         {st && <p className="data">closes in <Countdown round={st.round} closeTime={st.closeTime} chainNow={st.chainNow} serverNow={st.serverNow} /> ({new Date(st.closeTime * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} your time) · <span className={`badge ${st.relay ? "relay" : ""}`}>{st.relay ? "gasless · relay" : st.relayState === "spent-tonight" ? "relay spent for tonight — use your own wallet" : "relay empty — use your own wallet"}</span></p>}
         {st && <p style={{ margin: "-6px 0 14px" }}><button type="button" className="quiet chip" onClick={nightlyReminder}>Nightly reminder (.ics)</button></p>}
+        <p className="muted" style={{ fontSize: 15, marginTop: 0 }}>Sealing signs one commit for tonight&apos;s round. It approves no token and moves no $WIF.</p>
         {stErr && <p className="note warn" role="alert">{stErr}</p>}
         {signer && st && st.round > 0 && <Ritual account={signer.address} round={st.round} sealedTonight={st.commits.length > 0} />}
         {hint && phase !== "sealed" && (

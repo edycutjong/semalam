@@ -13,6 +13,7 @@ import { CHAIN, DEP, IS_TESTNET, SCRIMMAGE, WIF, WIF_LABEL, txUrl } from "@/lib/
 import { publicRpc, restoreSigner, walletSigner, localSigner, injected, type Signer } from "@/lib/wallet";
 import { status, type StatusJson } from "@/lib/commit";
 import { lsGet, lsSet } from "@/lib/ls";
+import { seasonOf } from "@/lib/clock";
 
 const PRICE = 200n * 10n ** 18n;
 const PAID_STORE = "semalam.paid.v1";
@@ -157,6 +158,7 @@ export default function Scrimmage() {
           ) : (
             <>
               <p className="data">paying as {signer.address.slice(0, 8)}…{signer.address.slice(-6)} · {bal === null ? "balance…" : `${Number(bal / 10n ** 18n)} ${WIF_LABEL}`}</p>
+              {st && seasonOf(st.round) === 0 && <p className="note">Round {st.round} is the rehearsal night and belongs to no season: a paid run tonight burns the same 160 {WIF_LABEL} but counts toward no crown. Season 1 starts with round 2.</p>}
               {!enough && bal !== null && (
                 <div className="note">
                   Paid runs need 200 {WIF_LABEL} and a little ETH at the address above — the free run (your first commit) needs neither{IS_TESTNET ? <> — <a href="https://faucet.testnet.chain.robinhood.com">testnet ETH faucet</a>, then mint test tokens</> : ""}. This is the same address that plays; the session key never moves {WIF_LABEL}.

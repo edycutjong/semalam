@@ -12,5 +12,5 @@ export default function LiveClock({ round }: { round: number | null }) {
     }).catch(() => { /* the static line stays */ });
   }, []);
   if (!s) return <span className="clock">{round ? `round ${round} closes 00:00 WIB` : "closes 00:00 WIB"}</span>;
-  return <span className="clock">round {s.round} closes in <Countdown round={s.round} closeTime={s.closeTime} chainNow={s.chainNow} serverNow={s.serverNow} /></span>;
+  return <span className="clock">round {s.round} closes in <Countdown round={s.round} closeTime={s.closeTime} chainNow={s.chainNow} serverNow={s.serverNow} /> · 00:00 WIB = {new Date(s.closeTime * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} your time</span>;
 }

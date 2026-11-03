@@ -6,7 +6,7 @@ import { readback } from "@semalam/policy";
 import { HOUSE } from "@semalam/sim/house";
 import type { AgentRep } from "@/components/ReplayPlayer";
 import { readArtifact, settledRounds, type RoundArtifact } from "./artifact";
-import { chainNow, commitCountOf, paidLogs } from "./chain";
+import { chainNow, commitAccountsOf, paidLogs } from "./chain";
 import { closeTime, currentRound } from "./clock";
 import { CHAIN_ID, EXCLUDED, IS_TESTNET, ORDERS, RESULTS, SCRIMMAGE, WIF_LABEL, addrUrl, txUrl } from "./config";
 import { ordinal } from "./rank";
@@ -41,7 +41,7 @@ export type Landing = {
   nights: number; matched: number; last: Night | null;
   burned: number | null; paidRuns: number | null; paidQa: number | null; houseOnly: number[];
   compiled: { at: string; orders: string; model: string; ms: number; lines: string[] };
-  tonight: { round: number; closeTime: number; chainNow: number; commits: number | null } | null;
+  tonight: { round: number; closeTime: number; chainNow: number; commits: number | null; operatorCommits: number } | null;
   evidence: { runtimes: number; allMatch: boolean; p50: number; benchAgents: number; benchTurns: number; golden: number; goldenOf: number; injectionsSafe: number; injectionsOf: number; model: string };
   recorded: { at: string; cmd: string; exit: number; wallSeconds: number; round: number; chainId: number; stdout: string[]; machine: string };
   links: { scrimmage: string; results: string; orders: string };
@@ -102,9 +102,13 @@ export async function loadLanding(): Promise<Landing> {
   try {
     const now = await within(chainNow());
     const round = currentRound(now);
-    let commits: number | null = null;
-    try { commits = round > 0 ? await within(commitCountOf(round)) : 0; } catch { /* unknown */ }
-    tonight = { round, closeTime: closeTime(round), chainNow: now, commits };
+    let commits: number | null = null, operatorCommits = 0;
+    try {
+      const accts = round > 0 ? await within(commitAccountsOf(round)) : [];
+      operatorCommits = accts.filter((a) => EXCLUDED.includes(a)).length; // our own smoke commits are never players
+      commits = accts.length - operatorCommits;
+    } catch { /* unknown */ }
+    tonight = { round, closeTime: closeTime(round), chainNow: now, commits, operatorCommits };
   } catch { /* the client clock asks /api/status again */ }
   const ev = compilerEval.report.find((r) => r.model === "openai/gpt-oss-120b") ?? compilerEval.report[0];
   const b = bench.rows[0];

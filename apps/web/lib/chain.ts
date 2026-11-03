@@ -40,8 +40,13 @@ async function commitsOfUncached(account: Address, round: number) {
   return logs.map((l) => ({ tx: l.transactionHash as Hex, block: Number(l.blockNumber), logIndex: l.logIndex, policyHash: l.args.policyHash as Hex, sealedBytes: ((l.args.sealedBlob as Hex).length - 2) / 2 }));
 }
 /** How many DISTINCT accounts have committed in the round so far — the relay's global per-round cap reads this (15 s memo; a few requests may overshoot it). */
+/** Distinct committing accounts of a round (lowercase), operators included — the admission cap counts them all. */
+export async function commitAccountsOf(round: number): Promise<string[]> {
+  return memoized(`commits:${round}`, 15_000, async () => [...new Set((await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: COMMITTED_EVENT, args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }))).map((l) => (l.args.account as string).toLowerCase()))]);
+}
+
 export async function commitCountOf(round: number): Promise<number> {
-  return memoized(`commits:${round}`, 15_000, async () => new Set((await paged((lo, hi) => publicClient.getLogs({ address: ORDERS, event: COMMITTED_EVENT, args: { round: BigInt(round) }, fromBlock: lo, toBlock: hi }))).map((l) => (l.args.account as string).toLowerCase())).size);
+  return (await commitAccountsOf(round)).length;
 }
 
 export async function postedOf(round: number): Promise<{ resultHash: Hex; drandRound: number } | null> {
