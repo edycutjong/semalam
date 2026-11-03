@@ -1,0 +1,15 @@
+{
+ "what": "operator smoke commit on chain 4663 (deployer = excluded operator address, not a player): sealed in the browser-grade tlock path, signed EIP-712, relayed by the relayer key via Orders.commitBySig",
+ "chainId": 4663,
+ "round": 1,
+ "account": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+ "relayer": "0x944bC964C60856BFd62CdAF971f53988B57D13A9",
+ "policyHash": "0x5ec1562259b43909bcffb07880c7d130b74a4fe712d02ebb149a95a971cddf44",
+ "sealedBytes": 527,
+ "drandRound": 33640712,
+ "tx": "0x1e4f78f4fed537a9275b7dd570fd587120dd8a61c72115523e8c8e79903b88ce",
+ "block": 104696187,
+ "status": "success",
+ "gasUsed": 70633,
+ "committedEventSeen": true
+}

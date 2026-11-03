@@ -23,13 +23,18 @@
     "rpcs": [
       "https://rpc.mainnet.chain.robinhood.com"
     ],
-    "orders": null,
-    "results": null,
-    "scrimmage": null,
-    "fromBlock": 0,
-    "excluded": [],
+    "orders": "0xAAA4D7abdC7FE91d2D4827CA559887eF6288e0C2",
+    "results": "0x313FBC505aac82b1257F4849A28f4461a3e09e25",
+    "scrimmage": "0xed6afbC314187C3e0D7EB3ABCb2962e6375C676C",
+    "fromBlock": 104694430,
+    "excluded": [
+      "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+      "0xaf343675E4942BF4071af6C838F871713A6f776D",
+      "0x944bC964C60856BFd62CdAF971f53988B57D13A9"
+    ],
     "wif": "0x5173b8eA6923c2d40267890D45C46a3480954773",
     "wifIsMock": false,
-    "ordersDeployTx": null
+    "genesis": 1793638800,
+    "ordersDeployTx": "0xef150ac6552160e375e989f6c85b7d3d3e693878f092ef59b094d1e9f3d3a770"
   }
 }

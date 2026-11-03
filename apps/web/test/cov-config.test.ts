@@ -23,14 +23,14 @@ test("config defaults to the Robinhood testnet (46630) with a mock WIF and lower
   assert.equal(c.excluded.length, 3);
   assert.ok(c.excluded.every((a: string) => a === a.toLowerCase()));
 });
-test("NEXT_PUBLIC_CHAIN_ID=4663 selects mainnet: mainnet explorer, real $WIF label, no exclusions", () => {
+test("NEXT_PUBLIC_CHAIN_ID=4663 selects mainnet: mainnet explorer, real $WIF label, the three operator addresses excluded", () => {
   const c = loadWith("4663");
   assert.equal(c.id, 4663);
   assert.equal(c.t, false);
-  assert.equal(c.ex, "https://explorer.mainnet.chain.robinhood.com");
+  assert.equal(c.ex, "https://robinhoodchain.blockscout.com");
   assert.equal(c.label, "$WIF");
-  assert.deepEqual(c.excluded, []);
-  assert.equal(c.orders, null);
+  assert.equal(c.excluded.length, 3);
+  assert.equal(c.orders?.toLowerCase(), "0xaaa4d7abdc7fe91d2d4827ca559887ef6288e0c2");
 });
 test("txUrl and addrUrl build explorer links for the active chain", () => {
   assert.equal(CHAIN_ID, 46630);

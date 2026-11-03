@@ -26,6 +26,8 @@ const dry = argv.includes("--dry");
 const d = (deployments as Record<string, any>)[chainId];
 const rpc = arg("--rpc") ?? d.rpcs[0];
 const outDir = path.join(root, "apps/web/data/rounds");
+// testnet keeps `<round>.json`; any other chain is `<chainId>-<round>.json` (apps/web/lib/artifact.ts reads the same names)
+const artFile = (r: number) => path.join(outDir, `${chainId === "46630" ? "" : chainId + "-"}${r}.json`);
 const log = (m: string) => console.log(`${new Date().toISOString()} ${m}`);
 
 const EV = parseAbi([
@@ -100,8 +102,8 @@ async function main() {
   for (let r = 1; closeTime(genesis, r) + 300 <= Number(fin.timestamp); r++) {
     if (only && r !== only) continue;
     const h = await pub.readContract({ address: d.results, abi: RES, functionName: "resultOf", args: [BigInt(r)] });
-    const haveArt = existsSync(path.join(outDir, `${r}.json`));
-    const artPosted = haveArt && JSON.parse(readFileSync(path.join(outDir, `${r}.json`), "utf8")).status === "posted";
+    const haveArt = existsSync(artFile(r));
+    const artPosted = haveArt && JSON.parse(readFileSync(artFile(r), "utf8")).status === "posted";
     // unposted, posted without its artifact, or an artifact that still says anything but "posted" (e.g. a lost race)
     if (/^0x0+$/.test(h) || (only && r === only) || !artPosted) todo.push(r);
   }
@@ -165,7 +167,7 @@ async function main() {
       settled: run.st, opponents,
       policies: run.agents.map((a) => ({ id: a.id, policy: a.policy })),
     };
-    const file = path.join(outDir, `${round}.json`);
+    const file = artFile(round);
     const prev = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
     // a retried round whose outcome did not change is not rewritten (no commit + redeploy every loop)
     const same = prev && prev.status === art.status && prev.settled?.resultHash === art.settled.resultHash && prev.onchain?.resultHash === art.onchain?.resultHash && prev.onchain?.tx === art.onchain?.tx;

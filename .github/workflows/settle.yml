@@ -15,7 +15,6 @@ jobs:
   settle:
     runs-on: ubuntu-latest
     env:
-      SEMALAM_CHAIN: ${{ vars.SEMALAM_CHAIN || '46630' }}
       POSTER_PRIVATE_KEY: ${{ secrets.POSTER_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v7
@@ -24,8 +23,11 @@ jobs:
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter semalam build
-      - name: settle every closed round that lacks a post
-        run: pnpm --filter @semalam/scripts exec tsx settle/settle.ts
+      - name: settle every closed round that lacks a post (chain 4663)
+        run: pnpm --filter @semalam/scripts exec tsx settle/settle.ts --chain 4663
+      - name: settle the testnet rounds the nightly bot playtest fills (chain 46630)
+        if: always()
+        run: pnpm --filter @semalam/scripts exec tsx settle/settle.ts --chain 46630
       - name: commit round artifacts
         run: |
           git config user.name "semalam-settler"

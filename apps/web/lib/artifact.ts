@@ -5,6 +5,7 @@ import type { Settled } from "@semalam/sim/round";
 import type { Policy } from "@semalam/policy";
 import { SEED_DELAY, closeTime } from "./clock";
 import { seedRoundAt, roundTimeOf } from "@semalam/beacon/consts";
+import { CHAIN_ID } from "./config";
 
 export type Opponent = { id: string; label: string | null; house: boolean; rank: number; coins: number; policy: Policy };
 export type RoundArtifact = {
@@ -25,11 +26,14 @@ export const statusLabel = (st: RoundArtifact["status"]): string =>
 export type Named = { code: string; label: string; detail?: string };
 
 const dir = () => path.join(process.cwd(), "data", "rounds");
+/** Testnet artifacts keep the plain `<round>.json` name; every other chain is namespaced `<chainId>-<round>.json` (scripts/settle uses the same rule). */
+const prefix = () => (CHAIN_ID === 46630 ? "" : `${CHAIN_ID}-`);
 export async function readArtifact(round: number): Promise<RoundArtifact | null> {
-  try { return JSON.parse(await readFile(path.join(dir(), `${round}.json`), "utf8")) as RoundArtifact; } catch { return null; }
+  try { return JSON.parse(await readFile(path.join(dir(), `${prefix()}${round}.json`), "utf8")) as RoundArtifact; } catch { return null; }
 }
 export async function settledRounds(): Promise<number[]> {
-  try { return (await readdir(dir())).map((f) => /^(\d+)\.json$/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a, b) => a - b); } catch { return []; }
+  const re = new RegExp(`^${prefix()}(\\d+)\\.json$`);
+  try { return (await readdir(dir())).map((f) => re.exec(f)?.[1]).filter(Boolean).map(Number).sort((a, b) => a - b); } catch { return []; }
 }
 
 /** The named public state of a round that has no artifact yet (A20). */

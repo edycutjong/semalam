@@ -148,14 +148,13 @@ test("house lists HOUSE_SET_HASH and every house agent with its policy name", as
   assert.ok(lines[1].includes(HOUSE.agents[0].label) && lines[1].includes(HOUSE.agents[0].policy.name));
 });
 
-test("an unknown command, a missing / zero / non-numeric round and an unknown or undeployed chain all exit 64", async () => {
+test("an unknown command, a missing / zero / non-numeric round and an unknown chain all exit 64", async () => {
   const cases: [string[], RegExp][] = [
     [["frobnicate"], /unknown command frobnicate/],
     [["replay"], /usage: semalam replay <round>/],
     [["replay", "0"], /usage: semalam replay <round>/],
     [["replay", "abc"], /usage: semalam replay <round>/],
     [["replay", "2", "--chain", "99999"], /unknown --chain 99999 \(known: /],
-    [["replay", "2", "--chain", "4663"], /no SEMALAM deployment recorded for chain 4663/],
   ];
   for (const [argv, re] of cases) {
     const r = await cap(() => main(argv));

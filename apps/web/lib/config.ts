@@ -10,7 +10,7 @@ type Dep = {
 export const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? 46630);
 export const DEP = (deployments as unknown as Record<string, Dep>)[String(CHAIN_ID)];
 export const IS_TESTNET = CHAIN_ID === 46630;
-export const EXPLORER = IS_TESTNET ? "https://explorer.testnet.chain.robinhood.com" : "https://explorer.mainnet.chain.robinhood.com";
+export const EXPLORER = IS_TESTNET ? "https://explorer.testnet.chain.robinhood.com" : "https://robinhoodchain.blockscout.com";
 export const CHAIN = defineChain({
   id: CHAIN_ID,
   name: DEP.name,

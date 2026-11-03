@@ -1,0 +1,43 @@
+{
+ "note": "Chain 4663 mainnet deploy of the final bytecode with the frozen pins (house set + semalam-sim/1). WIF is the real token (no MockWIF). Source verified on Sourcify (match); the chain's Blockscout API sits behind a Cloudflare challenge.",
+ "chainId": 4663,
+ "genesis": 1793638800,
+ "genesisUtc": "2026-11-02T17:00:00Z",
+ "round1CloseUtc": "2026-11-03T17:00:00Z",
+ "houseSetHash": "0x85305c0278d44fb4d5d20df919cc4acd594e75612564eee4c4fbaa574f800fbc",
+ "simVersion": "semalam-sim/1",
+ "deployer": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+ "poster": "0xaf343675E4942BF4071af6C838F871713A6f776D",
+ "compute": "0x5b84F1A4E8037107a2B0aAcf3381005633A8f74e",
+ "wif": "0x5173b8eA6923c2d40267890D45C46a3480954773",
+ "contracts": {
+  "Orders": {
+   "address": "0xAAA4D7abdC7FE91d2D4827CA559887eF6288e0C2",
+   "block": 104694430,
+   "tx": "0xef150ac6552160e375e989f6c85b7d3d3e693878f092ef59b094d1e9f3d3a770",
+   "gasUsed": 753176
+  },
+  "Scrimmage": {
+   "address": "0xed6afbC314187C3e0D7EB3ABCb2962e6375C676C",
+   "block": 104694462,
+   "tx": "0xc405a32d7683840462a3480a082193b40efe52be3a91be84b9bb88d1645a3697",
+   "gasUsed": 648338
+  },
+  "Results": {
+   "address": "0x313FBC505aac82b1257F4849A28f4461a3e09e25",
+   "block": 104694493,
+   "tx": "0x7173b7d4dc15d96a48e2929dd49ac1534e0ba4bbb61c88e8c4fb59f6ff259267",
+   "gasUsed": 705036
+  }
+ },
+ "sourcify": {
+  "Orders": "47cbc648-eec5-4eb6-af57-c8be00600857",
+  "Scrimmage": "b51a2579-7854-400d-91f1-7a06fca70989",
+  "Results": "da78dc07-8f43-4e5b-a7e0-5ac2ef390ac1",
+  "result": "match x3 (https://sourcify.dev/server/v2/verify/<job id>)"
+ },
+ "funding": {
+  "poster 0.0001 ETH": "0x5977bf11dc8331f094157d3a5295dc72c7683a0d06ef8d8bc0b3ccdc539011e5",
+  "relayer 0.00144 ETH": "0x28767ca683f38b7f01c244124af1a8d13d40a47e5dbd21d458012d9736aa281d"
+ }
+}
