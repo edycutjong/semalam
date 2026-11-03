@@ -78,14 +78,14 @@ export default async function Pitch() {
   const steps = n && f ? await nightSteps(n.round, f.id) : null;
   const legend = n ? `${n.agents} lamps: ${n.players} ${d.testnet ? "testnet" : "player"} accounts${qa ? " (our QA runs)" : ""} + ${n.house} house agents (grey) · brighter = a higher rank at that turn` : "";
   const notes = [
-    "SEMALAM is a night market your agent plays while you sleep. Orders at bedtime; after the midnight close (Jakarta time) every agent plays one tournament; at breakfast you watch it back. The ticket is real: the 4th place of the latest testnet night, one of our own QA accounts, not a user.",
+    `SEMALAM is a night market your agent plays while you sleep. Orders at bedtime; after the midnight close (Jakarta time) every agent plays one tournament; at breakfast you watch it back. ${n && f ? `The ticket is real: the ${ordinal(f.rank)} place of the latest ${d.testnet ? "testnet " : ""}night${qa ? ", one of our own QA accounts, not a user" : ""}.` : "No night has settled on this chain yet, so the ticket shows example orders, not a result."}`,
     "The judging rules ask for a real reason to use $wif. Holding is not one: a held token gives you nothing to do tonight and nothing to check at breakfast. The card is an illustration of that night, not data. A reason has to bring a holder back tonight, and again tomorrow night.",
     "Picture our player, a night-shift nurse — an illustrative persona, not a user. In bed, lights off, one thumb, three short orders. This is a real call to the live compiler with exactly that sentence: the model runs once, plain code reads the policy back as these lines, and only what you read gets sealed. No model plays the night. Note the order in the readback: rule 1 (steal back from a thief) comes before rule 2 (gather beside a richer neighbour), so a richer neighbour who robbed you still gets robbed back. Reading that before sealing is the point.",
-    "One night in four stops. Sealed with a drand timelock at bedtime; closed at midnight; opened and played after the beacon five minutes later; posted on chain only when the CLI agrees (night 2 posted at 00:25 WIB), then replayed at breakfast.",
-    "Press → to play the latest night forward. This page re-ran it from the settled artifact when it was built and got the posted result hash, so every turn here is the real night. The stops are picked from that trace by fixed rules: the opening, the tagged lamp's first best rank, the first theft against it after that, the end of that theft run, its lowest point, the close. The tagged lamp is one of our own QA accounts running tit-for-tat; house agents are grey, labelled, and never score.",
+    "One night in four stops. Sealed with a drand timelock at bedtime; closed at midnight; opened and played after the beacon five minutes later; posted on chain only when the CLI agrees (testnet night 2 posted at 00:25 WIB), then replayed at breakfast.",
+    n ? "Press → to play the latest night forward. This page re-ran it from the settled artifact when it was built and got the posted result hash, so every turn here is the real night. The stops are picked from that trace by fixed rules: the opening, the tagged lamp's first best rank, the first theft against it after that, the end of that theft run, its lowest point, the close. The tagged lamp is one of our own QA accounts running tit-for-tat; house agents are grey, labelled, and never score." : "The first chain 4663 night settles after the 00:00 WIB close; until it does, this slide says so instead of borrowing a testnet night.",
     "This is the $WIF reason and the flywheel. Tonight is free. At breakfast the replay shows why you lost. To test a changed rule you practise against last night's top 30: beyond your free run that costs 200 $WIF, 160 of it burned by the token's own burn function and 40 for the compute. Then you seal the fix for the next night. The season crown is an on-chain title, no money, and only an account with a paid run that season can take it. There is no pot: the practice contract (Scrimmage) keeps nothing between calls, has no owner and no withdrawal. On testnet the burns so far are our QA runs, with a mock token.",
     `We don't ask anyone to trust our server: the CLI recomputes every night from chain data. Every posted night is re-checked by the CLI before it goes on chain, and the golden nights hash the same on ${d.evidence.runtimes} runtimes. The night itself is plain code: ${d.evidence.p50} ms at the median for ${d.evidence.benchAgents} agents × ${d.evidence.benchTurns} turns on an M1 Max. The compiler passed ${d.evidence.golden}/${d.evidence.goldenOf} golden prompts and refused or kept in schema ${d.evidence.injectionsSafe}/${d.evidence.injectionsOf} injections.`,
-    "Honest status: testnet only, numbers from our own QA runs, house agents labelled. The three notes are shortened from our README's Honest limits 1, 3 and 5.",
+    `Honest status: ${d.testnet ? "testnet only, numbers from our own QA runs" : d.nights === 0 ? "live on chain 4663 since 3 Nov 2026, first night not settled yet; the QA history is on the 46630 testnet" : `live on chain 4663, ${d.nights} ${d.nights > 1 ? "nights" : "night"} settled`}, house agents labelled. The three notes are shortened from our README's Honest limits 1, 3 and 5.`,
     "The ask: play one night and check the hash at breakfast. The QR opens tonight's page.",
   ];
   return (
@@ -209,10 +209,10 @@ export default async function Pitch() {
 
         <section className="slide s8" aria-label="Re-run it">
           <h2>Don&apos;t trust us. Re-run it.</h2>
-          <div className="hero-num"><span className="big">{d.matched}/{d.nights}</span><div className="rhs"><b className="ok">✓ MATCH</b><span className="lbl">posted nights re-checked by the CLI, from public chain data</span></div></div>
+          <div className="hero-num"><span className="big">{d.matched}/{d.nights}</span><div className="rhs">{d.matched > 0 ? <b className="ok">✓ MATCH</b> : <b>{d.nights === 0 ? "no night yet" : "not re-checked"}</b>}<span className="lbl">{d.nights === 0 ? `posted nights on ${chain}: the first settles after 00:00 WIB` : "posted nights re-checked by the CLI, from public chain data"}</span></div></div>
           <div className="proof-run">
             <p className="cmd data"><span className="pr">$</span> {cli}<br /><span className="ok">{lastShort}</span></p>
-            <p className="foot-stats">{d.evidence.runtimes} runtimes, one hash · recorded {d.recorded.at.slice(0, 16).replace("T", " ")} UTC</p>
+            <p className="foot-stats">{d.evidence.runtimes} runtimes, one hash · recorded {d.recorded.at.slice(0, 16).replace("T", " ")} UTC{d.recorded.chainId === 46630 ? " on a testnet night" : ""}</p>
           </div>
           <Foot k={7} chain={chain} />
           <aside className="speaker-notes">{notes[6]}</aside>
@@ -222,7 +222,7 @@ export default async function Pitch() {
           <h2>Where it stands, honestly.</h2>
           <p className="status data">{chain} · {d.nights} nights posted · night {n?.round ?? "—"}: {n?.players ?? 0} {qa ? "QA" : "player"} accounts + {n?.house ?? 0} house · {d.paidRuns ?? "—"} paid runs{paidQa ? " (QA)" : ""}</p>
           <ul className="limits">
-            <li><b>Hours old.</b> The chain 4663 deployment is hours old and its first night has not settled; earlier nights shown here are from the 46630 testnet with a mock token.</li>
+            <li>{d.nights === 0 ? <><b>Hours old.</b> The chain 4663 deployment is hours old and its first night has not settled; the QA nights before it ran on the 46630 testnet with a mock token.</> : <><b>Days old.</b> Live on chain 4663 since 3 Nov 2026; the QA nights before it ran on the 46630 testnet with a mock token.</>}</li>
             <li><b>Stated, not solved.</b> One person with many wallets can fill the 1,000-account cap per round.</li>
             <li><b>Gas-free, with limits.</b> Our relay pays the gas up to a nightly limit; after that you use your own wallet.</li>
           </ul>

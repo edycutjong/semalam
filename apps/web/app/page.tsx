@@ -54,7 +54,8 @@ export default async function Landing() {
             <p className="s-lede">
               A nightly strategy game for $WIF holders. Write three short orders before bed; they stay sealed through the
               <b> 00:00 WIB</b> close. Then your agent gathers, guards, shares or steals for <b>300 turns</b>. At breakfast:
-              a <b>15-second</b> replay, your rank, a hash anyone can check.
+              a <b>15-second</b> replay, your rank, a hash anyone can check. Your sealed orders also get one free practice
+              run on the spot, so you watch them play within a minute.
             </p>
             <div className="s-ctas">
               <Link href="/play" className="btn s-primary">Write tonight&apos;s orders</Link>
@@ -69,8 +70,8 @@ export default async function Landing() {
           {n ? (
             <FrozenTicket n={n} />
           ) : (
-            <article className="ticket s-ticket" aria-label="Stall ticket: a builder preset">
-              <p className="who">No night has settled on {chain} yet · builder preset</p>
+            <article className="ticket s-ticket" aria-label="Stall ticket: example orders">
+              <p className="who">No night has settled on {chain} yet · example orders</p>
               <p className="t-title">{nurse.name}</p>
               <ul>{readback(nurse).slice(1).map((l, i) => <li key={i}>{l.replace(/^\s*-\s*/, "").trim()}</li>)}</ul>
               <div className="stub"><div className="stamps"><span className="stamp draft st1">DRAFT</span></div></div>
@@ -121,7 +122,7 @@ export default async function Landing() {
               <ReplayPlayer replays={n.replays} mineId={f?.id} houseIds={n.houseIds} agents={n.agents} autoPlay mineLabel={`the ${ordinal(f?.rank ?? 4)}-place ticket`} />
             </div>
             <div className="demo-term">
-              <Terminal title={`replay · night ${d.recorded.round} · chain ${d.recorded.chainId}`} cmd={cli} lines={d.recorded.stdout}
+              <Terminal title={`replay · night ${d.recorded.round} · chain ${d.recorded.chainId}${d.recorded.chainId === 46630 ? " (testnet)" : ""}`} cmd={cli} lines={d.recorded.stdout}
                 foot={`recorded ${d.recorded.at.replace("T", " ").replace(/:\d\dZ$/, " UTC")} · ${d.recorded.machine} · exit ${d.recorded.exit} · ${d.recorded.wallSeconds} s`} />
               {n.round !== d.recorded.round && <p className="s-note">Night {n.round}: the settler&apos;s CLI hash {n.cliMatch ? "equals" : "does not equal"} the posted hash {short(n.resultHash)}.</p>}
             </div>
@@ -135,7 +136,7 @@ export default async function Landing() {
           <dl className="plank-grid">
             <div>
               <dt><CountUp value={d.nights} /></dt>
-              <dd>nights settled on chain<small>{d.matched} of {d.nights} re-checked: ✓ MATCH{d.houseOnly.length ? ` · ${d.houseOnly.length > 1 ? "nights" : "night"} ${d.houseOnly.join(", ")}: house agents only` : ""}</small></dd>
+              <dd>nights settled on chain<small>{d.nights === 0 ? `no night on ${chain} to re-check yet` : `${d.matched} of ${d.nights} re-checked${d.matched > 0 ? ": ✓ MATCH" : ""}`}{d.houseOnly.length ? ` · ${d.houseOnly.length > 1 ? "nights" : "night"} ${d.houseOnly.join(", ")}: house agents only` : ""}</small></dd>
             </div>
             <div>
               <dt>{n ? <CountUp value={n.agents} /> : "0"}</dt>
@@ -161,7 +162,7 @@ export default async function Landing() {
         <div className="wif-in">
           <div>
             <h2 id="h-wif">Practice costs $WIF. The season crown needs it.</h2>
-            <p>Your first sealed orders each night run free against last night&apos;s top 30. Testing any other draft costs <b>200 $WIF</b>: <b>160</b> is burned with the token&apos;s own <code>burn()</code> and <b>40</b> pays for compute. A season is three nights. Its crown is an on-chain title, not a prize, and the contract refuses it to any account without a paid run that season.</p>
+            <p>Your first sealed orders each night run free against last night&apos;s top 30. Testing any other draft costs <b>200 $WIF</b>: <b>160</b> is burned with the token&apos;s own <code>burn()</code> and <b>40</b> pays for compute. A season is three nights. Its crown is an on-chain title, not a prize. Our settler key names the season&apos;s winner (<code>semalam season</code> re-derives the pick from public data), and the contract refuses the crown to any account without a paid run that season.</p>
             <p className="quiet">No prize pool and no owner withdrawal: the contracts hold nothing to drain. A fork test against the real $WIF contract shows payer −200, total supply −160, compute +40.</p>
           </div>
           <figure className="char" aria-label="One paid practice run: 200 $WIF, 160 burned, 40 to compute">
@@ -194,7 +195,7 @@ export default async function Landing() {
           <h2 id="h-honest">What isn&apos;t done yet.</h2>
           <p className="s-sub">Lifted from the README&apos;s limits. Judges should hear them from us first.</p>
           <div className="notes">
-            <blockquote className="n1"><p className="k">Hours old</p><p>The chain 4663 deployment is hours old: its first night (round 1) has not been settled yet, and any night shown above that is older comes from the 46630 testnet with a mock token.</p><cite>README · Honest limits, 1</cite></blockquote>
+            <blockquote className="n1"><p className="k">{d.nights === 0 ? "Hours old" : "Days old"}</p><p>{d.nights === 0 ? "The chain 4663 deployment is hours old: its first night (round 1) has not been settled yet, and any night shown above that is older comes from the 46630 testnet with a mock token." : `The chain 4663 deployment went live on 3 Nov 2026 and has settled ${d.nights} ${d.nights > 1 ? "nights" : "night"} so far; the earlier QA nights in the repo come from the 46630 testnet with a mock token.`}</p><cite>README · Honest limits, 1</cite></blockquote>
             <blockquote className="n2"><p className="k">Stated, not solved</p><p>A Sybil can fill the 1,000-account admission cap per round with own-wallet commits … Stated, not solved.</p><cite>README · Honest limits, 3</cite></blockquote>
             <blockquote className="n3"><p className="k">A relay, not AA</p><p>Gas-free onboarding is a relay with a per-night budget, not account abstraction … when the relay is empty the app asks for your own wallet.</p><cite>README · Honest limits, 5</cite></blockquote>
           </div>
@@ -207,7 +208,7 @@ export default async function Landing() {
         <div className="faq-list">
           <details><summary>Does an AI play the game?</summary><p>No. A model reads your words once, when you write them, and turns them into a small typed policy you approve. The night itself is plain deterministic code: same inputs, same hash, on all nine runtimes we tested.</p></details>
           <details><summary>Can anyone read my orders before midnight, even you?</summary><p>Not the sealed policy: it is timelock-encrypted to the drand beacon published about five minutes after the close and opens for everyone at once, us included. The sentences you type do pass through our compile endpoint and the model provider; the no-LLM builder keeps them in your browser.</p></details>
-          <details><summary>What stops you from posting a fake result?</summary><p>The contract accepts only the beacon round fixed for that night, and the runner posts only when its hash equals the CLI&apos;s. Anyone can re-run a night from public data; a mismatch is disputed in public, never re-posted.</p></details>
+          <details><summary>What stops you from posting a fake result?</summary><p>The contract accepts only the beacon round fixed for that night, and the runner posts only when its hash equals the CLI&apos;s. Anyone can re-run a night from public data; a mismatch is disputed in public, never re-posted. Posting and crowning are signed by one settler key: the chain checks the beacon round and the paid-run rule, and the CLI is how you check the rest.</p></details>
           <details><summary>Where does the $WIF go?</summary><p>A paid practice run is exactly 200 $WIF: 160 burned with the token&apos;s own burn() and 40 to compute. The contracts hold no prize pool and have no owner withdrawal.</p></details>
           <details><summary>Do I need gas or a wallet?</summary><p>For writing and sealing orders, no: a key is made in your browser and a relay pays the gas, within nightly limits; when the relay is empty, the app asks for your own wallet. A paid practice run needs $WIF and a little ETH in that same address.</p></details>
           <details><summary>Is it live on mainnet?</summary><p>{d.testnet ? "Not yet. Everything on this page runs on the chain 46630 testnet, with MockWIF in place of $WIF. The page reads chain 4663 once the mainnet contracts are deployed." : "Yes. The numbers on this page are read from chain 4663 and the real $WIF."}</p></details>
