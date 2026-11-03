@@ -123,9 +123,12 @@ export default function Breakfast({ d }: { d: BreakfastData }) {
     const wp = d.policies.find((p) => p.id.toLowerCase() === w.id.toLowerCase())?.policy ?? hp;
     const per = (c: number) => (c / 300).toFixed(1);
     const name = w.house ? (w.label ?? "the house agent") : "the winner";
-    const style = wp ? `Opened with ${wp.opening}, then ${wp.default} by default${wp.rules.length ? ` — ${wp.rules.length} rule${wp.rules.length === 1 ? "" : "s"}` : ""}.` : "";
+    const nr = wp ? `${wp.rules.length} rule${wp.rules.length === 1 ? "" : "s"}` : "";
+    const style = wp ? (wp.opening === wp.default ? `Always ${wp.default}${wp.rules.length ? ` except ${nr}` : ""}.` : `Opened with ${wp.opening}, then ${wp.default} by default${wp.rules.length ? ` — ${nr}` : ""}.`) : "";
+    const nx = d.ranking[1];
+    const next = nx ? ` Next best: ${nx.house ? (nx.label ?? "a house agent") : `rank 2 with ${nx.steals} steal${nx.steals === 1 ? "" : "s"}`}, ${nx.coins} coins (${w.coins - nx.coins} behind).` : "";
     const rules = wp ? readback(wp).filter((l) => /^\s+\d\./.test(l)).map((l) => l.trim()) : [];
-    const line = `${name === "the winner" ? "Rank 1" : name} finished with ${w.coins} coins (${per(w.coins)} a turn) and ${w.steals} steal${w.steals === 1 ? "" : "s"}. ${style}`.trim();
+    const line = `${name === "the winner" ? "Rank 1" : name} finished with ${w.coins} coins (${per(w.coins)} a turn) and ${w.steals} steal${w.steals === 1 ? "" : "s"}. ${style}${next}`.trim();
     const m = d.ranking.find((r) => r.id.toLowerCase() === addr.toLowerCase());
     const you = m && m.id !== w.id && !m.house && !m.operator
       ? `${isOwn ? "You" : "They"} finished rank ${m.rank} of ${d.agents} with ${m.coins} coins (${per(m.coins)} a turn) and ${m.steals} steal${m.steals === 1 ? "" : "s"}: ${w.coins - m.coins} coins behind the winner over 300 turns.`
