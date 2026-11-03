@@ -96,7 +96,7 @@ Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and pe
 
 | Metric | Result |
 |---|---|
-| TypeScript tests | **72** pass (sim 28 · cli 16 · web 15 · policy 9 · beacon 4) |
+| TypeScript tests | **251** pass (web 86 · cli 64 · sim 48 · beacon 28 · policy 25) |
 | Foundry tests | **39** pass, including 1 fork test against real $WIF |
 | Golden determinism | 230-agent hash `0x590be287…ef69` equal in fresh processes; 3 golden rounds replay offline in the CLI; checked on 9 runtimes (macOS Node 20/22/24, Linux arm64 + amd64 Node 20/22), [`evidence/determinism-matrix.json`](evidence/determinism-matrix.json) |
 | Simulator speed | 230 agents × 300 turns **15.8 ms** p50; 1,030 agents 87 ms; full 2,000-account round with decryption 355 ms ([`evidence/bench.json`](evidence/bench.json)) |
@@ -142,7 +142,7 @@ The live command exits 4 ("posted, not final yet") until the testnet's finalized
 ## 🧪 Testing & CI
 
 ```bash
-pnpm -r --if-present test          # 72 TypeScript tests
+pnpm -r --if-present test          # 251 TypeScript tests
 cd contracts && forge test         # 39 Foundry tests; the fork test needs a chain 4663 RPC
 ```
 
