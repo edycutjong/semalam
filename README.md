@@ -31,7 +31,7 @@
   <img src="docs/assets/readme-hero.png" alt="SEMALAM at 06:10 on testnet night 1: 30 lamps at their real final ranks, the house agent's ticket stamped SETTLED · 4TH OF 30, and the replay's ✓ MATCH" width="100%">
 </p>
 
-Live at **[semalam.edycu.dev](https://semalam.edycu.dev)** on the chain 46630 testnet: write orders, read back what your agent will do, seal, commit, then replay the night at breakfast. The animated art on this page is drawn from a real settled testnet night (30 house agents, result hash `0xbe22a8eb…8026`), not stock art.
+Live at **[semalam.edycu.dev](https://semalam.edycu.dev)** on chain 4663 with the real $WIF (the chain 46630 testnet runs beside it for QA): write orders, read back what your agent will do, seal, commit, then replay the night at breakfast. The animated art on this page is drawn from a real settled testnet night (30 house agents, result hash `0xbe22a8eb…8026`), not stock art.
 
 ## 💡 The Problem & Solution
 
@@ -71,7 +71,17 @@ Track: **games**. The game is built around the community token, $WIF:
 
 ## ⛓️ Live Deployment
 
-Testnet (chain 46630), deployed with the frozen pins; `MockWIF` is a labelled testnet stand-in for $WIF.
+**Chain 4663** (deployed 2026-11-03, source verified on Sourcify, real $WIF `0x5173b8eA6923c2d40267890D45C46a3480954773`). Round 1 is a house-plus-operator rehearsal night that closes 17:00 UTC on 3 Nov; its one commit is an operator smoke commit through the relayer ([`evidence/mainnet-commit-round1.json`](evidence/mainnet-commit-round1.json)).
+
+| Contract | Address |
+|---|---|
+| Orders | [`0xAAA4D7abdC7FE91d2D4827CA559887eF6288e0C2`](https://robinhoodchain.blockscout.com/address/0xAAA4D7abdC7FE91d2D4827CA559887eF6288e0C2) |
+| Scrimmage | [`0xed6afbC314187C3e0D7EB3ABCb2962e6375C676C`](https://robinhoodchain.blockscout.com/address/0xed6afbC314187C3e0D7EB3ABCb2962e6375C676C) |
+| Results | [`0x313FBC505aac82b1257F4849A28f4461a3e09e25`](https://robinhoodchain.blockscout.com/address/0x313FBC505aac82b1257F4849A28f4461a3e09e25) |
+
+Deploy txs, blocks and gas: [`evidence/deployments-4663.json`](evidence/deployments-4663.json).
+
+Testnet (chain 46630), deployed earlier with the same frozen pins; `MockWIF` is a labelled testnet stand-in for $WIF.
 
 | Contract | Address |
 |---|---|
@@ -106,7 +116,7 @@ Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and pe
 
 ### Honest limits (6)
 
-1. The chain 4663 deployment is not live yet; everything above runs on the 46630 testnet with a mock token, except the fork test.
+1. The chain 4663 deployment is hours old: its first night (round 1) has not been settled yet, and the numbers quoted above (night 2's QA accounts, the 0xbe22a8eb…8026 round) are from the 46630 testnet with a mock token. The 46630 contracts predate the last contract tweaks (see `contracts/`); chain 4663 runs the final bytecode.
 2. `npx semalam` is not published yet (npm token); run the CLI from this repo as shown below.
 3. A Sybil can fill the 1,000-account admission cap per round with own-wallet commits (cost per night is not benchmarked here). Stated, not solved.
 4. Across 48 simulated seeds a pure single-action policy (excluding COPY_LEADER) won outright 5 times, and pure STEAL took 10 of the 13 pure top-10 finishes ([`evidence/sim-tuning.json`](evidence/sim-tuning.json)); real fields are not random, and the playtest is where this is watched.
