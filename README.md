@@ -98,7 +98,7 @@ Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and pe
 |---|---|
 | TypeScript tests | **251** pass (web 86 · cli 64 · sim 48 · beacon 28 · policy 25) |
 | Foundry tests | **39** pass, including 1 fork test against real $WIF |
-| Golden determinism | 230-agent hash `0x590be287…ef69` equal in fresh processes; 3 golden rounds replay offline in the CLI; checked on 9 runtimes (macOS Node 20/22/24, Linux arm64 + amd64 Node 20/22), [`evidence/determinism-matrix.json`](evidence/determinism-matrix.json) |
+| Golden determinism | 230-agent hash `0x590be287…ef69` equal in fresh processes; 3 golden rounds replay offline in the CLI; checked on 9 runtimes (5 macOS Node builds 20.9–24.19, Linux arm64 + amd64 Node 20/22), [`evidence/determinism-matrix.json`](evidence/determinism-matrix.json) |
 | Simulator speed | 230 agents × 300 turns **15.8 ms** p50; 1,030 agents 87 ms; full 2,000-account round with decryption 355 ms ([`evidence/bench.json`](evidence/bench.json)) |
 | Order compiler | 10/10 golden prompts ([`evidence/feasibility/compiler-eval.json`](evidence/feasibility/compiler-eval.json)); 5/5 injection attempts refused or kept in-schema ([`evidence/compiler-injection.json`](evidence/compiler-injection.json)) |
 | L2 clock drift | max 1.75 s on chain 4663 against a 300 s seed buffer ([`evidence/clock-drift-4663.json`](evidence/clock-drift-4663.json)) |
@@ -119,7 +119,7 @@ Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and pe
 1. The chain 4663 deployment is hours old: its first night (round 1) has not been settled yet, and the numbers quoted above (night 2's QA accounts, the 0xbe22a8eb…8026 round) are from the 46630 testnet with a mock token. The 46630 contracts predate the last contract tweaks (see `contracts/`); chain 4663 runs the final bytecode.
 2. `npx semalam` is not published yet (npm token); run the CLI from this repo as shown below.
 3. A Sybil can fill the 1,000-account admission cap per round with own-wallet commits (cost per night is not benchmarked here). Stated, not solved.
-4. Across 48 simulated seeds a pure single-action policy (excluding COPY_LEADER) won outright 5 times, and pure STEAL took 10 of the 13 pure top-10 finishes ([`evidence/sim-tuning.json`](evidence/sim-tuning.json)); real fields are not random, and the playtest is where this is watched.
+4. Across 48 simulated seeds a pure single-action policy (excluding COPY_LEADER) won outright 5 times, and pure STEAL took 10 of the 13 pure top-10 finishes ([`evidence/sim-tuning.json`](evidence/sim-tuning.json)); real fields are not random, and the playtest is where this is watched: re-running the first bot night (testnet round 3) under 100 other seeds gave the pure-STEAL bot a median rank of 42 of 49 and 0 top-10 finishes ([`evidence/playtest/seeds-r3.json`](evidence/playtest/seeds-r3.json)).
 5. Gas-free onboarding is a relay with a per-night budget, not account abstraction (cut after the architecture review); when the relay is empty the app asks for your own wallet.
 6. Round 1 is a labelled rehearsal night (the 30 house agents plus one operator smoke commit, no season).
 
