@@ -325,7 +325,7 @@ test("live: drand failures map to exit 3 with a --drand hint; --drand mirrors ar
   const w = await run({ posted: postedB, fixtures: { [B.round]: f } }, ["replay", "2", "--chain", "46630", "--drand", "https://mirror.example"]);
   assert.equal(w.exit?.code, 4);
   assert.match(w.exit!.message, /^waiting for drand round \d+: drand: round \d+ not published yet/);
-  assert.ok(w.urls.every((u) => u.startsWith("https://mirror.example")));
+  assert.ok(w.urls.every((u) => new URL(u).origin === "https://mirror.example"));
 });
 
 test("live: --json writes the settled night with bigints as strings; --agent prints the agent block first", async () => {
