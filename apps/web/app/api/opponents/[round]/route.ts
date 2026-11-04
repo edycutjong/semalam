@@ -1,6 +1,6 @@
 import { HOUSE } from "@semalam/sim/house";
 import { readArtifact, settledRounds } from "@/lib/artifact";
-import { CHAIN_ID } from "@/lib/config";
+import { CHAIN_ID, EXCLUDED } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +23,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ round: string }
   return Response.json({
     source: art ? { round: art.round, resultHash: art.settled.resultHash } : null,
     opponents,
-    mix: { house: opponents.filter((o) => o.house).length, players: opponents.filter((o) => !o.house).length },
+    // operator addresses (our own smoke/demo commits) are named as what they are, never counted as players
+    mix: {
+      house: opponents.filter((o) => o.house).length,
+      players: opponents.filter((o) => !o.house && !EXCLUDED.includes(o.id.toLowerCase())).length,
+      operators: opponents.filter((o) => !o.house && EXCLUDED.includes(o.id.toLowerCase())).length,
+    },
     note: art ? undefined : "no settled night yet — the field is the 30 house agents",
   });
 }

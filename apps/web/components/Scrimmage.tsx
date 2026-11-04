@@ -20,7 +20,11 @@ const PAID_STORE = "semalam.paid.v1";
 /** src = the settled night whose top 30 was the field when the run was made (null = the house set) — a re-run uses the SAME field. */
 type PaidRun = { tx: Hex; round: number; account: Address; policy: Policy; src: number | null };
 const loadPaid = (): PaidRun[] => lsGet<PaidRun[]>(PAID_STORE, []);
-type Opp = { source: { round: number } | null; opponents: Opponent[]; mix: { house: number; players: number }; note?: string };
+type Opp = { source: { round: number } | null; opponents: Opponent[]; mix: { house: number; players: number; operators?: number }; note?: string };
+const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
+/** "29 house agents + 1 operator test agent": operator addresses are never called players. */
+const fieldMix = (m: Opp["mix"]) =>
+  [plural(m.house, "house agent"), m.players ? plural(m.players, "player") : "", m.operators ? plural(m.operators, "operator test agent") : ""].filter(Boolean).join(" + ");
 
 export default function Scrimmage() {
   const [st, setSt] = useState<StatusJson | null>(null);
@@ -140,7 +144,7 @@ export default function Scrimmage() {
         <p className="lead">Try a draft against yesterday's top 30 — instantly. It never counts toward your score.</p>
         <div className="card">
           <h3 style={{ fontSize: 20 }}>Opponents</h3>
-          <p style={{ margin: 0 }}>{opp ? <>{opp.mix.house} house agents + {opp.mix.players} players{opp.source ? ` from round ${opp.source.round}` : ""}. {opp.note ?? ""}</> : "loading the field…"}</p>
+          <p style={{ margin: 0 }}>{opp ? <>{fieldMix(opp.mix)}{opp.source ? ` from round ${opp.source.round}` : ""}. {opp.note ?? ""}</> : "loading the field…"}</p>
         </div>
         <div className="card" style={{ marginTop: 16 }}>
           <h3 style={{ fontSize: 20 }}>Free: tonight's orders</h3>
