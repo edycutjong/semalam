@@ -8,7 +8,12 @@
       "round": 3,
       "tx": "0x867fb18591f404fa9b2d0ebe89d226e08db267c3fd399639c0cb7bf4f89b487e",
       "via": "public relay (the /play 'Play without a wallet' flow, recorded for the demo video)",
-      "utc": "2026-11-04T18:2xZ"
+      "utc": "2026-11-04T18:16:05Z",
+      "block": 106102702,
+      "gasUsed": 72163,
+      "status": "success",
+      "submittedBy": "0x944bc964c60856bfd62cdaf971f53988b57d13a9",
+      "to": "0xaaa4d7abdc7fe91d2d4827ca559887ef6288e0c2"
     }
   ],
   "listedBeforeFirstSettle": true
