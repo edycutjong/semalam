@@ -71,7 +71,7 @@ Track: **games**. The game is built around the community token, $WIF:
 
 ## ⛓️ Live Deployment
 
-**Chain 4663** (deployed 2026-11-03, source verified on Sourcify, real $WIF `0x5173b8eA6923c2d40267890D45C46a3480954773`). Round 1 is a house-plus-operator rehearsal night that closes 17:00 UTC on 3 Nov; the only commit in its Orders contract so far is an operator smoke commit through the relayer ([`evidence/mainnet-commit-round1.json`](evidence/mainnet-commit-round1.json)).
+**Chain 4663** (deployed 2026-11-03, source verified on Sourcify, real $WIF `0x5173b8eA6923c2d40267890D45C46a3480954773`). Round 1 was a house-plus-operator rehearsal night (closed 17:00 UTC on 3 Nov) and round 2 a house-only night. The Orders contract holds two commits so far, both from operator addresses that never count as players: round 1's smoke commit through the relayer ([`evidence/mainnet-commit-round1.json`](evidence/mainnet-commit-round1.json)) and the demo video's seal in round 3 through the public relay ([`evidence/demo-account-4663.json`](evidence/demo-account-4663.json)).
 
 | Contract | Address |
 |---|---|
@@ -116,12 +116,12 @@ Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and pe
 
 ### Honest limits (6)
 
-1. The chain 4663 deployment is days old: only round 1, the rehearsal night with no outside players (limit 6), has settled there so far (`semalam replay 1 --chain 4663` ✓ MATCH, [`evidence/replay-1-4663.json`](evidence/replay-1-4663.json)), and the numbers quoted above (night 2's QA accounts, the 0xbe22a8eb…8026 round) are from the 46630 testnet with a mock token. The 46630 contracts predate the last contract tweaks (see `contracts/`); chain 4663 runs the final bytecode.
+1. The chain 4663 deployment is days old: only round 1 (the rehearsal night, limit 6) and round 2 (house-only) have settled there so far, with no outside players (`semalam replay 1 --chain 4663` ✓ MATCH, [`evidence/replay-1-4663.json`](evidence/replay-1-4663.json); round 2's posted hash carries the same CLI cross-check in `apps/web/data/rounds/4663-2.json`), and the numbers quoted above (night 2's QA accounts, the 0xbe22a8eb…8026 round) are from the 46630 testnet with a mock token. The 46630 contracts predate the last contract tweaks (see `contracts/`); chain 4663 runs the final bytecode.
 2. `npx semalam` is not published yet (npm token); run the CLI from this repo as shown below.
 3. A Sybil can fill the 1,000-account admission cap per round with own-wallet commits (cost per night is not benchmarked here). Stated, not solved.
 4. Across 48 simulated seeds a pure single-action policy (excluding COPY_LEADER) won outright 5 times, and pure STEAL took 10 of the 13 pure top-10 finishes ([`evidence/sim-tuning.json`](evidence/sim-tuning.json)); real fields are not random, and the playtest is where this is watched: re-running the first bot night (testnet round 3) under 100 other seeds gave the pure-STEAL bot a median rank of 42 of 49 and 0 top-10 finishes ([`evidence/playtest/seeds-r3.json`](evidence/playtest/seeds-r3.json)).
 5. Gas-free onboarding is a relay with a per-night budget, not account abstraction (cut after the architecture review); when the relay is empty the app asks for your own wallet.
-6. Round 1 is a labelled rehearsal night (the 30 house agents plus one operator smoke commit, no season).
+6. Round 1 is a labelled rehearsal night (the 30 house agents plus one operator smoke commit, no season); the demo video's seal in round 3 is an operator commit too, excluded from every player count ([`evidence/demo-account-4663.json`](evidence/demo-account-4663.json)).
 
 Earlier versions had defects (dispute path, relay drain bound, crown verifiability); each is fixed and covered by a test.
 

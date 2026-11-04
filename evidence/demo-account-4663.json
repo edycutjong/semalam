@@ -13,7 +13,30 @@
       "gasUsed": 72163,
       "status": "success",
       "submittedBy": "0x944bc964c60856bfd62cdaf971f53988b57d13a9",
-      "to": "0xaaa4d7abdc7fe91d2d4827ca559887ef6288e0c2"
+      "to": "0xaaa4d7abdc7fe91d2d4827ca559887ef6288e0c2",
+      "policy": {
+        "v": 1,
+        "name": "share-retaliate",
+        "opening": "GATHER",
+        "default": "GATHER",
+        "grudge": 3,
+        "rules": [
+          {
+            "if": "partner_is_leader",
+            "then": "GATHER"
+          },
+          {
+            "if": "partner_stole_from_me",
+            "then": "STEAL"
+          },
+          {
+            "if": "partner_shared_with_me",
+            "then": "SHARE"
+          }
+        ]
+      },
+      "policyHash": "0xe3f698c906c52d9333b93259024c8b74065836f421e54ad6a7a7db424999497f",
+      "policyHashCheck": "policyHash(policy) from packages/policy/src/index.ts equals the policyHash argument of the Committed event in this tx (topic data word 0)"
     }
   ],
   "listedBeforeFirstSettle": true
