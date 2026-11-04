@@ -3,6 +3,13 @@
   "chainId": 4663,
   "address": "0x0310dD87A9aae45023d3f99A73923Ab8b5d59F82",
   "listedBeforeFirstCommit": false,
-  "commits": [],
+  "commits": [
+    {
+      "round": 3,
+      "tx": "0x867fb18591f404fa9b2d0ebe89d226e08db267c3fd399639c0cb7bf4f89b487e",
+      "via": "public relay (the /play 'Play without a wallet' flow, recorded for the demo video)",
+      "utc": "2026-11-04T18:2xZ"
+    }
+  ],
   "listedBeforeFirstSettle": true
 }
