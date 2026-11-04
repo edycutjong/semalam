@@ -1,6 +1,6 @@
 {
   "what": "real run of the bundled replay CLI against chain 4663 (mainnet), stdout verbatim",
-  "at": "2026-11-04T15:24:32Z",
+  "at": "2026-11-04T20:24:58Z",
   "machine": "macOS arm64 · Node 22.22.0",
   "cmd": "node packages/cli/dist/semalam.mjs replay 1 --chain 4663",
   "round": 1,
@@ -14,7 +14,7 @@
     "drand       round 33640712 = seedRound(1) ✓ · BLS signature ✓ (quicknet, pinned key)",
     "commits     1 events · 1 admitted accounts · 0 over capacity",
     "policies    1 ok · 0 void",
-    "players     0 (1 incl. 1 operator address; 3 listed) · agents 31 (30 house)",
+    "players     0 (1 incl. 1 operator address; 4 listed) · agents 31 (30 house)",
     "top 5       1. house-25 1036 · 2. house-13 928 · 3. house-12 922 · 4. 0x5b84…f74e 910 · 5. house-09 890",
     "resultHash  0xfb26b115b078f154d8d75fb94084f33475dfc550eb22252c696107c27b8cbadc  ==  Results.post 0xfb26b115b078f154d8d75fb94084f33475dfc550eb22252c696107c27b8cbadc  ✓ MATCH"
   ]
