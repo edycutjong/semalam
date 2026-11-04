@@ -134,10 +134,11 @@ Node ≥ 20, pnpm 10, and [Foundry](https://book.getfoundry.sh/) for the contrac
 ```bash
 pnpm install && pnpm --filter semalam build
 node packages/cli/dist/semalam.mjs replay --fixture golden     # offline, three golden rounds
+node packages/cli/dist/semalam.mjs replay 1 --chain 4663       # live, chain 4663 (mainnet): prints ✓ MATCH
 node packages/cli/dist/semalam.mjs replay 1 --chain 46630      # live, chain 46630 (testnet)
 ```
 
-The live command exits 4 ("posted, not final yet") until the testnet's finalized head passes the posting block. The CLI refuses a beacon with a bad BLS signature, a beacon for the wrong round, and a house set or simulator version that differs from the one pinned in `Results`. Details and exit codes: [`packages/cli/README.md`](packages/cli/README.md).
+A live replay exits 0 with ✓ MATCH. A night posted minutes ago exits 4 ("posted, not final yet") until the chain's finalized head passes the posting block. The CLI refuses a beacon with a bad BLS signature, a beacon for the wrong round, and a house set or simulator version that differs from the one pinned in `Results`. Details and exit codes: [`packages/cli/README.md`](packages/cli/README.md).
 
 ## 🧪 Testing & CI
 
