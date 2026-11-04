@@ -114,8 +114,8 @@ export default async function Landing() {
       {n && (
         <section id="last-night" className="s-sec demo" aria-labelledby="h-demo">
           <p className="eyebrow s-eye">Night {n.round} · {chain}</p>
-          <h2 id="h-demo">Last night, replayed twice.</h2>
-          <p className="s-sub">Left: the app&apos;s replay, one lamp per agent, brighter is higher. Right: the same night recomputed from public chain data by the open-source CLI.</p>
+          <h2 id="h-demo">{n.round === d.recorded.round ? "Last night, replayed twice." : `Night ${n.round} replayed, night ${d.recorded.round} recomputed.`}</h2>
+          <p className="s-sub">Left: the app&apos;s replay, one lamp per agent, brighter is higher. Right: {n.round === d.recorded.round ? "the same night" : `night ${d.recorded.round} (a recorded run)`} recomputed from public chain data by the open-source CLI.</p>
           <div className="demo-grid">
             <div className="stall">
               <div className="stall-head"><span>/round/{n.round}</span><span className="data">{n.agents} agents · drand {n.drandRound}</span></div>
@@ -136,7 +136,7 @@ export default async function Landing() {
           <dl className="plank-grid">
             <div>
               <dt><CountUp value={d.nights} /></dt>
-              <dd>nights settled on chain<small>{d.nights === 0 ? `no night on ${chain} to re-check yet` : `${d.matched} of ${d.nights} re-checked${d.matched > 0 ? ": ✓ MATCH" : ""}`}{d.houseOnly.length ? ` · ${d.houseOnly.length > 1 ? "nights" : "night"} ${d.houseOnly.join(", ")}: house agents only` : ""}</small></dd>
+              <dd>nights settled on chain<small>{d.nights === 0 ? `no night on ${chain} to re-check yet` : `${d.matched} of ${d.nights} re-checked${d.matched > 0 ? ": ✓ MATCH" : ""}`}{d.houseOnly.length ? ` · ${d.houseOnly.length > 1 ? "nights" : "night"} ${d.houseOnly.join(", ")}: no player accounts` : ""}</small></dd>
             </div>
             <div>
               <dt>{n ? <CountUp value={n.agents} /> : "0"}</dt>

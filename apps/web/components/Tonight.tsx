@@ -176,7 +176,7 @@ export default function Tonight() {
               placeholder="Share with neighbours who shared with me, gather otherwise. If someone steals from me, steal back for a few turns — but never steal from the leader." />
             <div className="row" style={{ justifyContent: "space-between", margin: "6px 0 14px" }}>
               <span className={`counter ${len > MAX_ORDERS ? "over" : ""}`}>{len}/{MAX_ORDERS}</span>
-              <span className="muted" style={{ fontSize: 15 }}>The AI path lets the operator read your words. The builder never does.</span>
+              <span className="muted" style={{ fontSize: 15 }}>The AI path lets the operator read your words. The in-browser builder sends them nowhere.</span>
             </div>
             <div className="row">
               <button type="button" className="primary" onClick={compile} disabled={busy || !orders.trim() || len > MAX_ORDERS || !open || phase === "sealing" || phase === "sealed"}>{busy ? "Compiling…" : "Compile"}</button>
@@ -213,7 +213,7 @@ export default function Tonight() {
         {(phase === "identity" || (phase === "sealing" && !entered)) && policy && (
           <div className="card" style={{ marginTop: 18 }}>
             <h3 style={{ fontSize: 20 }}>Who is playing?</h3>
-            <p className="muted" style={{ marginTop: 0 }}>One identity commits and pays. Sealing locks your orders to a public beacon, so nobody can read them from the chain before midnight.{viaLLM ? " The words you typed went through the AI compiler, which the operator can see; the builder never shows anyone." : " Your words never left this browser."} {st?.relay ? `Sealing signs one typed message, “SEMALAM Orders · Commit”: your address, round ${st.round}, the policy and sealed-blob hashes, a nonce and a 15-minute deadline.` : "Sealing sends one transaction, Orders.commit with the round, the policy hash and the sealed blob."} It approves no token and moves no $WIF.</p>
+            <p className="muted" style={{ marginTop: 0 }}>One identity commits and pays. Sealing locks your orders to a public beacon, so nobody can read them from the chain before midnight.{viaLLM ? " The words you typed went through the AI compiler, which the operator can see; orders made with the in-browser builder never leave this browser." : " Your words never left this browser."} {st?.relay ? `Sealing signs one typed message, “SEMALAM Orders · Commit”: your address, round ${st.round}, the policy and sealed-blob hashes, a nonce and a 15-minute deadline.` : "Sealing sends one transaction, Orders.commit with the round, the policy hash and the sealed blob."} It approves no token and moves no $WIF.</p>
             {signer?.mode === "local" ? <p className="data" style={{ wordBreak: "break-all" }}>your key stays in this browser · {st?.relay ? <HashLine value={signer.address} short /> : <HashLine value={signer.address} />}</p> : null}
             <div className="row">
               <button type="button" className="primary" onClick={pickLocal} disabled={phase === "sealing"}>Play without a wallet</button>
