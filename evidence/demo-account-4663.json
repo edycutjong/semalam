@@ -1,7 +1,8 @@
 {
-  "note": "Operator demo account for the demo video's live seal on chain 4663. Listed in packages/cli/src/deployments.json -> 4663.excluded BEFORE its first commit, so the settler, the CLI and the web app never count it as a player (excluded addresses change only the player count, never the result hash: packages/sim/src/round.ts). It commits through the public relay like any player; its key is a throwaway made for the recording and never leaves the operator's machine.",
+  "note": "Operator demo account for the demo video's live seal on chain 4663. The public relay refuses listed operator addresses (apps/web/app/api/relay/commit/route.ts), so the account seals through the relay exactly like a player and is listed in packages/cli/src/deployments.json -> 4663.excluded right after that seal, before its first night settles: the settler, the CLI and the web app then never count it as a player (excluded addresses change only the player count, never the result hash: packages/sim/src/round.ts). Its key is a throwaway made for the recording and never leaves the operator's machine.",
   "chainId": 4663,
   "address": "0x0310dD87A9aae45023d3f99A73923Ab8b5d59F82",
-  "listedBeforeFirstCommit": true,
-  "commits": []
+  "listedBeforeFirstCommit": false,
+  "commits": [],
+  "listedBeforeFirstSettle": true
 }
