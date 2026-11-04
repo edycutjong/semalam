@@ -116,7 +116,7 @@ Night 2's 19 accounts and its 6 paid practice runs are our own end-to-end and pe
 
 ### Honest limits (6)
 
-1. The chain 4663 deployment is hours old: its first night (round 1) has not been settled yet, and the numbers quoted above (night 2's QA accounts, the 0xbe22a8eb…8026 round) are from the 46630 testnet with a mock token. The 46630 contracts predate the last contract tweaks (see `contracts/`); chain 4663 runs the final bytecode.
+1. The chain 4663 deployment is days old: only round 1, the rehearsal night with no outside players (limit 6), has settled there so far (`semalam replay 1 --chain 4663` ✓ MATCH, [`evidence/replay-1-4663.json`](evidence/replay-1-4663.json)), and the numbers quoted above (night 2's QA accounts, the 0xbe22a8eb…8026 round) are from the 46630 testnet with a mock token. The 46630 contracts predate the last contract tweaks (see `contracts/`); chain 4663 runs the final bytecode.
 2. `npx semalam` is not published yet (npm token); run the CLI from this repo as shown below.
 3. A Sybil can fill the 1,000-account admission cap per round with own-wallet commits (cost per night is not benchmarked here). Stated, not solved.
 4. Across 48 simulated seeds a pure single-action policy (excluding COPY_LEADER) won outright 5 times, and pure STEAL took 10 of the 13 pure top-10 finishes ([`evidence/sim-tuning.json`](evidence/sim-tuning.json)); real fields are not random, and the playtest is where this is watched: re-running the first bot night (testnet round 3) under 100 other seeds gave the pure-STEAL bot a median rank of 42 of 49 and 0 top-10 finishes ([`evidence/playtest/seeds-r3.json`](evidence/playtest/seeds-r3.json)).
