@@ -10,7 +10,7 @@ import LiveClock from "@/components/site/LiveClock";
 import Settle from "@/components/site/Settle";
 import Terminal from "@/components/site/Terminal";
 import FrozenTicket from "@/components/site/FrozenTicket";
-import { loadLanding, REPO } from "@/lib/landing";
+import { loadLanding, REPO, VIDEO } from "@/lib/landing";
 import { ordinal } from "@/lib/rank";
 import "./site.css";
 
@@ -61,7 +61,7 @@ export default async function Landing() {
               <Link href="/play" className="btn s-primary">Write tonight&apos;s orders</Link>
               {n && <Link href={`/round/${n.round}`} className="btn s-ghost">Watch night {n.round}</Link>}
             </div>
-            <p className="s-links"><Link href="/pitch">Pitch deck →</Link><a href={REPO}>Source on GitHub →</a></p>
+            <p className="s-links"><a href={VIDEO}>Watch the 2:24 demo →</a><Link href="/pitch">Pitch deck →</Link><a href={REPO}>Source on GitHub →</a></p>
             <p className="s-proof">
               <span>sealed by drand timelock</span><span>settled by open code</span>
               {n && <a href="#last-night">night {n.round}: {n.cliMatch ? "✓ MATCH" : "not re-checked"}</a>}
@@ -226,7 +226,7 @@ export default async function Landing() {
 
       <footer className="s-foot">
         <nav aria-label="Footer">
-          <Link href="/play">Play</Link><Link href="/board">Board</Link>{n && <Link href={`/verify/${n.round}`}>Verify night {n.round}</Link>}<Link href="/pitch">Pitch deck</Link><a href={REPO}>Source on GitHub</a><a href="https://worldisflat.fun/build">World Is Flat · games</a>
+          <Link href="/play">Play</Link><Link href="/board">Board</Link>{n && <Link href={`/verify/${n.round}`}>Verify night {n.round}</Link>}<a href={VIDEO}>Demo video</a><Link href="/pitch">Pitch deck</Link><a href={REPO}>Source on GitHub</a><a href="https://worldisflat.fun/build">World Is Flat · games</a>
         </nav>
         <p>SEMALAM · MIT licence · Independent hackathon project, not affiliated with any chain operator, exchange or token issuer.</p>
       </footer>

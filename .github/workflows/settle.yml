@@ -30,7 +30,7 @@ jobs:
         run: pnpm --filter @semalam/scripts exec tsx settle/settle.ts --chain 46630
       - name: commit round artifacts
         run: |
-          git config user.name "semalam-settler"
-          git config user.email "settler@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add apps/web/data/rounds
           git diff --cached --quiet || (git commit -m "settle: round artifacts" && git pull --rebase --autostash && git push)

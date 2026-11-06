@@ -19,6 +19,7 @@ import qaFile from "../../../evidence/qa-accounts-46630.json";
 import compileHook from "../../../evidence/compile-hook.json";
 
 export const REPO = "https://github.com/edycutjong/semalam";
+export const VIDEO = "https://youtu.be/08FeD_edXz0";
 export const SITE = "https://semalam.edycu.dev";
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 /** Accounts we ran ourselves (end-to-end + persona QA), per chain — counted and labelled as QA, never as players. */

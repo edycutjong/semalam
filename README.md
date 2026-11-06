@@ -7,6 +7,7 @@
   <br/>
 
   [![Live Demo](https://img.shields.io/badge/🚀_Live-Demo-06b6d4?style=for-the-badge)](https://semalam.edycu.dev)
+  [![Demo Video](https://img.shields.io/badge/▶_Demo-Video_2:24-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/08FeD_edXz0)
   [![Pitch Deck](https://img.shields.io/badge/📊_Pitch-Deck-1B1530?style=for-the-badge)](https://semalam.edycu.dev/pitch)
   [![Built for World Is Flat](https://img.shields.io/badge/World_Is_Flat-Build-8b5cf6?style=for-the-badge)](https://worldisflat.fun/build)
 
