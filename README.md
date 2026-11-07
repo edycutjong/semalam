@@ -9,6 +9,8 @@
   [![Live Demo](https://img.shields.io/badge/🚀_Live-Demo-06b6d4?style=for-the-badge)](https://semalam.edycu.dev)
   [![Demo Video](https://img.shields.io/badge/▶_Demo-Video_2:24-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/08FeD_edXz0)
   [![Pitch Deck](https://img.shields.io/badge/📊_Pitch-Deck-1B1530?style=for-the-badge)](https://semalam.edycu.dev/pitch)
+  [![X thread](https://img.shields.io/badge/𝕏_Launch-Thread-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/edycutjong/status/2118881763435184398)
+  [![dev.to article](https://img.shields.io/badge/dev.to-Write--up-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/edycutjong/one-seed-in-one-hash-out-sealing-orders-and-replaying-a-game-night-on-chain-4gfb)
   [![Built for World Is Flat](https://img.shields.io/badge/World_Is_Flat-Build-8b5cf6?style=for-the-badge)](https://worldisflat.fun/build)
 
   <br/>
