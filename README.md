@@ -74,6 +74,8 @@ Track: **games**. The game is built around the community token, $WIF:
 
 **Chain 4663** (deployed 2026-11-03, source verified on Sourcify, real $WIF `0x5173b8eA6923c2d40267890D45C46a3480954773`). Round 1 was a house-plus-operator rehearsal night (closed 17:00 UTC on 3 Nov) and round 2 a house-only night. The Orders contract holds two commits so far, both from operator addresses that never count as players: round 1's smoke commit through the relayer ([`evidence/mainnet-commit-round1.json`](evidence/mainnet-commit-round1.json)) and the demo video's seal in round 3 through the public relay ([`evidence/demo-account-4663.json`](evidence/demo-account-4663.json)).
 
+**Nights so far (7 Nov):** nights 1–4 are posted on chain and each replays to the same hash (✓ MATCH at [`/verify/1`](https://semalam.edycu.dev/verify/1) … [`/verify/4`](https://semalam.edycu.dev/verify/4)). Every night has had 0 players (operator commits excluded) and the Scrimmage contract has 0 paid runs, so season 1 (nights 2–4) has no crown: the contract only crowns an account with a paid run. SEMALAM was submitted to World Is Flat Build and keeps running nightly through the final on 16 Nov.
+
 | Contract | Address |
 |---|---|
 | Orders | [`0xAAA4D7abdC7FE91d2D4827CA559887eF6288e0C2`](https://robinhoodchain.blockscout.com/address/0xAAA4D7abdC7FE91d2D4827CA559887eF6288e0C2) |
