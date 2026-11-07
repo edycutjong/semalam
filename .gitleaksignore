@@ -1,4 +1,4 @@
 935cd4b0395caf10a7816b8dafca1189f032ee3a:fixtures/golden/vectors.json:generic-api-key:56
 935cd4b0395caf10a7816b8dafca1189f032ee3a:fixtures/golden/vectors.json:generic-api-key:60
 # apps/web/test/cov-chain.test.ts: Anvil/Hardhat public dev key #0 (derives a fake relayer address in a unit test; not a secret)
-541e06fadc783e875f93d0d3c6cf08095c636a6d:apps/web/test/cov-chain.test.ts:generic-api-key:44
+9829d7ac91bb681b6d79b55dac63d23417668317:apps/web/test/cov-chain.test.ts:generic-api-key:44
