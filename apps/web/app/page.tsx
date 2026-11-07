@@ -172,7 +172,7 @@ export default async function Landing() {
             </div>
             <figcaption>
               <span className="big">{d.burned === null ? "—" : <CountUp value={d.burned} decimals={d.burned % 1 ? 1 : 0} />}</span>
-              <span>{d.wif} burned so far on {chain}{d.paidRuns !== null ? ` · ${d.paidRuns} paid runs${d.paidQa && d.paidQa === d.paidRuns ? ", all by our QA accounts" : ""}` : ""}</span>
+              <span>{d.wif} burned so far on {chain}{d.paidRuns !== null ? ` · ${d.paidRuns} paid run${d.paidRuns === 1 ? "" : "s"}${d.paidQa && d.paidQa === d.paidRuns ? ", all by our QA accounts" : ""}` : ""}</span>
             </figcaption>
           </figure>
         </div>

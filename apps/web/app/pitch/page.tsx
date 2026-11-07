@@ -220,7 +220,7 @@ export default async function Pitch() {
 
         <section className="slide s9" aria-label="Status and limits">
           <h2>Where it stands, honestly.</h2>
-          <p className="status data">{chain} · {d.nights} nights posted · night {n?.round ?? "—"}: {n?.players ?? 0} {qa ? "QA" : "player"} accounts + {n?.house ?? 0} house · {d.paidRuns ?? "—"} paid runs{paidQa ? " (QA)" : ""}</p>
+          <p className="status data">{chain} · {d.nights} nights posted · night {n?.round ?? "—"}: {n?.players ?? 0} {qa ? "QA" : "player"} accounts + {n?.house ?? 0} house · {d.paidRuns ?? "—"} paid run{d.paidRuns === 1 ? "" : "s"}{paidQa ? " (QA)" : ""}</p>
           <ul className="limits">
             <li>{d.nights === 0 ? <><b>Hours old.</b> The chain 4663 deployment is hours old and its first night has not settled; the QA nights before it ran on the 46630 testnet with a mock token.</> : <><b>Days old.</b> Live on chain 4663 since 3 Nov 2026; the QA nights before it ran on the 46630 testnet with a mock token.</>}</li>
             <li><b>Stated, not solved.</b> One person with many wallets can fill the 1,000-account cap per round.</li>
